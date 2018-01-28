@@ -28,6 +28,10 @@ func (m *Mailbox) IsClient() bool {
 	return m.Flag == share.MB_FLAG_CLIENT
 }
 
+func (m *Mailbox) Generate() {
+	m.Uid = ((uint64(m.Sid) << 48) & 0xFFFF000000000000) | ((uint64(m.Flag) & 1) << 47) | (m.Id & share.SESSION_MAX)
+}
+
 func NewMailboxFromStr(mb string) (Mailbox, error) {
 	mbox := Mailbox{}
 	if !strings.HasPrefix(mb, "mailbox://") {
@@ -69,7 +73,7 @@ func GetServiceMailbox(appid share.ServiceId) Mailbox {
 	m.Sid = appid
 	m.Flag = share.MB_FLAG_APP
 	m.Id = 0
-	m.Uid = ((uint64(appid) << 48) & 0xFFFF000000000000)
+	m.Generate()
 	return m
 }
 
@@ -81,7 +85,7 @@ func NewMailbox(flag int8, id uint64, appid share.ServiceId) Mailbox {
 	m.Sid = appid
 	m.Flag = flag
 	m.Id = id
-	m.Uid = ((uint64(appid) << 48) & 0xFFFF000000000000) | ((uint64(flag) & 1) << 47) | (id & share.SESSION_MAX)
+	m.Generate()
 	return m
 }
 
