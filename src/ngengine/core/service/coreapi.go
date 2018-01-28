@@ -89,10 +89,13 @@ func (c *Core) Shut() {
 	}
 
 	c.closeState = CS_QUIT
+	// 关闭harbor
 	if c.harbor != nil {
 		c.harbor.Close()
 	}
 	c.Wait()
+
+	// 关闭所有的模块
 	for n, m := range c.modules.modules {
 		m.Shut()
 		c.LogInfo("module '", n, "' is shut")
@@ -105,7 +108,7 @@ func (c *Core) Shut() {
 
 }
 
-// 关注其它服务，"all" 关闭全部服务
+// 关注其它服务，"all" 关注全部服务
 func (c *Core) Watch(w ...string) {
 	c.watchs = c.watchs[:0]
 	c.watchs = append(c.watchs, w...)
@@ -126,7 +129,7 @@ func (c *Core) Mailto(src *rpc.Mailbox, dest *rpc.Mailbox, method string, args .
 		src = &c.Mailbox
 	}
 
-	if !dest.IsClient() {
+	if !dest.IsClient() { // 判断是否是客户端的消息
 		if dest.Sid == c.Mailbox.Sid { // 本地调用
 			return c.rpcSvr.Call(rpc.GetServiceMethod(method), *src, args...)
 		}
@@ -154,7 +157,7 @@ func (c *Core) MailtoAndCallback(src *rpc.Mailbox, dest *rpc.Mailbox, method str
 		src = &c.Mailbox
 	}
 
-	if dest.IsClient() {
+	if dest.IsClient() { // 客户端的调用不支持回调
 		return fmt.Errorf("client not support callback")
 	}
 

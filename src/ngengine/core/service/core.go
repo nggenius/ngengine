@@ -98,6 +98,7 @@ func (c *Core) Init(args string) error {
 		return err
 	}
 
+	// 初始化模块
 	em := make([]string, 0, 8)
 	for n, m := range c.modules.modules {
 		if !m.Init(c) {
@@ -109,6 +110,7 @@ func (c *Core) Init(args string) error {
 		c.LogErr("module '", n, "' init ok")
 	}
 
+	// 删除初始化失败的模块
 	for _, n := range em {
 		c.LogErr("module '", n, "' init failed, now is removed")
 		delete(c.modules.modules, n)
@@ -126,6 +128,7 @@ func (c *Core) Serv() {
 	}
 
 	harbor := NewHarbor(ctx)
+	// 连接admin
 	harbor.SetAdmin(c.opts.AdminAddr, c.opts.AdminPort)
 	if err := harbor.Serv(c.opts.ServAddr, c.opts.ServPort); err != nil {
 		c.LogFatal(err)
@@ -136,6 +139,7 @@ func (c *Core) Serv() {
 	}
 
 	harbor.Watch(c.watchs)
+	// 创建rpc服务
 	c.rpcCh = make(chan *rpc.RpcCall, c.opts.MaxRpcCall)
 	c.rpcSvr = c.rpcmgr.createRpc(c.rpcCh, ctx)
 	c.Wrap(func() { rpc.CreateService(c.rpcSvr, harbor.serviceListener, c.Log) })
