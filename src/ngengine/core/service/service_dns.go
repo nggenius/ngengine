@@ -103,7 +103,7 @@ func (s *SrvDNS) addSrv(srv protocol.ServiceInfo) {
 
 	s.idToIndex[srv.Id] = index
 	s.nameToIndex[srv.Name] = index
-	s.ctx.Core.LogInfo("add service,", newsrv)
+	s.ctx.Core.LogInfo("add ", newsrv)
 	s.ctx.Core.Emitter.Fire(EVENT_READY, event.EventArgs{"id": srv.Id}, true)
 }
 
@@ -140,7 +140,7 @@ func (s *SrvDNS) removeSrv(id ServiceId) {
 		delete(s.idToIndex, id)
 		delete(s.nameToIndex, srv.Name)
 		s.srvs[index] = nil
-		s.ctx.Core.LogInfo("remove service,", srv)
+		s.ctx.Core.LogInfo("remove ", srv)
 		s.ctx.Core.Emitter.Fire(EVENT_LOST, event.EventArgs{"id": srv.Id}, true)
 	}
 }

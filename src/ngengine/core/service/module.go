@@ -13,6 +13,7 @@ type ModuleHandler interface {
 	OnMessage(id int, args ...interface{})
 }
 
+// 模块集合
 type Modules struct {
 	modules map[string]ModuleHandler
 }
@@ -23,6 +24,7 @@ func NewModules() *Modules {
 	return m
 }
 
+// 增加一个模块
 func (ms *Modules) AddModule(m ModuleHandler) error {
 	if _, dup := ms.modules[m.Name()]; dup {
 		return errors.New("module is dup")
@@ -32,6 +34,7 @@ func (ms *Modules) AddModule(m ModuleHandler) error {
 	return nil
 }
 
+// 获取模块
 func (ms *Modules) GetModule(name string) ModuleHandler {
 	if m, has := ms.modules[name]; has {
 		return m

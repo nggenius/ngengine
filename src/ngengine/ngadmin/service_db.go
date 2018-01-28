@@ -34,6 +34,17 @@ type ServiceInfo struct {
 	Client   *Client
 }
 
+func (s *ServiceInfo) String() string {
+	return fmt.Sprintf("Service{Id:%d,Name:%s,Type:%s,Status:%d,Addr:%s,Port:%d}",
+		s.PeerInfo.ServId,
+		s.PeerInfo.ServName,
+		s.PeerInfo.ServType,
+		s.PeerInfo.Status,
+		s.PeerInfo.RemoteAddr,
+		s.PeerInfo.RemotePort,
+	)
+}
+
 func NewServ(peerinfo *PeerInfo, client *Client) *ServiceInfo {
 	s := &ServiceInfo{
 		PeerInfo: peerinfo,
@@ -57,14 +68,14 @@ func (s *ServiceDB) AddService(id ServiceId, service *ServiceInfo) error {
 	srv, dup := s.serviceMap[id]
 	if dup {
 		if srv.PeerInfo.ServName == service.PeerInfo.ServName { //已经存在
-			return fmt.Errorf("service dup, %v", *service.PeerInfo)
+			return fmt.Errorf("service dup, %v", service)
 		}
 		//id不一样,可能是服务重启了
 		delete(s.serviceMap, id)
 	}
 
 	s.serviceMap[id] = service
-	s.ctx.ngadmin.LogInfo("add service:", id, *service.PeerInfo)
+	s.ctx.ngadmin.LogInfo("add ", service)
 	srvs := &protocol.Services{
 		OpType:  protocol.ST_ADD,
 		All:     false,
@@ -103,7 +114,7 @@ func (s *ServiceDB) RemoveService(name string, id ServiceId) bool {
 		}
 		delete(s.serviceMap, id)
 
-		s.ctx.ngadmin.LogInfo("remove service:", *srv.PeerInfo)
+		s.ctx.ngadmin.LogInfo("remove ", srv)
 		srvs := &protocol.Services{
 			OpType:  protocol.ST_DEL,
 			All:     false,
