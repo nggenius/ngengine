@@ -10,10 +10,10 @@ import (
 )
 
 type Mailbox struct {
-	App  int32  //所在app的id
-	Flag int8   //0:app 1:player
-	Id   uint64 //flag=1时，表示客户端的session.
-	Uid  uint64 //唯一id,由以上三个字段生成。主要用来传送
+	Sid  share.ServiceId // 所在service的id
+	Flag int8            // 见share.MB_FLAG_XXXX
+	Id   uint64          // flag=share.MB_FLAG_CLIENT时，表示客户端的session.
+	Uid  uint64          // 唯一id,由以上三个字段生成。主要用来传送
 }
 
 func (m Mailbox) String() string {
@@ -21,11 +21,11 @@ func (m Mailbox) String() string {
 }
 
 func (m *Mailbox) ServiceId() share.ServiceId {
-	return share.ServiceId(m.App)
+	return share.ServiceId(m.Sid)
 }
 
 func (m *Mailbox) IsClient() bool {
-	return m.Flag == 1
+	return m.Flag == share.MB_FLAG_CLIENT
 }
 
 func NewMailboxFromStr(mb string) (Mailbox, error) {
@@ -48,7 +48,7 @@ func NewMailboxFromStr(mb string) (Mailbox, error) {
 	mbox.Uid = val
 	mbox.Id = mbox.Uid & share.SESSION_MAX
 	mbox.Flag = int8((mbox.Uid >> 47) & 1)
-	mbox.App = int32((mbox.Uid >> 48) & 0xFFFF)
+	mbox.Sid = share.ServiceId((mbox.Uid >> 48) & 0xFFFF)
 	return mbox, nil
 }
 
@@ -57,7 +57,7 @@ func NewMailboxFromUid(val uint64) Mailbox {
 	mbox.Uid = val
 	mbox.Id = mbox.Uid & share.SESSION_MAX
 	mbox.Flag = int8((mbox.Uid >> 47) & 1)
-	mbox.App = int32((mbox.Uid >> 48) & 0xFFFF)
+	mbox.Sid = share.ServiceId((mbox.Uid >> 48) & 0xFFFF)
 	return mbox
 }
 
@@ -66,8 +66,8 @@ func GetServiceMailbox(appid share.ServiceId) Mailbox {
 		panic("id is wrong")
 	}
 	m := Mailbox{}
-	m.App = int32(appid)
-	m.Flag = 0
+	m.Sid = appid
+	m.Flag = share.MB_FLAG_APP
 	m.Id = 0
 	m.Uid = ((uint64(appid) << 48) & 0xFFFF000000000000)
 	return m
@@ -78,7 +78,7 @@ func NewMailbox(flag int8, id uint64, appid share.ServiceId) Mailbox {
 		panic("id is wrong")
 	}
 	m := Mailbox{}
-	m.App = int32(appid)
+	m.Sid = appid
 	m.Flag = flag
 	m.Id = id
 	m.Uid = ((uint64(appid) << 48) & 0xFFFF000000000000) | ((uint64(flag) & 1) << 47) | (id & share.SESSION_MAX)
