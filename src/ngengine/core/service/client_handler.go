@@ -75,7 +75,7 @@ func (c *ClientHandler) Handle(conn net.Conn) {
 		return
 	}
 
-	mb := rpc.NewMailbox(1, id, c.ctx.Core.Id)
+	mb := rpc.NewSessionMailbox(c.ctx.Core.Id, id)
 	c.ctx.Core.Emitter.Fire(share.EVENT_USER_CONNECT, event.EventArgs{"id": id}, true)
 	client := c.ctx.Core.clientDB.FindClient(id)
 	client.Mailbox = mb

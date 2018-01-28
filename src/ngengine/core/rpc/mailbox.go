@@ -77,8 +77,20 @@ func GetServiceMailbox(appid share.ServiceId) Mailbox {
 	return m
 }
 
-func NewMailbox(flag int8, id uint64, appid share.ServiceId) Mailbox {
-	if id > share.SESSION_MAX || appid > 0xFFFF {
+func NewSessionMailbox(appid share.ServiceId, id uint64) Mailbox {
+	if id > share.SESSION_MAX || appid > share.SID_MAX {
+		panic("id is wrong")
+	}
+	m := Mailbox{}
+	m.Sid = appid
+	m.Flag = share.MB_FLAG_CLIENT
+	m.Id = id
+	m.Generate()
+	return m
+}
+
+func NewMailbox(appid share.ServiceId, flag int8, id uint64) Mailbox {
+	if id > share.SESSION_MAX || appid > share.SID_MAX {
 		panic("id is wrong")
 	}
 	m := Mailbox{}

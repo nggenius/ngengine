@@ -1,5 +1,7 @@
 package share
 
+type SessionId uint64
+
 const (
 	ST_ADMIN = 1 + iota
 )
