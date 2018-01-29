@@ -42,7 +42,7 @@ func (ch *C2SHelper) Call(sender rpc.Mailbox, msg *protocol.Message) (errcode in
 		err = srv.Handle(sender, sm, data)
 	}
 
-	ch.owner.LogDebug("client call: ", node, "/", sm)
+	ch.owner.LogDebug("client call ", node, "/", sm)
 	if err != nil {
 		ch.owner.LogErr(err)
 	}

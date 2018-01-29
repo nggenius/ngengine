@@ -268,7 +268,7 @@ func (server *Server) ServeCodec(codec ServerCodec, maxlen uint16) {
 	server.sessions[serial] = session
 	server.mutex.Unlock()
 	go session.send(server.log)
-	server.log.LogInfo("start new service:", serial)
+	server.log.LogInfo("start new rpc server{serial:", serial, "}")
 	for {
 		msg, err := codec.ReadRequest(maxlen)
 		if err != nil {
@@ -292,7 +292,7 @@ func (server *Server) ServeCodec(codec ServerCodec, maxlen uint16) {
 
 	session.quit = true
 	codec.Close()
-	server.log.LogInfo("service quit:", serial)
+	server.log.LogInfo("rpc server{serial:", serial, "} closed")
 	server.mutex.Lock()
 	delete(server.sessions, serial)
 	server.mutex.Unlock()

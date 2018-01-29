@@ -50,7 +50,7 @@ func (c *ClientDB) AddClient(conn net.Conn) uint64 {
 
 	client := NewClient(c.serial, conn, c.ctx)
 	c.clients[client.Session] = client
-	c.ctx.Core.LogInfo("add client:", client)
+	c.ctx.Core.LogInfo("add ", client)
 	return client.Session
 }
 
@@ -70,7 +70,7 @@ func (c *ClientDB) RemoveClient(session uint64) {
 	if client, has := c.clients[session]; has {
 		delete(c.clients, session)
 		client.Close()
-		c.ctx.Core.LogInfo("remove client:", client)
+		c.ctx.Core.LogInfo("remove ", client)
 	}
 }
 

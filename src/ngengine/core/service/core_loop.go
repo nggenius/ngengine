@@ -21,7 +21,7 @@ func (c *Core) doRPCProcess(ch chan *rpc.RpcCall) {
 			if call.IsThreadWork() {
 				c.busy = true
 			} else {
-				c.LogDebug(call.GetSrc(), " rpc call:", call.GetMethod())
+				c.LogDebug(call.GetSrc(), " call ", call.GetMethod())
 				start_time = time.Now()
 				err := call.Call()
 				if err != nil {
@@ -29,7 +29,7 @@ func (c *Core) doRPCProcess(ch chan *rpc.RpcCall) {
 				}
 				delay = time.Now().Sub(start_time)
 				if delay > warninglvl {
-					c.LogWarn("rpc call ", call.GetMethod(), " delay:", delay.Nanoseconds()/1000000, "ms")
+					c.LogWarn("call ", call.GetMethod(), " delay:", delay.Nanoseconds()/1000000, "ms")
 				}
 				err = call.Done()
 				if err != nil {

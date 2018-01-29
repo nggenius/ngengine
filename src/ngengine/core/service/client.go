@@ -28,7 +28,7 @@ func NewClient(id uint64, conn net.Conn, ctx *context) *Client {
 }
 
 func (c *Client) String() string {
-	return fmt.Sprintf("client{session:%d}", c.Session)
+	return fmt.Sprintf("client{session:%d,addr:%s,port:%d}", c.Session, c.conn.Addr, c.conn.Port)
 }
 
 func (c *Client) Close() {
