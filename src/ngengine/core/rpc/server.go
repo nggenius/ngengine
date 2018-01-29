@@ -163,7 +163,7 @@ func (srv *service) RegisterCallback(name string, cb CB) {
 }
 
 func (srv *service) ThreadPush(call *RpcCall) bool {
-	if t, ok := srv.rcvr.(Threader); ok {
+	if t, ok := srv.rcvr.(ThreadHandler); ok {
 		return t.NewJob(call)
 	}
 	return false

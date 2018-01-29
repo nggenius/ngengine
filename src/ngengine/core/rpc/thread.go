@@ -8,7 +8,7 @@ import (
 	"github.com/mysll/toolkit"
 )
 
-type Threader interface {
+type ThreadHandler interface {
 	NewJob(*RpcCall) bool
 }
 
@@ -57,7 +57,7 @@ func (t *Thread) Wait() {
 }
 
 func (t *Thread) NewJob(r *RpcCall) bool {
-	t.Queue[int(r.GetSrc().Uid)%t.Pools] <- r
+	t.Queue[int(r.GetSrc().Id)%t.Pools] <- r
 	return true
 }
 
@@ -69,7 +69,7 @@ func (t *Thread) work(id int) {
 	for {
 		select {
 		case rpc := <-t.Queue[id]:
-			t.log.LogInfo(t.TAG, " thread:", id, rpc.GetSrc(), " call:", rpc.GetMethod())
+			t.log.LogInfo(t.TAG, " thread:", id, rpc.GetSrc(), " call ", rpc.GetMethod())
 			start_time = time.Now()
 			err := rpc.Call()
 			if err != nil {
@@ -77,11 +77,11 @@ func (t *Thread) work(id int) {
 			}
 			delay = time.Now().Sub(start_time)
 			if delay > warninglvl {
-				t.log.LogWarn("rpc call ", rpc.GetMethod(), " delay:", delay.Nanoseconds()/1000000, "ms")
+				t.log.LogWarn("rpc call ", rpc.GetMethod(), " delay ", delay.Nanoseconds()/1000000, "ms")
 			}
 			err = rpc.Done()
 			if err != nil {
-				t.log.LogErr("rpc error:", err)
+				t.log.LogErr("rpc error ", err)
 			}
 			rpc.Free()
 			break
