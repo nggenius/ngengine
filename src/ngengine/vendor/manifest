@@ -10,6 +10,14 @@
 			"notests": true
 		},
 		{
+			"importpath": "github.com/petermattis/goid",
+			"repository": "https://github.com/petermattis/goid",
+			"vcs": "git",
+			"revision": "176e84a949d354dcef722e602b312b1a75bacddc",
+			"branch": "master",
+			"notests": true
+		},
+		{
 			"importpath": "github.com/sadlil/go-trigger",
 			"repository": "https://github.com/sadlil/go-trigger",
 			"vcs": "git",

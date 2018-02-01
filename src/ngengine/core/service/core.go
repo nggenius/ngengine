@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/mysll/toolkit"
+	"github.com/petermattis/goid"
 )
 
 const (
@@ -26,6 +27,7 @@ type Core struct {
 	*logger.Log
 	toolkit.WaitGroupWrapper
 	Id         share.ServiceId     // 服务ID
+	gid        int64               // goroutine id
 	opts       *CoreOption         // 配置项
 	service    Service             // 逻辑服务
 	closeState int                 // 关闭状态
@@ -127,6 +129,8 @@ func (c *Core) Serv() {
 		c.LogFatal(err)
 	}
 
+	c.gid = goid.Get()
+	c.LogInfo(c.opts.ServName, " start, goroutine id ", c.gid)
 	harbor := NewHarbor(ctx)
 	// 连接admin
 	harbor.SetAdmin(c.opts.AdminAddr, c.opts.AdminPort)
