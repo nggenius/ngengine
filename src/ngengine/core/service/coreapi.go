@@ -20,6 +20,8 @@ type SrvInfo struct {
 
 // Core接口
 type CoreApi interface {
+	// 获取当前服务的goroutine id
+	GID() int64
 	// 返回配置选项
 	Option() *CoreOption
 	// 关闭服务
@@ -70,6 +72,10 @@ type CoreApi interface {
 	GetModule(name string) interface{}
 	// 调用模块
 	CallModule(module string, id int, args ...interface{}) error
+}
+
+func (c *Core) GID() int64 {
+	return c.gid
 }
 
 // 返回配置选项
