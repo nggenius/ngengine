@@ -2,10 +2,34 @@
 	"version": 0,
 	"dependencies": [
 		{
+			"importpath": "github.com/PuerkitoBio/goquery",
+			"repository": "https://github.com/PuerkitoBio/goquery",
+			"vcs": "git",
+			"revision": "09540e565986583836b5fc792fe951ec5fd201dd",
+			"branch": "master",
+			"notests": true
+		},
+		{
 			"importpath": "github.com/barnex/fmath",
 			"repository": "https://github.com/barnex/fmath",
 			"vcs": "git",
 			"revision": "ec9671f295c249e1b53d5c81d14dc79de6a26774",
+			"branch": "master",
+			"notests": true
+		},
+		{
+			"importpath": "github.com/go-xorm/xorm",
+			"repository": "https://github.com/go-xorm/xorm",
+			"vcs": "git",
+			"revision": "cd46810bf9951e108abc8b6b6d175bf621a1d5e0",
+			"branch": "master",
+			"notests": true
+		},
+		{
+			"importpath": "github.com/mattn/go-sqlite3",
+			"repository": "https://github.com/mattn/go-sqlite3",
+			"vcs": "git",
+			"revision": "a35b097634ab3a42fac3f7a1c5ed1f898d5cdd5f",
 			"branch": "master",
 			"notests": true
 		},
