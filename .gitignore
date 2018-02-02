@@ -19,3 +19,4 @@ env.bat
 bin
 *.log
 src/ngengine/apps/test/debug
+Testbin
