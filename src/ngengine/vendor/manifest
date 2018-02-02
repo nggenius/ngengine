@@ -2,6 +2,22 @@
 	"version": 0,
 	"dependencies": [
 		{
+			"importpath": "github.com/lunny/log",
+			"repository": "https://github.com/lunny/log",
+			"vcs": "git",
+			"revision": "7887c61bf0de75586961948b286be6f7d05d9f58",
+			"branch": "master",
+			"notests": true
+		},
+		{
+			"importpath": "github.com/lunny/tango",
+			"repository": "https://github.com/lunny/tango",
+			"vcs": "git",
+			"revision": "f14dff14f8acb5dfb7525e010fd831abb72d0a44",
+			"branch": "master",
+			"notests": true
+		},
+		{
 			"importpath": "github.com/mysll/toolkit",
 			"repository": "https://github.com/mysll/toolkit",
 			"vcs": "git",
