@@ -24,10 +24,10 @@ type timer struct {
 	expire int64
 	node   *list.Element
 	root   *list.List
-	task   *TimerTask
+	task   *timerTask
 }
 
-type TimerQueue struct {
+type timerQueue struct {
 	tickTime      int64
 	ticks         int64
 	nextTimerId   int64
@@ -39,8 +39,8 @@ type TimerQueue struct {
 	ti            int64
 }
 
-func New() *TimerQueue {
-	tq := &TimerQueue{
+func New() *timerQueue {
+	tq := &timerQueue{
 		tickTime:      now(),
 		ticks:         0,
 		nextTimerId:   0,
@@ -62,7 +62,7 @@ func New() *TimerQueue {
 	return tq
 }
 
-func (tq *TimerQueue) Schedule(delay int64, task *TimerTask) int64 {
+func (tq *timerQueue) Schedule(delay int64, task *timerTask) int64 {
 	delay = delay * 1e6
 	if delay < MIN_TICK_INTERVAL {
 		delay = MIN_TICK_INTERVAL
@@ -80,7 +80,7 @@ func (tq *TimerQueue) Schedule(delay int64, task *TimerTask) int64 {
 	return ev.id
 }
 
-func (tq *TimerQueue) Run() {
+func (tq *timerQueue) Run() {
 	if tq.last == 0 {
 		tq.last = now()
 	}
@@ -94,7 +94,7 @@ func (tq *TimerQueue) Run() {
 	tq.last = tq.curr
 }
 
-func (tq *TimerQueue) genID() int64 {
+func (tq *timerQueue) genID() int64 {
 	tq.nextTimerId++
 	return tq.nextTimerId
 }
@@ -103,7 +103,7 @@ func now() int64 {
 	return time.Now().UnixNano()
 }
 
-func (tq *TimerQueue) addTimer(t *timer) int64 {
+func (tq *timerQueue) addTimer(t *timer) int64 {
 	ticks := (t.expire - tq.tickTime) / MIN_TICK_INTERVAL
 	if ticks < 0 {
 		ticks = 0
@@ -139,7 +139,7 @@ func (tq *TimerQueue) addTimer(t *timer) int64 {
 	return t.id
 }
 
-func (tq *TimerQueue) cascade(n uint32) uint32 {
+func (tq *timerQueue) cascade(n uint32) uint32 {
 	idx := uint32(tq.ticks>>(TVR_BITS+(n-1)*TVN_BITS)) & TVN_MASK
 	vec := tq.tvec[n][idx]
 	tq.tvec[n][idx] = list.New()
@@ -151,7 +151,7 @@ func (tq *TimerQueue) cascade(n uint32) uint32 {
 	return idx
 }
 
-func (tq *TimerQueue) tick(dt int64) {
+func (tq *timerQueue) tick(dt int64) {
 	// schedule pending timers
 	tq.mutex.Lock()
 	pendingTimers := tq.pendingTimers
@@ -179,7 +179,7 @@ func (tq *TimerQueue) tick(dt int64) {
 			t.root = nil
 
 			if t.task != nil {
-				t.task.TaskCallBack(t.id)
+				t.task.taskCallBack(t.id)
 				t.task = nil
 			}
 		}

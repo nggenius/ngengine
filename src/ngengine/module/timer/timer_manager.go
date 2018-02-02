@@ -1,6 +1,6 @@
 package timer
 
-type TimerCallBack func(id int64, count int, args interface{})
+type timerCallBack func(id int64, count int, args interface{})
 
 // 定时器类型
 const (
@@ -9,19 +9,19 @@ const (
 	COUNT
 )
 
-type TimerTask struct {
+type timerTask struct {
 	id      int64 // 任务id
 	kind    int   // 类型
 	delta   int64 // 心跳时间
 	count   int   // 次数
 	amount  int   // 总数
 	args    interface{}
-	cb      TimerCallBack
-	timer   *TimerQueue
+	cb      timerCallBack
+	timer   *timerQueue
 	manager *TimerManager
 }
 
-func (t *TimerTask) TaskCallBack(id int64) {
+func (t *timerTask) taskCallBack(id int64) {
 	t.count++
 	if t.kind == REPEAT {
 		t.timer.Schedule(t.delta, t)
@@ -38,14 +38,14 @@ func (t *TimerTask) TaskCallBack(id int64) {
 
 type TimerManager struct {
 	genID   int64
-	taskMap map[int64]*TimerTask
-	timer   *TimerQueue
+	taskMap map[int64]*timerTask
+	timer   *timerQueue
 }
 
 func NewManager() *TimerManager {
 	manager := &TimerManager{
 		genID:   0,
-		taskMap: make(map[int64]*TimerTask),
+		taskMap: make(map[int64]*timerTask),
 		timer:   New(),
 	}
 	return manager
@@ -60,8 +60,8 @@ func (t *TimerManager) GenerateID() int64 {
 	return t.genID
 }
 
-func (t *TimerManager) AddTimer(delta int64, args interface{}, cb TimerCallBack) (id int64) {
-	task := &TimerTask{
+func (t *TimerManager) AddTimer(delta int64, args interface{}, cb timerCallBack) (id int64) {
+	task := &timerTask{
 		id:      t.GenerateID(),
 		kind:    REPEAT,
 		delta:   delta,
@@ -77,8 +77,8 @@ func (t *TimerManager) AddTimer(delta int64, args interface{}, cb TimerCallBack)
 	return task.id
 }
 
-func (t *TimerManager) AddCountTimer(amount int, delta int64, args interface{}, cb TimerCallBack) (id int64) {
-	task := &TimerTask{
+func (t *TimerManager) AddCountTimer(amount int, delta int64, args interface{}, cb timerCallBack) (id int64) {
+	task := &timerTask{
 		id:      t.GenerateID(),
 		kind:    COUNT,
 		delta:   delta,

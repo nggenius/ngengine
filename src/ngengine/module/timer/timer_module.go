@@ -31,11 +31,11 @@ func (m *TimerModule) OnMessage(id int, args ...interface{}) {
 
 }
 
-func (m *TimerModule) AddTimer(delta int64, args interface{}, cb TimerCallBack) (id int64) {
+func (m *TimerModule) AddTimer(delta int64, args interface{}, cb timerCallBack) (id int64) {
 	return m.t.AddTimer(delta, args, cb)
 }
 
-func (m *TimerModule) AddCountTimer(amount int, delta int64, args interface{}, cb TimerCallBack) (id int64) {
+func (m *TimerModule) AddCountTimer(amount int, delta int64, args interface{}, cb timerCallBack) (id int64) {
 	return m.t.AddCountTimer(amount, delta, args, cb)
 }
 
