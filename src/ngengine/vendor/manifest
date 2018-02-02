@@ -26,10 +26,34 @@
 			"notests": true
 		},
 		{
+			"importpath": "github.com/oxtoacart/bpool",
+			"repository": "https://github.com/oxtoacart/bpool",
+			"vcs": "git",
+			"revision": "4e1c5567d7c2dd59fa4c7c83d34c2f3528b025d6",
+			"branch": "master",
+			"notests": true
+		},
+		{
 			"importpath": "github.com/sadlil/go-trigger",
 			"repository": "https://github.com/sadlil/go-trigger",
 			"vcs": "git",
 			"revision": "cfc3d83007cddfc1e31a478aa47cd41de07fac17",
+			"branch": "master",
+			"notests": true
+		},
+		{
+			"importpath": "github.com/tango-contrib/events",
+			"repository": "https://github.com/tango-contrib/events",
+			"vcs": "git",
+			"revision": "47d601abcefe008c049ab00d497767e20303bed3",
+			"branch": "master",
+			"notests": true
+		},
+		{
+			"importpath": "github.com/tango-contrib/renders",
+			"repository": "https://github.com/tango-contrib/renders",
+			"vcs": "git",
+			"revision": "86dba79a024074292970f9222e8268ceec8b9049",
 			"branch": "master",
 			"notests": true
 		}

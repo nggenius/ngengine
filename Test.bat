@@ -1,0 +1,1 @@
+go build -o ./Testbin/TestWeb.exe ./src/ngengine/console
