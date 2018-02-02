@@ -18,6 +18,7 @@ func main() {
 		panic(err)
 	}
 	core.RunAllService()
+
 	toolkit.WaitForQuit()
 	core.CloseAllService()
 	core.Wait()

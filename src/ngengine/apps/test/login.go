@@ -5,6 +5,7 @@ import (
 	"ngengine/common/event"
 	"ngengine/core/rpc"
 	"ngengine/core/service"
+	"ngengine/module/timer"
 	"ngengine/protocol"
 	"ngengine/share"
 )
@@ -38,12 +39,27 @@ func (l *Login) Prepare(core service.CoreApi) error {
 	core.RegisterHandler("User", &User{l})
 	core.AddModule(&ModuleTest{})
 	core.AddModule(&ModuleTest2{})
+	core.AddModule(&timer.TimerModule{})
 	return nil
 }
 
 func (l *Login) Start() error {
 	l.CoreApi.Watch("all")
+
+	timer := l.GetModule("TimerModule").(*timer.TimerModule)
+	id := timer.AddTimer(1000, 123, l.RepeatCallBack)
+	id2 := timer.AddCountTimer(10, 3000, 999, l.CountCallBack)
+	fmt.Print("id:%d   id2:%d", id, id2)
 	return nil
+}
+
+func (l *Login) RepeatCallBack(id int64, count int, args interface{}) {
+	fmt.Print(id, count, args)
+}
+
+func (l *Login) CountCallBack(id int64, count int, args interface{}) {
+	fmt.Print(id, count, args)
+
 }
 
 func (l *Login) OnEvent(e string, args event.EventArgs) {
