@@ -62,7 +62,7 @@ func (m *CrontabModule) Shut() {
 
 // OnUpdate 模块Update
 func (m *CrontabModule) OnUpdate(t *service.Time) {
-	m.Check()
+	m.check()
 }
 
 // OnMessage 模块消息
@@ -107,8 +107,7 @@ func new() *crontab {
 } 
 
 // Check crontab插件的主调用方法
-// 在自己写的程序的update或者是主循环里调用这个检测已经注册的事件是否可以执行
-func (m *CrontabModule) Check() {
+func (m *CrontabModule) check() {
 	if m.crtab == nil {
 		return 
 	}
