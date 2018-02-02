@@ -18,7 +18,7 @@ type timerTask struct {
 	args    interface{}
 	cb      timerCallBack
 	timer   *timerQueue
-	manager *TimerManager
+	manager *timerManager
 }
 
 func (t *timerTask) taskCallBack(id int64) {
@@ -36,14 +36,14 @@ func (t *timerTask) taskCallBack(id int64) {
 	}
 }
 
-type TimerManager struct {
+type timerManager struct {
 	genID   int64
 	taskMap map[int64]*timerTask
 	timer   *timerQueue
 }
 
-func NewManager() *TimerManager {
-	manager := &TimerManager{
+func newManager() *timerManager {
+	manager := &timerManager{
 		genID:   0,
 		taskMap: make(map[int64]*timerTask),
 		timer:   New(),
@@ -51,18 +51,18 @@ func NewManager() *TimerManager {
 	return manager
 }
 
-func (t *TimerManager) Run() {
+func (t *timerManager) run() {
 	t.timer.Run()
 }
 
-func (t *TimerManager) GenerateID() int64 {
+func (t *timerManager) generateID() int64 {
 	t.genID++
 	return t.genID
 }
 
-func (t *TimerManager) AddTimer(delta int64, args interface{}, cb timerCallBack) (id int64) {
+func (t *timerManager) addTimer(delta int64, args interface{}, cb timerCallBack) (id int64) {
 	task := &timerTask{
-		id:      t.GenerateID(),
+		id:      t.generateID(),
 		kind:    REPEAT,
 		delta:   delta,
 		count:   0,
@@ -77,9 +77,9 @@ func (t *TimerManager) AddTimer(delta int64, args interface{}, cb timerCallBack)
 	return task.id
 }
 
-func (t *TimerManager) AddCountTimer(amount int, delta int64, args interface{}, cb timerCallBack) (id int64) {
+func (t *timerManager) addCountTimer(amount int, delta int64, args interface{}, cb timerCallBack) (id int64) {
 	task := &timerTask{
-		id:      t.GenerateID(),
+		id:      t.generateID(),
 		kind:    COUNT,
 		delta:   delta,
 		count:   0,
@@ -94,7 +94,7 @@ func (t *TimerManager) AddCountTimer(amount int, delta int64, args interface{}, 
 	return task.id
 }
 
-func (t *TimerManager) RemoveTimer(id int64) bool {
+func (t *timerManager) removeTimer(id int64) bool {
 	_, ok := t.taskMap[id]
 	if ok {
 		t.taskMap[id] = nil
@@ -104,7 +104,7 @@ func (t *TimerManager) RemoveTimer(id int64) bool {
 	return false
 }
 
-func (t *TimerManager) FindTimer(id int64) (bool, int) {
+func (t *timerManager) findTimer(id int64) (bool, int) {
 	task, ok := t.taskMap[id]
 	if ok {
 		return true, task.kind
@@ -112,7 +112,7 @@ func (t *TimerManager) FindTimer(id int64) (bool, int) {
 	return false, NONE
 }
 
-func (t *TimerManager) GetTimerDelta(id int64) int64 {
+func (t *timerManager) getTimerDelta(id int64) int64 {
 	task, ok := t.taskMap[id]
 	if ok {
 		return task.delta
