@@ -2,6 +2,14 @@
 	"version": 0,
 	"dependencies": [
 		{
+			"importpath": "github.com/barnex/fmath",
+			"repository": "https://github.com/barnex/fmath",
+			"vcs": "git",
+			"revision": "ec9671f295c249e1b53d5c81d14dc79de6a26774",
+			"branch": "master",
+			"notests": true
+		},
+		{
 			"importpath": "github.com/mysll/toolkit",
 			"repository": "https://github.com/mysll/toolkit",
 			"vcs": "git",
@@ -22,6 +30,14 @@
 			"repository": "https://github.com/sadlil/go-trigger",
 			"vcs": "git",
 			"revision": "cfc3d83007cddfc1e31a478aa47cd41de07fac17",
+			"branch": "master",
+			"notests": true
+		},
+		{
+			"importpath": "github.com/ungerik/go3d",
+			"repository": "https://github.com/ungerik/go3d",
+			"vcs": "git",
+			"revision": "b765e791b61c6db0b9ff62072092d28395aeb106",
 			"branch": "master",
 			"notests": true
 		}
