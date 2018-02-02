@@ -15,7 +15,19 @@ import (
 // 检测间隔，先写死
 const duration int64 = 60
 
+var (
+	// ErrCrontabNotInit 模块没有初始化
+	ErrCrontabNotInit = errors.New("CrontabModule is not init")
 
+	// ErrCbNil 回调方法为空
+	ErrCbNil = errors.New("CallBack function is nil")
+
+	// ErrArgNil 回调参数为空
+	ErrArgNil = errors.New("CallBack args is nil")
+
+	// ErrTimeStrFmtError 时间字符串格式错误
+	ErrTimeStrFmtError = errors.New("time string must have five components like * * * * *")
+)
 
 // crontab 时间事件结构体
 // ticks 时间通道 evts 事件集合
@@ -24,30 +36,36 @@ type crontab struct {
 	evts		[]event
 }
 
+// CrontabModule 时间事件模块
 type CrontabModule struct {
 	core service.CoreApi
 	crtab *crontab
 }
 
+// Name 模块名
 func (m *CrontabModule) Name() string {
 	return "CrontabModule"
 }
 
+// Init 模块初始化
 func (m *CrontabModule) Init(core service.CoreApi) bool {
 	m.core = core
-	fmt.Println("CrontabModule init !!!!!!")
+	m.core.LogInfo("CrontabModule is init")
 	m.crtab = new()
 	return true
 }
 
+// Shut 模块关闭
 func (m *CrontabModule) Shut() {
 
 }
 
+// OnUpdate 模块Update
 func (m *CrontabModule) OnUpdate(t *service.Time) {
 	m.Check()
 }
 
+// OnMessage 模块消息
 func (m *CrontabModule) OnMessage(id int, args ...interface{}) {
 }
 
@@ -105,7 +123,7 @@ func (m *CrontabModule) Check() {
 // 调用来注册时间事件
 func (m *CrontabModule)RegistEvent(timeStr string, cb callback, args interface{}) error {
 	if m.crtab == nil {
-		return errors.New("CrontabModule is not init !~")
+		return ErrCrontabNotInit
 	}
 	evt, err := parseEventTime(timeStr)
 	if err != nil {
@@ -113,11 +131,11 @@ func (m *CrontabModule)RegistEvent(timeStr string, cb callback, args interface{}
 	}
 
 	if cb == nil {
-		return errors.New("CallBack function is nil....please introduct a valid function")
+		return ErrCbNil
 	}
 
 	if args == nil {
-		return errors.New("args is nil .....please introduct a valid args")
+		return ErrArgNil
 	}
 
 	evt.cb = cb
@@ -143,7 +161,7 @@ func parseEventTime(timeStr string) (evt event, err error) {
 	timeStr = matchSpaces.ReplaceAllLiteralString(timeStr, " ")
 	parts := strings.Split(timeStr, " ")
 	if len(parts) != 5 {
-		return event{}, errors.New("time string must have five components like * * * * *")
+		return event{}, ErrTimeStrFmtError
 	}
 
 	evt.minute, err = parsePartTimeStr(parts[0], 0, 59)
