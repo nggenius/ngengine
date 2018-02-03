@@ -20,3 +20,5 @@ bin
 *.log
 src/ngengine/apps/test/debug
 Testbin
+src/ngengine/module/db/dbtable/dbmodel
+src/ngengine/module/db/debug
