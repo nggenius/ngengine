@@ -18,10 +18,34 @@
 			"notests": true
 		},
 		{
+			"importpath": "github.com/go-sql-driver/mysql",
+			"repository": "https://github.com/go-sql-driver/mysql",
+			"vcs": "git",
+			"revision": "bc14601d1bd56421dd60f561e6052c9ed77f9daf",
+			"branch": "master",
+			"notests": true
+		},
+		{
 			"importpath": "github.com/go-xorm/xorm",
 			"repository": "https://github.com/go-xorm/xorm",
 			"vcs": "git",
 			"revision": "cd46810bf9951e108abc8b6b6d175bf621a1d5e0",
+			"branch": "master",
+			"notests": true
+		},
+		{
+			"importpath": "github.com/lunny/log",
+			"repository": "https://github.com/lunny/log",
+			"vcs": "git",
+			"revision": "7887c61bf0de75586961948b286be6f7d05d9f58",
+			"branch": "master",
+			"notests": true
+		},
+		{
+			"importpath": "github.com/lunny/tango",
+			"repository": "https://github.com/lunny/tango",
+			"vcs": "git",
+			"revision": "f14dff14f8acb5dfb7525e010fd831abb72d0a44",
 			"branch": "master",
 			"notests": true
 		},
@@ -58,14 +82,6 @@
 			"notests": true
 		},
 		{
-			"importpath": "github.com/ungerik/go3d",
-			"repository": "https://github.com/ungerik/go3d",
-			"vcs": "git",
-			"revision": "b765e791b61c6db0b9ff62072092d28395aeb106",
-			"branch": "master",
-			"notests": true
-		},
-        {
 			"importpath": "github.com/tango-contrib/events",
 			"repository": "https://github.com/tango-contrib/events",
 			"vcs": "git",
@@ -81,19 +97,11 @@
 			"branch": "master",
 			"notests": true
 		},
-        {
-			"importpath": "github.com/lunny/tango",
-			"repository": "https://github.com/lunny/tango",
+		{
+			"importpath": "github.com/ungerik/go3d",
+			"repository": "https://github.com/ungerik/go3d",
 			"vcs": "git",
-			"revision": "f14dff14f8acb5dfb7525e010fd831abb72d0a44",
-			"branch": "master",
-			"notests": true
-		},
-        {
-			"importpath": "github.com/lunny/log",
-			"repository": "https://github.com/lunny/log",
-			"vcs": "git",
-			"revision": "7887c61bf0de75586961948b286be6f7d05d9f58",
+			"revision": "b765e791b61c6db0b9ff62072092d28395aeb106",
 			"branch": "master",
 			"notests": true
 		}
