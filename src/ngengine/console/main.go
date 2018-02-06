@@ -4,6 +4,7 @@ import (
 	"flag"
 	"fmt"
 	"html/template"
+	"ngengine/console/models"
 	"ngengine/console/routes"
 
 	"github.com/lunny/tango"
@@ -16,7 +17,28 @@ var (
 	port = flag.Int("p", 7000, "No Port")
 )
 
+func InitDb() error {
+	err := models.InitDb()
+	if err != nil {
+		fmt.Println(err)
+		return err
+	}
+	return nil
+
+	/*info := &models.NxConsole{}
+	info.ServerIp = "1.1.1.1"
+
+	if err := info.Insert(); err != nil {
+		fmt.Println(err)
+		return err
+	}*/
+}
+
 func Serv() {
+	if err := InitDb(); err != nil {
+		return
+	}
+
 	t := tango.Classic()
 	t.Use(
 		events.Events(),
@@ -35,6 +57,7 @@ func Serv() {
 }
 
 func main() {
+	flag.Parse()
 	go Serv()
 	var url = fmt.Sprintf("http://127.0.0.1:%d/", *port)
 	toolkit.OpenBrowser(url)
