@@ -69,9 +69,9 @@ type CoreApi interface {
 	// 增加模块
 	AddModule(m ModuleHandler) error
 	// 获取模块
-	GetModule(name string) interface{}
+	Module(name string) interface{}
 	// 调用模块
-	CallModule(module string, id int, args ...interface{}) error
+	Call(module string, id int, args ...interface{}) error
 }
 
 func (c *Core) GID() int64 {
@@ -318,13 +318,13 @@ func (c *Core) AddModule(m ModuleHandler) error {
 }
 
 // 获取模块
-func (c *Core) GetModule(module string) interface{} {
-	return c.modules.GetModule(module)
+func (c *Core) Module(module string) interface{} {
+	return c.modules.Module(module)
 }
 
 // 调用模块
-func (c *Core) CallModule(module string, id int, args ...interface{}) error {
-	m := c.modules.GetModule(module)
+func (c *Core) Call(module string, id int, args ...interface{}) error {
+	m := c.modules.Module(module)
 	if m == nil {
 		return errors.New("module not found")
 	}
