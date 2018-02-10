@@ -27,3 +27,8 @@ const (
 	EVENT_USER_CONNECT = "user_connect" // 玩家连接, args:{id:uint64}
 	EVENT_USER_LOST    = "user_lost"    // 玩家断开连接, args:{id:uint64}
 )
+
+// MessageBox 结构体消息包
+type MessageBox struct {
+	Message interface{}
+}

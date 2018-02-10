@@ -1,3 +1,7 @@
+// 对象管理模块
+// 提供对象自动存储，自动同步功能
+// for example:
+//
 package object
 
 import "ngengine/core/service"
@@ -39,6 +43,7 @@ func (o *ObjectModule) OnUpdate(t *service.Time) {
 func (o *ObjectModule) OnMessage(id int, args ...interface{}) {
 }
 
+// RegisterObject 注册一个对象
 func (o *ObjectModule) RegisterObject(typ string, obj interface{}) {
 
 }

@@ -14,18 +14,18 @@ type ModuleHandler interface {
 }
 
 // 模块集合
-type Modules struct {
+type modules struct {
 	modules map[string]ModuleHandler
 }
 
-func NewModules() *Modules {
-	m := &Modules{}
+func NewModules() *modules {
+	m := &modules{}
 	m.modules = make(map[string]ModuleHandler)
 	return m
 }
 
 // 增加一个模块
-func (ms *Modules) AddModule(m ModuleHandler) error {
+func (ms *modules) AddModule(m ModuleHandler) error {
 	if _, dup := ms.modules[m.Name()]; dup {
 		return errors.New("module is dup")
 	}
@@ -35,7 +35,7 @@ func (ms *Modules) AddModule(m ModuleHandler) error {
 }
 
 // 获取模块
-func (ms *Modules) GetModule(name string) ModuleHandler {
+func (ms *modules) Module(name string) ModuleHandler {
 	if m, has := ms.modules[name]; has {
 		return m
 	}

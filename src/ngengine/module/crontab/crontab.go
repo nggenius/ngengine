@@ -3,13 +3,12 @@
 package crontab
 
 import (
-	"time"
-	"strings"
 	"errors"
-	"strconv"
 	"fmt"
 	"regexp"
-	"ngengine/core/service"
+	"strconv"
+	"strings"
+	"time"
 )
 
 // 检测间隔，先写死
@@ -32,64 +31,31 @@ var (
 // crontab 时间事件结构体
 // ticks 时间通道 evts 事件集合
 type crontab struct {
-	lastTime 	int64
-	evts		[]event
-}
-
-// CrontabModule 时间事件模块
-type CrontabModule struct {
-	core service.CoreApi
-	crtab *crontab
-}
-
-// Name 模块名
-func (m *CrontabModule) Name() string {
-	return "CrontabModule"
-}
-
-// Init 模块初始化
-func (m *CrontabModule) Init(core service.CoreApi) bool {
-	m.core = core
-	m.core.LogInfo("CrontabModule is init")
-	m.crtab = new()
-	return true
-}
-
-// Shut 模块关闭
-func (m *CrontabModule) Shut() {
-
-}
-
-// OnUpdate 模块Update
-func (m *CrontabModule) OnUpdate(t *service.Time) {
-	m.check()
-}
-
-// OnMessage 模块消息
-func (m *CrontabModule) OnMessage(id int, args ...interface{}) {
+	lastTime int64
+	evts     []event
 }
 
 type callback func(args interface{})
 
 // event 时间
 type event struct {
-	minute		map[int]struct{}
-	hour		map[int]struct{}
-	day			map[int]struct{}
-	month		map[int]struct{}
-	dayofweek	map[int]struct{}
-	
-	cb			callback
-	args		interface{}
+	minute    map[int]struct{}
+	hour      map[int]struct{}
+	day       map[int]struct{}
+	month     map[int]struct{}
+	dayofweek map[int]struct{}
+
+	cb   callback
+	args interface{}
 }
 
 // tick 时间点机构体
 type tick struct {
-	minute 		int
-	hour		int
-	day			int
-	month		int
-	dayofweek	int
+	minute    int
+	hour      int
+	day       int
+	month     int
+	dayofweek int
 }
 
 var (
@@ -98,54 +64,16 @@ var (
 	matchRange  = regexp.MustCompile("^(\\d+)-(\\d+)$")
 )
 
-func new() *crontab {
-	timeEvt := &crontab {
-		lastTime : time.Now().Unix() - int64(time.Now().Second()),
+func newCrontab() *crontab {
+	timeEvt := &crontab{
+		lastTime: time.Now().Unix() - int64(time.Now().Second()),
 	}
 
 	return timeEvt
-} 
-
-// Check crontab插件的主调用方法
-func (m *CrontabModule) check() {
-	if m.crtab == nil {
-		return 
-	}
-	now := time.Now().Unix()
-	if now - m.crtab.lastTime >= duration {
-		m.crtab.checkTriggerEvent(time.Now())
-		m.crtab.lastTime = now - int64(time.Now().Second())
-	}
-}
-
-// RegistEvent crontab插件事件注册接口
-// 调用来注册时间事件
-func (m *CrontabModule)RegistEvent(timeStr string, cb callback, args interface{}) error {
-	if m.crtab == nil {
-		return ErrCrontabNotInit
-	}
-	evt, err := parseEventTime(timeStr)
-	if err != nil {
-		return err	
-	}
-
-	if cb == nil {
-		return ErrCbNil
-	}
-
-	if args == nil {
-		return ErrArgNil
-	}
-
-	evt.cb = cb
-	evt.args = args
-	m.crtab.evts = append(m.crtab.evts, evt)
-
-	return nil
 }
 
 // 检查时间判断是否触发事件
-func (c * crontab)checkTriggerEvent(t time.Time) {
+func (c *crontab) checkTriggerEvent(t time.Time) {
 	tk := timeToTick(t)
 
 	for _, evt := range c.evts {
@@ -265,16 +193,15 @@ func parsePartTimeStr(s string, min, max int) (map[int]struct{}, error) {
 	return r, nil
 }
 
-
 // 在某个时间点事件是否能触发
 func canTriggerEvent(evt event, t tick) bool {
 	// 判断分钟是否符合
 	if _, ok := evt.minute[t.minute]; !ok {
 		return false
-	} 
+	}
 
 	// 判断小时是否符合
-	if _, ok := evt.hour[t.hour]; !ok{
+	if _, ok := evt.hour[t.hour]; !ok {
 		return false
 	}
 
@@ -293,15 +220,13 @@ func canTriggerEvent(evt event, t tick) bool {
 	return true
 }
 
-
-
-func timeToTick(t time.Time) tick{
+func timeToTick(t time.Time) tick {
 	return tick{
-		minute:		t.Minute(),
-		hour: 		t.Hour(),
-		day:		t.Day(),
-		month:		int(t.Month()),
-		dayofweek:	int(t.Weekday()), 
+		minute:    t.Minute(),
+		hour:      t.Hour(),
+		day:       t.Day(),
+		month:     int(t.Month()),
+		dayofweek: int(t.Weekday()),
 	}
 }
 

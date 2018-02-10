@@ -20,6 +20,12 @@ bin
 *.log
 src/ngengine/apps/test/debug
 Testbin
-src/ngengine/module/db/dbtable/dbmodel
-src/ngengine/module/db/debug
+debug
+# 数据自动生成需要的
+src/ngengine/module/db/dbtable
 !xorm_tool.exe
+!reverse_single_file.bat
+!reverse_multifile_file.bat
+!dbmodelManager.go
+!src/ngengine/module/db/dbtable/templates
+src/ngengine/module/dbmodule/dbtable/nx_base
