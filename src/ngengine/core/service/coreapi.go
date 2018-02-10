@@ -71,7 +71,7 @@ type CoreApi interface {
 	// 获取模块
 	Module(name string) interface{}
 	// 调用模块
-	CallModule(module string, id int, args ...interface{}) error
+	Call(module string, id int, args ...interface{}) error
 }
 
 func (c *Core) GID() int64 {
@@ -323,7 +323,7 @@ func (c *Core) Module(module string) interface{} {
 }
 
 // 调用模块
-func (c *Core) CallModule(module string, id int, args ...interface{}) error {
+func (c *Core) Call(module string, id int, args ...interface{}) error {
 	m := c.modules.Module(module)
 	if m == nil {
 		return errors.New("module not found")
