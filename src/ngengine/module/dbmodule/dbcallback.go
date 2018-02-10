@@ -12,17 +12,18 @@ type DbCallBack struct {
 	DbModule
 }
 
+// RegisterCallback 注册rpc回调
 func (a *DbCallBack) RegisterCallback(s rpc.Servicer) {
 	s.RegisterCallback("DBGet", a.Get)
-	s.RegisterCallback("DBSqlQuery", a.SqlQuery)
-	s.RegisterCallback("DBSqlExec", a.SqlExec)
+	s.RegisterCallback("DBSqlQuery", a.SQLQuery)
+	s.RegisterCallback("DBSqlExec", a.SQLExec)
 	s.RegisterCallback("DBInsert", a.Insert)
 	s.RegisterCallback("DBUpdate", a.Update)
 	s.RegisterCallback("DBDelete", a.Delete)
 	s.RegisterCallback("DBFind", a.Find)
 }
 
-//// a.owner.CoreApi.MailtoAndCallback(nil, &dest, "DBModule.DBGet", a.DbCallBack, dbtable.NX_BASE, share.MessageBox{Message: &nx_base.NxChangename{Uid: "333"}})
+// Get a.owner.CoreApi.MailtoAndCallback(nil, &dest, "DBModule.DBGet", a.DbCallBack, dbtable.NX_BASE, share.MessageBox{Message: &nx_base.NxChangename{Uid: "333"}})
 func (a *DbCallBack) Get(mailbox rpc.Mailbox, msg *protocol.Message) (errcode int32, reply *protocol.Message) {
 	m := protocol.NewMessageReader(msg)
 	DbName, _ := m.ReadString()
@@ -44,7 +45,8 @@ func (a *DbCallBack) Get(mailbox rpc.Mailbox, msg *protocol.Message) (errcode in
 	return 0, protocol.ReplyErrorAndArgs(0, share.MessageBox{Message: g})
 }
 
-func (a *DbCallBack) SqlQuery(mailbox rpc.Mailbox, msg *protocol.Message) (errcode int32, reply *protocol.Message) {
+// SQLQuery 直接传入查询类sql语
+func (a *DbCallBack) SQLQuery(mailbox rpc.Mailbox, msg *protocol.Message) (errcode int32, reply *protocol.Message) {
 	m := protocol.NewMessageReader(msg)
 	DbName, _ := m.ReadString()
 	sql, _ := m.ReadString()
@@ -60,7 +62,8 @@ func (a *DbCallBack) SqlQuery(mailbox rpc.Mailbox, msg *protocol.Message) (errco
 	return 0, protocol.ReplyErrorAndArgs(0, share.MessageBox{Message: g})
 }
 
-func (a *DbCallBack) SqlExec(mailbox rpc.Mailbox, msg *protocol.Message) (errcode int32, reply *protocol.Message) {
+// SQLExec 直接传入执行类sql语言
+func (a *DbCallBack) SQLExec(mailbox rpc.Mailbox, msg *protocol.Message) (errcode int32, reply *protocol.Message) {
 	m := protocol.NewMessageReader(msg)
 	DbName, _ := m.ReadString()
 	sql, _ := m.ReadString()
@@ -76,7 +79,7 @@ func (a *DbCallBack) SqlExec(mailbox rpc.Mailbox, msg *protocol.Message) (errcod
 	return 0, protocol.ReplyErrorAndArgs(0, g)
 }
 
-// a.owner.CoreApi.Mailto(nil, &dest, "DBModule.DBInsert", dbtable.NX_BASE, share.MessageBox{Message: &nx_base.NxChangename{
+//Insert  a.owner.CoreApi.Mailto(nil, &dest, "DBModule.DBInsert", dbtable.NX_BASE, share.MessageBox{Message: &nx_base.NxChangename{
 // 	Name:    "东山日照",
 // 	Uid:     "1234567",
 // 	NewName: "飞舞乱倒",
@@ -102,7 +105,7 @@ func (a *DbCallBack) Insert(mailbox rpc.Mailbox, msg *protocol.Message) (errcode
 	return 0, nil
 }
 
-// a.owner.CoreApi.Mailto(nil, &dest, "DBModule.DBUpdate", dbtable.NX_BASE, share.MessageBox{Message: &nx_base.NxChangename{
+// Update a.owner.CoreApi.Mailto(nil, &dest, "DBModule.DBUpdate", dbtable.NX_BASE, share.MessageBox{Message: &nx_base.NxChangename{
 // 	Name:    "尚东龙兴",
 // 	Uid:     "1234567",
 // 	NewName: "茶田非君",
@@ -134,7 +137,7 @@ func (a *DbCallBack) Update(mailbox rpc.Mailbox, msg *protocol.Message) (errcode
 	return 0, nil
 }
 
-// a.owner.CoreApi.Mailto(nil, &dest, "DBModule.DBDelete", dbtable.NX_BASE, share.MessageBox{Message: &nx_base.NxChangename{
+// Delete a.owner.CoreApi.Mailto(nil, &dest, "DBModule.DBDelete", dbtable.NX_BASE, share.MessageBox{Message: &nx_base.NxChangename{
 // 	Name: "尚东龙兴",
 // }})
 func (a *DbCallBack) Delete(mailbox rpc.Mailbox, msg *protocol.Message) (errcode int32, reply *protocol.Message) {
@@ -155,7 +158,7 @@ func (a *DbCallBack) Delete(mailbox rpc.Mailbox, msg *protocol.Message) (errcode
 	return 0, protocol.ReplyErrorAndArgs(1)
 }
 
-// a.owner.CoreApi.MailtoAndCallback(nil, &dest, "DBModule.DBFind", a.DbCallBack, dbtable.NX_BASE, share.MessageBox{Message: &nx_base.NxChangename{
+// Find a.owner.CoreApi.MailtoAndCallback(nil, &dest, "DBModule.DBFind", a.DbCallBack, dbtable.NX_BASE, share.MessageBox{Message: &nx_base.NxChangename{
 // 	Uid: "333",
 // }})
 func (a *DbCallBack) Find(mailbox rpc.Mailbox, msg *protocol.Message) (errcode int32, reply *protocol.Message) {
