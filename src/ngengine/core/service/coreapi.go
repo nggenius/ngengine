@@ -319,12 +319,12 @@ func (c *Core) AddModule(m ModuleHandler) error {
 
 // 获取模块
 func (c *Core) GetModule(module string) interface{} {
-	return c.modules.GetModule(module)
+	return c.modules.Module(module)
 }
 
 // 调用模块
 func (c *Core) CallModule(module string, id int, args ...interface{}) error {
-	m := c.modules.GetModule(module)
+	m := c.modules.Module(module)
 	if m == nil {
 		return errors.New("module not found")
 	}

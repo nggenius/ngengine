@@ -46,7 +46,7 @@ type Core struct {
 	clientDB   *ClientDB           // 客户端管理
 	rpcmgr     *RpcRegister        // rpc注册
 	s2chelper  *S2CHelper          // 客户端调用工具
-	modules    *Modules
+	modules    *modules
 }
 
 // 创建一个服务
