@@ -21,7 +21,7 @@ func (m *ModuleTest) Shut() {
 
 func (m *ModuleTest) OnUpdate(t *service.Time) {
 	if t.FrameCount()%5000 == 0 {
-		m.core.CallModule("ModuleTest2", 1, "hello world")
+		m.core.Call("ModuleTest2", 1, "hello world")
 	}
 }
 
