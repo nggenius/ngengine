@@ -28,3 +28,4 @@ src/ngengine/module/db/dbtable
 !reverse_multifile_file.bat
 !dbmodelManager.go
 !src/ngengine/module/db/dbtable/templates
+src/ngengine/module/dbmodule/dbtable/nx_base
