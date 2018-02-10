@@ -24,11 +24,11 @@ type timerTask struct {
 func (t *timerTask) taskCallBack(id int64) {
 	t.count++
 	if t.kind == REPEAT {
-		t.timer.Schedule(t.delta, t)
+		t.timer.schedule(t.delta, t)
 		t.cb(t.id, t.count, t.args)
 	} else if t.kind == COUNT {
 		if t.count < t.amount {
-			t.timer.Schedule(t.delta, t)
+			t.timer.schedule(t.delta, t)
 			t.cb(t.id, t.count, t.args)
 		} else if t.count == t.amount {
 			t.cb(t.id, t.count, t.args)
@@ -46,13 +46,13 @@ func newManager() *timerManager {
 	manager := &timerManager{
 		genID:   0,
 		taskMap: make(map[int64]*timerTask),
-		timer:   New(),
+		timer:   newTimerQueue(),
 	}
 	return manager
 }
 
 func (t *timerManager) run() {
-	t.timer.Run()
+	t.timer.run()
 }
 
 func (t *timerManager) generateID() int64 {
@@ -73,7 +73,7 @@ func (t *timerManager) addTimer(delta int64, args interface{}, cb timerCallBack)
 		manager: t,
 	}
 	t.taskMap[task.id] = task
-	t.timer.Schedule(delta, task)
+	t.timer.schedule(delta, task)
 	return task.id
 }
 
@@ -90,7 +90,7 @@ func (t *timerManager) addCountTimer(amount int, delta int64, args interface{}, 
 		manager: t,
 	}
 	t.taskMap[task.id] = task
-	t.timer.Schedule(delta, task)
+	t.timer.schedule(delta, task)
 	return task.id
 }
 

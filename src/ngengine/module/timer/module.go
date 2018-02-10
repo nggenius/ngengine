@@ -9,6 +9,11 @@ type TimerModule struct {
 	t    *timerManager
 }
 
+func New() *TimerModule {
+	m := &TimerModule{}
+	return m
+}
+
 func (m *TimerModule) Name() string {
 	return "TimerModule"
 }

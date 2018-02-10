@@ -39,9 +39,9 @@ type timerQueue struct {
 	ti            int64
 }
 
-func New() *timerQueue {
+func newTimerQueue() *timerQueue {
 	tq := &timerQueue{
-		tickTime:      now(),
+		tickTime:      time.Now().Unix(),
 		ticks:         0,
 		nextTimerId:   0,
 		pendingTimers: list.New(),
@@ -62,7 +62,7 @@ func New() *timerQueue {
 	return tq
 }
 
-func (tq *timerQueue) Schedule(delay int64, task *timerTask) int64 {
+func (tq *timerQueue) schedule(delay int64, task *timerTask) int64 {
 	delay = delay * 1e6
 	if delay < MIN_TICK_INTERVAL {
 		delay = MIN_TICK_INTERVAL
@@ -80,12 +80,13 @@ func (tq *timerQueue) Schedule(delay int64, task *timerTask) int64 {
 	return ev.id
 }
 
-func (tq *timerQueue) Run() {
+func (tq *timerQueue) run() {
+	now := time.Now().Unix()
 	if tq.last == 0 {
-		tq.last = now()
+		tq.last = now
 	}
 
-	tq.curr = now()
+	tq.curr = now
 	diff := tq.curr - tq.last
 	if diff < tq.ti {
 		return
@@ -97,10 +98,6 @@ func (tq *timerQueue) Run() {
 func (tq *timerQueue) genID() int64 {
 	tq.nextTimerId++
 	return tq.nextTimerId
-}
-
-func now() int64 {
-	return time.Now().UnixNano()
 }
 
 func (tq *timerQueue) addTimer(t *timer) int64 {

@@ -39,6 +39,7 @@ func (o *ObjectModule) OnUpdate(t *service.Time) {
 func (o *ObjectModule) OnMessage(id int, args ...interface{}) {
 }
 
+// RegisterObject 注册一个对象
 func (o *ObjectModule) RegisterObject(typ string, obj interface{}) {
 
 }
