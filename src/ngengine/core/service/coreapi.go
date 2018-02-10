@@ -69,7 +69,7 @@ type CoreApi interface {
 	// 增加模块
 	AddModule(m ModuleHandler) error
 	// 获取模块
-	GetModule(name string) interface{}
+	Module(name string) interface{}
 	// 调用模块
 	CallModule(module string, id int, args ...interface{}) error
 }
@@ -318,7 +318,7 @@ func (c *Core) AddModule(m ModuleHandler) error {
 }
 
 // 获取模块
-func (c *Core) GetModule(module string) interface{} {
+func (c *Core) Module(module string) interface{} {
 	return c.modules.Module(module)
 }
 
