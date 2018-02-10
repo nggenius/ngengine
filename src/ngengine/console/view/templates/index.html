@@ -247,10 +247,6 @@
 
 
 
-
-
-
-
         <div class="tpl-content-wrapper">
             <div class="tpl-content-page-title">
                 控制首页
@@ -269,27 +265,35 @@
                 </div>
             </div>
             
+
+            <div class="am-dropdown" id="doc-dropdown-js">
+                <div class="am-dropdown-content">
+                    <div id="editor"></div>
+                </div>
+            </div>
+
             <hr data-am-widget="divider" class="am-divider-default" />
 
             <div class="am-u-sm-16 am-u-md-16 am-u-lg-16 widget-margin-bottom-sm">
                 <div class="widget am-cf widget-body-lg"></div>
                     <div class="widget-body  am-fl">
                         <div class="am-scrollable-horizontal ">
-                            <div id="server_table_wrapper" class="dataTables_wrapper am-datatable am-form-inline dt-amazeui no-footer">
+                            <div id="server-table-wrapper" class="dataTables_wrapper am-datatable am-form-inline dt-amazeui no-footer">
                                 <table width="100%" class="am-table am-table-compact am-text-nowrap tpl-table-black  dataTable no-footer" id="server_table" role="grid" style="width: 100%;">
                                     <thead>
                                         <tr role="row">
-                                            <th class="sorting_asc" tabindex="0" aria-controls="server_table" rowspan="1" colspan="1" aria-sort="ascending" aria-label="服务器: 以降序排列此列" style="width: 300px;">服务器</th>
-                                            <th class="sorting" tabindex="0" aria-controls="server_table" rowspan="1" colspan="1" aria-label="地址: 以升序排列此列" style="width: 200px;">地址</th>
-                                            <th class="sorting" tabindex="0" aria-controls="server_table" rowspan="1" colspan="1" aria-label="时间: 以升序排列此列" style="width: 200px;">时间</th>
-                                            <th class="sorting" tabindex="0" aria-controls="server_table" rowspan="1" colspan="1" aria-label="状态: 以升序排列此列" style="width: 200px;">状态</th>
-                                            <th class="sorting" tabindex="0" aria-controls="server_table" rowspan="1" colspan="1" aria-label="操作: 以升序排列此列" style="width: 300px;">操作</th>
+                                            <th class="sorting_asc" tabindex="0" aria-controls="server-table" rowspan="1" colspan="1" aria-sort="ascending" aria-label="服务器: 以降序排列此列" style="width: 300px;">服务器</th>
+                                            <th class="sorting" tabindex="0" aria-controls="server-table" rowspan="1" colspan="1" aria-label="地址: 以升序排列此列" style="width: 200px;">地址</th>
+                                            <th class="sorting" tabindex="0" aria-controls="server-table" rowspan="1" colspan="1" aria-label="时间: 以升序排列此列" style="width: 200px;">时间</th>
+                                            <th class="sorting" tabindex="0" aria-controls="server-table" rowspan="1" colspan="1" aria-label="状态: 以升序排列此列" style="width: 200px;">状态</th>
+                                            <th class="sorting" tabindex="0" aria-controls="server-table" rowspan="1" colspan="1" aria-label="操作: 以升序排列此列" style="width: 300px;">操作</th>
                                         </tr>
                                     </thead>
-                                    <tbody>
-                                        <!-- more data -->
-                                        <tr class="server_data_1" role="row">
-                                            <td class="sorting_1">admin_server1</td>
+                                    <tbody class="server-tbody">
+                                        {{.XsrfFormHtml}}
+                                        <!-- more data 
+                                        <tr id="server-data-1" role="row">
+                                            <td>admin_server1</td>
                                             <td>192.168.1.1</td>
                                             <td>2016-09-26</td>
                                             <td>关闭</td>
@@ -301,7 +305,7 @@
                                                     <button type="button" class="am-btn am-btn-warning am-round am-btn-xs">配置</button>
                                                 </div>
                                             </td>
-                                        </tr><tr class="server_data_2" role="row">
+                                        </tr><tr id="server-data-2" role="row">
                                             <td class="sorting_1">admin_server2</td>
                                             <td>192.168.1.1</td>
                                             <td>2016-09-26</td>
@@ -314,7 +318,7 @@
                                                     <button type="button" class="am-btn am-btn-warning am-round am-btn-xs">配置</button>
                                                 </div>
                                             </td>
-                                        </tr><tr class="server_data_3" role="row">
+                                        </tr><tr id="server-data-3" role="row">
                                             <td class="sorting_1">admin_server3</td>
                                             <td>192.168.1.1</td>
                                             <td>2016-09-26</td>
@@ -327,7 +331,7 @@
                                                     <button type="button" class="am-btn am-btn-warning am-round am-btn-xs">配置</button>
                                                 </div>
                                             </td>
-                                        </tr><tr class="server_data_4" role="row">
+                                        </tr><tr id="server-data-4" role="row">
                                             <td class="sorting_1">admin_server4</td>
                                             <td>192.168.1.1</td>
                                             <td>2016-09-26</td>
@@ -340,7 +344,7 @@
                                                     <button type="button" class="am-btn am-btn-warning am-round am-btn-xs">配置</button>
                                                 </div>
                                             </td>
-                                        </tr><tr class="server_data_5" role="row">
+                                        </tr><tr id="server-data-5" role="row">
                                             <td class="sorting_1">admin_server5</td>
                                             <td>192.168.1.1</td>
                                             <td>2016-09-26</td>
@@ -353,7 +357,7 @@
                                                     <button type="button" class="am-btn am-btn-warning am-round am-btn-xs">配置</button>
                                                 </div>
                                             </td>
-                                        </tr>
+                                        </tr>-->
                                     </tbody>
                                 </table>
                             </div>
@@ -368,6 +372,7 @@
     <script src="assets/js/amazeui.min.js"></script>
     <script src="assets/js/iscroll.js"></script>
     <script src="assets/js/app.js"></script>
+    <script src="assets/js/wangEditor.min.js"></script>
 </body>
 
 </html>

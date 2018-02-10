@@ -1,5 +1,4 @@
 $(function() {
-
         var $fullText = $('.admin-fullText');
         $('#admin-fullscreen').on('click', function() {
             $.AMUI.fullscreen.toggle();
@@ -26,8 +25,12 @@ $(function() {
                     }
                 })
                 // console.log('123123123')
-
         })
+
+        // 请求服务器列表数据
+        SendMessage("list", "", InitServerList)
+        // 初始化编辑器
+        InitEditor()
     })
     // ==========================
     // 侧边导航下拉列表
@@ -47,24 +50,110 @@ $('.tpl-header-nav-hover-ico').on('click', function() {
     $('.tpl-content-wrapper').toggleClass('tpl-content-wrapper-hover');
 })
 
-$('.btn-open-server').click(function () {
-    var btn = $(this)
-    btn.button('loading');
-    SendMessage("open", "")
-});
 
-function SendMessage(cmd, args) {
-    $.ajax({
+function InitEditor() {
+    var E = window.wangEditor
+    var editor = new E('#editor')
+    // 或者 var editor = new E( document.getElementById('editor') )
+    editor.create()
+}
+
+var server_data_array = new Array();
+// 初始化服务器列表数据
+function InitServerList(result) {
+    if (result.status != 200) {
+        return
+    }
+    var info = result.data;
+    server_data_array = info.serverdata
+
+    for (var i = 0; i < info.servernum; ++i)
+    {
+        var tableHtml ="";
+        var num = i + 1
+        tableHtml += '<tr id="server-data-'+num+'">' +
+        '<td>' + info.serverdata[i].name + '</td>' +
+        '<td>' + info.serverdata[i].serverip + '</td>' +
+        '<td>' + info.serverdata[i].logintime + '</td>' +
+        '<td>' + info.serverdata[i].id + '</td>' +
+        '<td>' + 
+            '<div class="am-btn-group">' +
+            '<button type="button" class="am-btn am-btn-primary am-round am-btn-xs" id="btn-start-'+num+'">开启</button>' +
+            '<button type="button" class="am-btn am-btn-danger am-round am-btn-xs" id="btn-close-'+num+'">关闭</button>' +
+            '<button type="button" class="am-btn am-btn-secondary am-round am-btn-xs" id="btn-restart-'+num+'">重启</button>' +
+            '<button type="button" class="am-btn am-btn-warning am-round am-btn-xs" id="btn-config-'+num+'">配置</button>' +
+        '</td></tr>';
+    }
+    var tbody = $(".server-tbody")
+    var elements = $(".server-tbody").children().length;  //表示id为“mtTable”的标签下的子标签的个数
+    $(".server-tbody").append(tableHtml); //在表头之后添加空白行
+    
+    BindServerClick(info)
+}
+
+// 动态绑定点击事件
+function BindServerClick(info) {
+    for (var i = 0; i < info.servernum; ++i)
+    {
+        var num = i + 1
+        var servdata = info.serverdata[i]
+
+        var elem = $("#btn-start-" + num)
+        elem.bind("click", function() {
+            onClickStartBtn(servdata)
+        })
+
+        var elem = $("#btn-close-" + num)
+        elem.bind("click", function() {
+            onClickCloseBtn(servdata)
+        })
+
+        var elem = $("#btn-restart-" + num)
+        elem.bind("click", function() {
+            onClickRestartBtn(servdata)
+        })
+
+        var elem = $("#btn-config-" + num)
+        elem.bind("click", function() {
+            onClickConfigBtn(servdata)
+        })
+    }
+}
+
+function onClickStartBtn(data) {
+    alert(data.serverip)
+}
+
+function onClickCloseBtn(data) {
+    alert(data.serverip)
+}
+
+function onClickRestartBtn(data) {
+    alert(data.id)
+}
+
+function onClickConfigBtn(data) {
+    var $dropdown = $('#doc-dropdown-js');
+    $dropdown.dropdown('open');
+}
+
+function SendMessage(cmd, args, cb) {
+    var token = $("input[name='_xsrf']").val();
+    var formdata = new FormData();
+    formdata.append("cmd", '{"cmd":"' + cmd + '","args":"' + args + '"}');
+    formdata.append("_xsrf", token);
+    jQuery.ajax({
         type: "post",
-        url: "/open_server",
+        url: "/server_control",
         dataType: "json",
-        data: '{"cmd":"' + cmd + '","args":"' + args + '"}',
-        success: function(result) {
-            if (result.status == 200) {
-                $('.label').innerHTML = '当前服务器状态:开启'
-            }
-            $('.btn-open-server').button('reset');
-        }
+        data: formdata,
+        processData: false,     // false序列化data   true不序列化data
+        contentType: false,
+        /*beforeSend: function (xhr) {
+            var token = $("input[name='_xsrf']").val()
+            xhr.setRequestHeader('_xsrf', token);
+        },*/
+        success: cb
     })
 }
 
@@ -73,32 +162,5 @@ var pageData = {
     // ===============================================
     // 首页
     // ===============================================
-    'index': function indexData() {
-        var myScroll = new IScroll('#wrapper', {
-            scrollbars: true,
-            mouseWheel: true,
-            interactiveScrollbars: true,
-            shrinkScrollbars: 'scale',
-            preventDefault: false,
-            fadeScrollbars: true
-        });
 
-        var myScrollA = new IScroll('#wrapperA', {
-            scrollbars: true,
-            mouseWheel: true,
-            interactiveScrollbars: true,
-            shrinkScrollbars: 'scale',
-            preventDefault: false,
-            fadeScrollbars: true
-        });
-
-        var myScrollB = new IScroll('#wrapperB', {
-            scrollbars: true,
-            mouseWheel: true,
-            interactiveScrollbars: true,
-            shrinkScrollbars: 'scale',
-            preventDefault: false,
-            fadeScrollbars: true
-        });
-    },
 }

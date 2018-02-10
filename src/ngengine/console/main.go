@@ -7,6 +7,8 @@ import (
 	"ngengine/console/models"
 	"ngengine/console/routes"
 
+	"github.com/tango-contrib/xsrf"
+
 	"github.com/lunny/tango"
 	"github.com/mysll/toolkit"
 	"github.com/tango-contrib/events"
@@ -41,6 +43,7 @@ func Serv() {
 
 	t := tango.Classic()
 	t.Use(
+		xsrf.New(100),
 		events.Events(),
 		tango.Static(tango.StaticOptions{
 			RootPath: "./view/statics/assets",

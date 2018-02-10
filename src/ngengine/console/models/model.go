@@ -32,6 +32,15 @@ func (c *NxConsole) Read() error {
 	return nil
 }
 
+func (c *NxConsole) ReadAll() ([]NxConsole, error) {
+	everyone := make([]NxConsole, 0)
+	err := XormEngine.Find(&everyone)
+	if err != nil {
+		return everyone, err
+	}
+	return everyone, nil
+}
+
 func (c *NxConsole) Update() error {
 	if _, err := XormEngine.Update(c); err != nil {
 		return err
