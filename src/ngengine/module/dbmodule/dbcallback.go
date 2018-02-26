@@ -8,6 +8,7 @@ import (
 	"ngengine/share"
 )
 
+// DbCallBack rpc调用的函数
 type DbCallBack struct {
 	DbModule
 }

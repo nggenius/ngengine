@@ -6,15 +6,20 @@ package {{.Model}}
 {{if gt $ilen 0}}
 import (
 	{{range .Imports}}"{{.}}"{{end}}
-	"encoding/gob"
+	"fmt"
+	"ngengine/module/dbmodule/dbtable"
 )
 {{end}}
 
 
 func init(){
+	if _, ok := dbtable.DbPtrMap["{{$module}}"]; !ok {
+		fmt.Print("{{$module}} init defeated")
+	}
+	db := dbtable.DbPtrMap["{{$module}}"]
+
 	{{range .Tables}}
-	gob.Register(&{{Mapper .Name}}{})
-	gob.Register([]{{Mapper .Name}}{})
+	dbtable.RegisterTable(db, &{{Mapper .Name}}{}, []{{Mapper .Name}}{})
 	{{end}}
 }
 

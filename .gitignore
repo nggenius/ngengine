@@ -21,3 +21,4 @@ bin
 src/ngengine/apps/test/debug
 Testbin
 debug
+src/ngengine/module/dbmodule/dbtable/nx_base/nx_base.go
