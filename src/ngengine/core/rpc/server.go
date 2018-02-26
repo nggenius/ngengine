@@ -498,8 +498,12 @@ func (c *byteServerCodec) WriteResponse(seq uint64, errcode int32, body *protoco
 		w.Put(errcode)
 	}
 	body.Header = body.Header[:w.Len()]
-	count := uint16(len(body.Header) + len(body.Body))
-	binary.Write(c.encBuf, binary.LittleEndian, count)                    //数据大小
+	size := len(body.Header) + len(body.Body)
+	if size > RPC_BUF_LEN {
+		return fmt.Errorf("message size is too large")
+	}
+
+	binary.Write(c.encBuf, binary.LittleEndian, uint16(size))             //数据大小
 	binary.Write(c.encBuf, binary.LittleEndian, uint16(len(body.Header))) //头部大小
 	c.encBuf.Write(body.Header)
 	if len(body.Body) > 0 {

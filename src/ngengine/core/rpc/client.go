@@ -246,7 +246,7 @@ func (call *Call) done() {
 // the header and payload are sent as a unit.
 func NewClient(conn io.ReadWriteCloser, l *logger.Log) *Client {
 	encBuf := bufio.NewWriter(conn)
-	client := &byteClientCodec{conn, encBuf, 1024 * 16}
+	client := &byteClientCodec{conn, encBuf, RPC_BUF_LEN}
 	return NewClientWithCodec(client, l)
 }
 
