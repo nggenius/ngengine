@@ -1,13 +1,17 @@
-// 用来注册数据库操作相关函数
+//Package dbmodule 用来注册数据库操作相关函数
 // for example:
 //
 package dbmodule
 
 import (
+	"ngengine/core/rpc"
 	"ngengine/core/service"
+	"ngengine/logger"
 )
 
+// DbModule 模块结构体
 type DbModule struct {
+	*rpc.Thread
 	Core service.CoreApi
 }
 
@@ -26,7 +30,13 @@ func (m *DbModule) Name() string {
 func (m *DbModule) Init(core service.CoreApi) bool {
 	m.Core = core
 	m.Core.RegisterRemote("Database", &DbCallBack{
-		DbModule: DbModule{core}})
+		DbModule: DbModule{rpc.NewThread("Database", 10, 10, logger.New("dbLog", 1)), core}})
+	return true
+}
+
+// NewJob 重写Thread里面的NewJob(为了保证同一个对象多次获取数据的时候数据获取的先后顺序)
+func (m *DbModule) NewJob(r *rpc.RpcCall) bool {
+	m.Queue[int(r.GetSrc().Id)%m.Pools] <- r
 	return true
 }
 

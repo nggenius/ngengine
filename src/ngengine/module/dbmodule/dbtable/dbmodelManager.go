@@ -1,6 +1,7 @@
 package dbtable
 
 import (
+	"encoding/gob"
 	"errors"
 	"fmt"
 
@@ -10,7 +11,7 @@ import (
 
 // 当前链接的数据库
 const (
-	NX_BASE string = "nx_base"
+	nxbase string = "nx_base"
 )
 
 // DbPtrMap 存放全部的连接
@@ -22,14 +23,12 @@ type DbPtrs struct {
 }
 
 func init() {
-	DbPtrMap = make(map[string]*DbPtrs)
-
 	// 后面通过配置加载
 	dbptr, err := InitDb("mysql", "root:@tcp(127.0.0.1:3306)/nx_base?charset=utf8")
 	if err != nil {
 		return
 	}
-	RegisterDb(NX_BASE, dbptr)
+	RegisterDb(nxbase, dbptr)
 }
 
 // IsDbConnect 检查是否有这个数据库连接
@@ -70,10 +69,24 @@ func RegisterDb(dbName string, dbPtr *xorm.Engine) bool {
 		return false
 	}
 
+	if nil == DbPtrMap {
+		DbPtrMap = make(map[string]*DbPtrs)
+	}
+
 	if _, ok := DbPtrMap[dbName]; ok {
 		panic("This DbName had")
 	}
 	DbPtrMap[dbName] = &DbPtrs{dbPtr}
 
 	return true
+}
+
+func RegisterTable(db *DbPtrs, tableStruct interface{}, tableStructArray interface{}) {
+	if nil == db {
+		return
+	}
+
+	db.DbPtr.Sync2(tableStruct)
+	gob.Register(tableStruct)
+	gob.Register(tableStructArray)
 }
