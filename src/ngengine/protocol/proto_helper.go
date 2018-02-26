@@ -83,10 +83,12 @@ func GetReplyError(msg *Message) int32 {
 	return errcode
 }
 
+// 解析消息协议，由使用的消息类型决定解码方式。用于客户端与服务器的通讯
 func ParseProto(decoder Decoder, msg *Message, obj interface{}) error {
 	return decoder.DecodeMessage(msg, obj)
 }
 
+// 解析参数，用于服务器之间的通讯
 func ParseArgs(msg *Message, args ...interface{}) error {
 	if len(args) == 0 || msg == nil {
 		return nil
@@ -103,6 +105,7 @@ func ParseArgs(msg *Message, args ...interface{}) error {
 	return nil
 }
 
+// 错误处理函数，如果有错误则写入日志
 func Check(l *logger.Log, err error) bool {
 	if err != nil {
 		l.Output(3, "[W]", err)
@@ -112,6 +115,7 @@ func Check(l *logger.Log, err error) bool {
 	return false
 }
 
+// 错误处理函数，如果有错误则写入日志
 func Check2(l *logger.Log, _ interface{}, err error) bool {
 	if err != nil {
 		l.Output(3, "[W]", err)
@@ -121,11 +125,12 @@ func Check2(l *logger.Log, _ interface{}, err error) bool {
 	return false
 }
 
+// 按传入参数，序列化消息
 func CreateMessage(args ...interface{}) *Message {
 	if len(args) > 0 {
 		msg := NewProtoMessage()
 		for i := 0; i < len(args); i++ {
-			err := msg.Write(args[i])
+			err := msg.Put(args[i])
 			if err != nil {
 				msg.Free()
 				panic("write args failed")
@@ -137,11 +142,12 @@ func CreateMessage(args ...interface{}) *Message {
 	return nil
 }
 
+// 向已有的message中附加参数
 func AppendArgs(msg *Message, args ...interface{}) {
 	w := &BodyWriter{utils.NewStoreArchiver(msg.Body), msg}
 	if len(args) > 0 {
 		for i := 0; i < len(args); i++ {
-			err := w.Write(args[i])
+			err := w.Put(args[i])
 			if err != nil {
 				msg.Free()
 				panic("write args failed")
@@ -151,37 +157,71 @@ func AppendArgs(msg *Message, args ...interface{}) {
 	}
 }
 
-//错误消息
-func ReplyErrorMessage(errcode int32) *Message {
+// 缓冲区大小定义
+const (
+	DEF    = -1
+	TINY   = 256
+	MIDDLE = 1024
+	BIG    = 4096
+)
+
+// rpc返回值, poolsize为使用的缓冲区大小，请根据实际大小进行预处理
+func ReplyMessage(poolsize int, args ...interface{}) *Message {
+	if poolsize == DEF {
+		poolsize = share.MAX_BUF_LEN
+	}
+
+	if poolsize > share.MAX_BUF_LEN {
+		poolsize = share.MAX_BUF_LEN
+	}
+
+	msg := NewMessage(poolsize)
+	if len(args) > 0 {
+		mw := NewMessageWriter(msg)
+		for i := 0; i < len(args); i++ {
+			err := mw.Put(args[i])
+			if err != nil {
+				msg.Free()
+				panic("write args failed")
+			}
+		}
+		mw.Flush()
+	}
+
+	return msg
+}
+
+// 错误消息
+func replyErrorMessage(errcode int32) *Message {
 	msg := NewMessage(1)
 	if errcode == 0 {
 		return msg
 	}
 	sr := utils.NewStoreArchiver(msg.Header)
-	sr.Write(int8(1))
-	sr.Write(errcode)
+	sr.Put(int8(1))
+	sr.Put(errcode)
 	msg.Header = msg.Header[:sr.Len()]
 	return msg
 }
 
-func ReplyErrorAndArgs(errcode int32, args ...interface{}) *Message {
+// 错误消息
+func replyErrorAndArgs(errcode int32, args ...interface{}) *Message {
 	msg := NewMessage(share.MAX_BUF_LEN)
 
 	if errcode > 0 {
 		sr := utils.NewStoreArchiver(msg.Header)
-		sr.Write(int8(1))
-		sr.Write(errcode)
+		sr.Put(int8(1))
+		sr.Put(errcode)
 		msg.Header = msg.Header[:sr.Len()]
 	}
 
 	if len(args) > 0 {
 		mw := NewMessageWriter(msg)
 		for i := 0; i < len(args); i++ {
-			err := mw.Write(args[i])
+			err := mw.Put(args[i])
 			if err != nil {
 				msg.Free()
 				panic("write args failed")
-				return nil
 			}
 		}
 		mw.Flush()

@@ -5,80 +5,101 @@ import (
 	"encoding/binary"
 	"encoding/gob"
 	"fmt"
+	"io"
 )
 
 type StoreArchive struct {
-	buffer *bytes.Buffer
+	buf []byte
+	pos int
 }
 
-func NewStoreArchiver(data []byte) *StoreArchive {
+func NewStoreArchiver(buf []byte) *StoreArchive {
+	if buf == nil || cap(buf) == 0 {
+		return nil
+	}
 	ar := &StoreArchive{}
-	ar.buffer = bytes.NewBuffer(data)
+	ar.buf = buf[:0]
+	ar.pos = 0
 	return ar
 }
 
+func (ar *StoreArchive) Write(p []byte) (n int, err error) {
+	l := len(p)
+	if ar.pos+l > cap(ar.buf) {
+		return 0, io.EOF
+	}
+	ar.buf = ar.buf[:ar.pos+l]
+	copy(ar.buf[ar.pos:], p)
+	ar.pos += l
+	return l, nil
+}
+
 func (ar *StoreArchive) Data() []byte {
-	return ar.buffer.Bytes()
+	return ar.buf[:ar.pos]
 }
 
 func (ar *StoreArchive) Len() int {
-	return ar.buffer.Len()
+	return ar.pos
 }
 
 func (ar *StoreArchive) WriteAt(offset int, val interface{}) error {
-	if offset >= ar.buffer.Len() {
+	if offset >= cap(ar.buf) {
 		return fmt.Errorf("offset out of range")
 	}
 
-	data := ar.buffer.Bytes()
-	tmp := bytes.NewBuffer(data[offset:offset])
+	old := ar.pos
+	ar.pos = offset
+	var err error
 	switch val.(type) {
 	case int8, int16, int32, int64, uint8, uint16, uint32, uint64, float32, float64:
-		return binary.Write(tmp, binary.LittleEndian, val)
+		err = binary.Write(ar, binary.LittleEndian, val)
 	case int:
-		return binary.Write(tmp, binary.LittleEndian, int32(val.(int)))
+		err = binary.Write(ar, binary.LittleEndian, int32(val.(int)))
 	default:
-		return fmt.Errorf("unsupport type")
+		err = fmt.Errorf("unsupport type")
 	}
-}
 
-func (ar *StoreArchive) Write(val interface{}) error {
-	switch val.(type) {
-	case int8, int16, int32, int64, uint8, uint16, uint32, uint64, float32, float64:
-		return binary.Write(ar.buffer, binary.LittleEndian, val)
-	case int:
-		return binary.Write(ar.buffer, binary.LittleEndian, int64(val.(int)))
-	case string:
-		return ar.WriteString(val.(string))
-	case []byte:
-		return ar.WriteData(val.([]byte))
-	default:
-		return ar.WriteObject(val)
-	}
-}
-
-func (ar *StoreArchive) WriteString(val string) error {
-	data := []byte(val)
-	size := len(data)
-	err := binary.Write(ar.buffer, binary.LittleEndian, int16(size))
-	if err != nil {
-		return err
-	}
-	_, err = ar.buffer.Write(data)
+	ar.pos = old
 	return err
 }
 
-func (ar *StoreArchive) WriteObject(obj interface{}) error {
-	enc := gob.NewEncoder(ar.buffer)
-	return enc.Encode(obj)
+func (ar *StoreArchive) Put(val interface{}) error {
+	switch val.(type) {
+	case int8, int16, int32, int64, uint8, uint16, uint32, uint64, float32, float64:
+		return binary.Write(ar, binary.LittleEndian, val)
+	case int:
+		return binary.Write(ar, binary.LittleEndian, int64(val.(int)))
+	case string:
+		return ar.PutString(val.(string))
+	case []byte:
+		return ar.PutData(val.([]byte))
+	default:
+		return ar.PutObject(val)
+	}
 }
 
-func (ar *StoreArchive) WriteData(data []byte) error {
-	err := ar.Write(uint16(len(data)))
+func (ar *StoreArchive) PutString(val string) error {
+	data := []byte(val)
+	size := len(data)
+	err := binary.Write(ar, binary.LittleEndian, int16(size))
 	if err != nil {
 		return err
 	}
-	_, err = ar.buffer.Write(data)
+	_, err = ar.Write(data)
+	return err
+}
+
+func (ar *StoreArchive) PutObject(obj interface{}) error {
+	enc := gob.NewEncoder(ar)
+	return enc.Encode(obj)
+}
+
+func (ar *StoreArchive) PutData(data []byte) error {
+	err := ar.Put(uint16(len(data)))
+	if err != nil {
+		return err
+	}
+	_, err = ar.Write(data)
 	return err
 }
 

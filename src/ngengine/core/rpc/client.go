@@ -282,9 +282,9 @@ func (c *byteClientCodec) WriteRequest(sending *sync.Mutex, seq uint64, call *Ca
 	msg := call.Args
 	msg.Header = msg.Header[:0]
 	w := utils.NewStoreArchiver(msg.Header)
-	w.Write(seq)
-	w.Write(call.mb.Uid)
-	w.WriteString(call.ServiceMethod)
+	w.Put(seq)
+	w.Put(call.mb.Uid)
+	w.PutString(call.ServiceMethod)
 	msg.Header = msg.Header[:w.Len()]
 	count := uint16(len(msg.Header) + len(msg.Body))
 	binary.Write(c.encBuf, binary.LittleEndian, count)                   //数据大小
@@ -372,7 +372,7 @@ func (client *Client) Call(serviceMethod string, src Mailbox, args ...interface{
 		msg = protocol.NewMessage(MAX_BUF_LEN)
 		ar := utils.NewStoreArchiver(msg.Body)
 		for i := 0; i < len(args); i++ {
-			err := ar.Write(args[i])
+			err := ar.Put(args[i])
 			if err != nil {
 				msg.Free()
 				return err
@@ -395,7 +395,7 @@ func (client *Client) CallBack(serviceMethod string, src Mailbox, reply ReplyCB,
 		msg = protocol.NewMessage(MAX_BUF_LEN)
 		ar := utils.NewStoreArchiver(msg.Body)
 		for i := 0; i < len(args); i++ {
-			err := ar.Write(args[i])
+			err := ar.Put(args[i])
 			if err != nil {
 				msg.Free()
 				return err

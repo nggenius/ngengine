@@ -192,7 +192,7 @@ func (server *Server) getCall(servicemethod string, src Mailbox, cb ReplyCB, arg
 		msg = protocol.NewMessage(share.MAX_BUF_LEN)
 		ar := utils.NewStoreArchiver(msg.Body)
 		for i := 0; i < len(args); i++ {
-			ar.Write(args[i])
+			ar.Put(args[i])
 		}
 		msg.Body = msg.Body[:ar.Len()]
 	} else {
@@ -331,8 +331,8 @@ func (server *Server) sendResponse(call *RpcCall) error {
 			call.reply = protocol.NewMessage(1)
 		}
 		w := utils.NewStoreArchiver(call.reply.Header)
-		w.Write(int8(1))
-		w.Write(call.errcode)
+		w.Put(int8(1))
+		w.Put(call.errcode)
 		call.reply.Header = call.reply.Header[:w.Len()]
 		call.cb(call.reply)
 		return nil
@@ -492,10 +492,10 @@ func (c *byteServerCodec) WriteResponse(seq uint64, errcode int32, body *protoco
 
 	body.Header = body.Header[:0]
 	w := utils.NewStoreArchiver(body.Header)
-	w.Write(seq)
+	w.Put(seq)
 	if errcode != 0 {
-		w.Write(int8(1))
-		w.Write(errcode)
+		w.Put(int8(1))
+		w.Put(errcode)
 	}
 	body.Header = body.Header[:w.Len()]
 	count := uint16(len(body.Header) + len(body.Body))

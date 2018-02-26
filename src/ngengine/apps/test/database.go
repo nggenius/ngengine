@@ -57,9 +57,9 @@ func (a *Account) Login(mailbox rpc.Mailbox, msg *protocol.Message) (errcode int
 	a.owner.CoreApi.Mailto(nil, &mb, "Client.Login", LoginResult{"ok"})
 
 	if pass == "123" {
-		return 0, protocol.ReplyErrorAndArgs(0, "ok", mb)
+		return 0, protocol.ReplyMessage(protocol.TINY, "ok", mb)
 	} else {
-		return 0, protocol.ReplyErrorAndArgs(0, "failed", mb)
+		return 0, protocol.ReplyMessage(protocol.TINY, "failed", mb)
 	}
 
 }

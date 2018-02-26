@@ -32,9 +32,9 @@ func (c *ClientCodec) ReadRequest(maxrc uint16) (*protocol.Message, error) {
 		case protocol.C2S_RPC:
 			msg := protocol.NewMessage(len(data))
 			ar := protocol.NewHeadWriter(msg)
-			ar.Write(uint64(0))
-			ar.Write(c.client.Mailbox.Uid)
-			ar.Write(rpc.GetHandleMethod("C2SHelper.Call"))
+			ar.Put(uint64(0))
+			ar.Put(c.client.Mailbox.Uid)
+			ar.Put(rpc.GetHandleMethod("C2SHelper.Call"))
 			msg.Header = msg.Header[:ar.Len()]
 			msg.Body = append(msg.Body, data...)
 			return msg, nil
