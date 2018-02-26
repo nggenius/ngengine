@@ -199,7 +199,7 @@ func (c *Core) ClientCall(src *rpc.Mailbox, dest *rpc.Mailbox, method string, ar
 
 	if dest.Sid == c.Mailbox.Sid {
 		msg := protocol.NewProtoMessage()
-		msg.Write(pb)
+		msg.Put(pb)
 		msg.Flush()
 		c.s2chelper.Call(*src, msg.GetMessage())
 		msg.Free()

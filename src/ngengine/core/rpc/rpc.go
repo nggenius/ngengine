@@ -8,6 +8,10 @@ import (
 	"runtime"
 )
 
+const (
+	RPC_BUF_LEN = 0xFFFF
+)
+
 func GetServiceMethod(m string) string {
 	return fmt.Sprintf("S2S%s", m)
 }

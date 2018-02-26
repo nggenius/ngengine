@@ -38,12 +38,12 @@ func (a *DbCallBack) Get(mailbox rpc.Mailbox, msg *protocol.Message) (errcode in
 	g, err := dbdriver.Get(DbName, mes.Message)
 
 	if err != nil {
-		return 0, protocol.ReplyErrorAndArgs(1)
+		return 0, protocol.ReplyMessage(protocol.TINY, 1)
 	}
 
 	a.Core.LogDebug("查询出来的数据:", g)
 	// 回复查询的结构
-	return 0, protocol.ReplyErrorAndArgs(0, share.MessageBox{Message: g})
+	return 0, protocol.ReplyMessage(protocol.DEF, share.MessageBox{Message: g})
 }
 
 // SQLQuery 直接传入查询类sql语
@@ -55,12 +55,12 @@ func (a *DbCallBack) SQLQuery(mailbox rpc.Mailbox, msg *protocol.Message) (errco
 	g, err := dbdriver.SQLQuery(DbName, sql)
 
 	if err != nil {
-		return 0, protocol.ReplyErrorAndArgs(1)
+		return 0, protocol.ReplyMessage(protocol.TINY, 1)
 	}
 
 	a.Core.LogDebug("查询出来的数据:", g)
 	// 回复查询的结构
-	return 0, protocol.ReplyErrorAndArgs(0, share.MessageBox{Message: g})
+	return 0, protocol.ReplyMessage(protocol.DEF, share.MessageBox{Message: g})
 }
 
 // SQLExec 直接传入执行类sql语言
@@ -72,12 +72,12 @@ func (a *DbCallBack) SQLExec(mailbox rpc.Mailbox, msg *protocol.Message) (errcod
 	g, err := dbdriver.SQLExec(DbName, sql)
 
 	if err != nil {
-		return 0, protocol.ReplyErrorAndArgs(1)
+		return 0, protocol.ReplyMessage(protocol.TINY, 1)
 	}
 
 	a.Core.LogDebug("执行结果:", g)
 	// 回复查询的结构
-	return 0, protocol.ReplyErrorAndArgs(0, g)
+	return 0, protocol.ReplyMessage(protocol.DEF, g)
 }
 
 //Insert  a.owner.CoreApi.Mailto(nil, &dest, "DBModule.DBInsert", dbtable.NX_BASE, share.MessageBox{Message: &nx_base.NxChangename{
@@ -99,7 +99,7 @@ func (a *DbCallBack) Insert(mailbox rpc.Mailbox, msg *protocol.Message) (errcode
 
 	if err != nil {
 		a.Core.LogDebug("错误:", err)
-		return 0, protocol.ReplyErrorAndArgs(1)
+		return 0, protocol.ReplyMessage(protocol.TINY, 1)
 	}
 
 	// 回复查询的结构
@@ -132,7 +132,7 @@ func (a *DbCallBack) Update(mailbox rpc.Mailbox, msg *protocol.Message) (errcode
 
 	if err != nil {
 		a.Core.LogDebug("错误:", err)
-		return 0, protocol.ReplyErrorAndArgs(1)
+		return 0, protocol.ReplyMessage(protocol.TINY, 1)
 	}
 	// 回复查询的结构
 	return 0, nil
@@ -154,9 +154,9 @@ func (a *DbCallBack) Delete(mailbox rpc.Mailbox, msg *protocol.Message) (errcode
 	err := dbdriver.Delete(DbName, mes.Message)
 	if err != nil {
 		a.Core.LogDebug("错误:", err)
-		return 0, protocol.ReplyErrorAndArgs(1)
+		return 0, protocol.ReplyMessage(protocol.TINY, 1)
 	}
-	return 0, protocol.ReplyErrorAndArgs(1)
+	return 0, protocol.ReplyMessage(protocol.TINY, 1)
 }
 
 // Find a.owner.CoreApi.MailtoAndCallback(nil, &dest, "DBModule.DBFind", a.DbCallBack, dbtable.NX_BASE, share.MessageBox{Message: &nx_base.NxChangename{
@@ -174,9 +174,9 @@ func (a *DbCallBack) Find(mailbox rpc.Mailbox, msg *protocol.Message) (errcode i
 	g, err := dbdriver.Find(DbName, mes.Message)
 	if err != nil {
 		fmt.Println(err)
-		return 0, protocol.ReplyErrorAndArgs(1)
+		return 0, protocol.ReplyMessage(protocol.TINY, 1)
 	}
 	a.Core.LogDebug("执行结果:", g)
 	// 这里是数组没有注册gob然后返回值失败
-	return 0, protocol.ReplyErrorAndArgs(0, share.MessageBox{Message: g})
+	return 0, protocol.ReplyMessage(protocol.DEF, share.MessageBox{Message: g})
 }
