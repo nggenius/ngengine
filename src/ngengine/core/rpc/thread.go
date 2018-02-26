@@ -12,18 +12,25 @@ type ThreadHandler interface {
 	NewJob(*RpcCall) bool
 }
 
+type Threader interface {
+	Run(l *logger.Log) error
+	WaitDone()
+	Terminate()
+	NewJob(*RpcCall) bool
+}
+
 type Thread struct {
 	TAG        string
 	NumProcess int32
 	Queue      []chan *RpcCall
-	Quit       bool
+	quit       bool
 	Pools      int
 	wg         toolkit.WaitGroupWrapper
 	run        bool
 	log        *logger.Log
 }
 
-func NewThread(tag string, pools int, queuelen int, log *logger.Log) *Thread {
+func NewThread(tag string, pools int, queuelen int) *Thread {
 	if pools < 1 || queuelen < 2 {
 		return nil
 	}
@@ -34,11 +41,11 @@ func NewThread(tag string, pools int, queuelen int, log *logger.Log) *Thread {
 	for i := 0; i < pools; i++ {
 		t.Queue[i] = make(chan *RpcCall, queuelen)
 	}
-	t.log = log
 	return t
 }
 
-func (t *Thread) Start() error {
+func (t *Thread) Run(l *logger.Log) error {
+	t.log = l
 	if t.run {
 		return fmt.Errorf(t.TAG, " thread already run")
 	}
@@ -52,7 +59,11 @@ func (t *Thread) Start() error {
 	return nil
 }
 
-func (t *Thread) Wait() {
+func (t *Thread) Terminate() {
+	t.quit = true
+}
+
+func (t *Thread) WaitDone() {
 	t.wg.Wait()
 }
 
@@ -86,7 +97,7 @@ func (t *Thread) work(id int) {
 			rpc.Free()
 			break
 		default:
-			if t.Quit {
+			if t.quit {
 				t.log.LogInfo(t.TAG, " thread ", id, " quit")
 				return
 			}

@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"net"
 	"ngengine/logger"
-	"ngengine/share"
 	"runtime"
 )
 
@@ -41,6 +40,13 @@ func CreateRpcService(service map[string]interface{}, handle map[string]interfac
 
 func CreateService(rs *Server, l net.Listener, log *logger.Log) {
 	log.LogInfo("rpc start at:", l.Addr().String())
+
+	for _, v := range rs.serviceMap {
+		if t, ok := v.rcvr.(Threader); ok {
+			t.Run(log)
+		}
+	}
+
 	for {
 		conn, err := l.Accept()
 		if nerr, ok := err.(net.Error); ok && nerr.Temporary() {
@@ -54,6 +60,13 @@ func CreateService(rs *Server, l net.Listener, log *logger.Log) {
 		}
 		//启动服务
 		log.LogInfo("new rpc client,", conn.RemoteAddr())
-		go rs.ServeConn(conn, share.MAX_BUF_LEN)
+		go rs.ServeConn(conn, RPC_BUF_LEN)
+	}
+
+	for _, v := range rs.serviceMap {
+		if t, ok := v.rcvr.(Threader); ok {
+			t.Terminate()
+			t.WaitDone()
+		}
 	}
 }

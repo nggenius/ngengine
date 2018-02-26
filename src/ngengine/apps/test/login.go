@@ -49,7 +49,7 @@ func (l *Login) Start() error {
 	timer := l.Module("TimerModule").(*timer.TimerModule)
 	id := timer.AddTimer(1000, 123, l.RepeatCallBack)
 	id2 := timer.AddCountTimer(10, 3000, 999, l.CountCallBack)
-	fmt.Printf("id:%d   id2:%d", id, id2)
+	l.CoreApi.LogDebugf("id:%d   id2:%d", id, id2)
 	return nil
 }
 

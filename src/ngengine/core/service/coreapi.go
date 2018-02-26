@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"ngengine/core/rpc"
+	"ngengine/logger"
 	"ngengine/protocol"
 	"ngengine/share"
 	"time"
@@ -72,6 +73,8 @@ type CoreApi interface {
 	Module(name string) interface{}
 	// 调用模块
 	Call(module string, id int, args ...interface{}) error
+	// 获取log指针
+	GetLog() *logger.Log
 }
 
 func (c *Core) GID() int64 {
@@ -331,4 +334,9 @@ func (c *Core) Call(module string, id int, args ...interface{}) error {
 
 	m.OnMessage(id, args...)
 	return nil
+}
+
+// 获取log指针
+func (c *Core) GetLog() *logger.Log {
+	return c.Log
 }

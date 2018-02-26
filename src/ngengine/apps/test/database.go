@@ -24,11 +24,14 @@ var startargs = `{
 // service
 type Database struct {
 	service.BaseService
+	acc *Account
 }
 
 func (d *Database) Prepare(core service.CoreApi) error {
 	d.CoreApi = core
-	core.RegisterRemote("Account", &Account{owner: d})
+	d.acc = &Account{owner: d}
+	d.acc.Thread = rpc.NewThread("account", 5, 10)
+	core.RegisterRemote("Account", d.acc)
 	return nil
 }
 
@@ -39,6 +42,7 @@ func (d *Database) Start() error {
 
 // rpc
 type Account struct {
+	*rpc.Thread
 	owner *Database
 }
 
