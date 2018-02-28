@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<object>
+    <package>object</package>
+    <name>Player</name>
+    <type>player</type>
+    <include></include>
+    <archive>player</archive>
+    <propertys>
+        <property name="Name" type="string" save="true" expose="owner" desc="玩家名" />
+        <property name="Hp" type="int32" save="false" expose="owner" desc="血量" />
+        <property name="Mp" type="int32" save="false" expose="owner" desc="魔量" />
+        <property name="Location" type="tuple" save="true" expose="owner" desc="位置">
+            <tuple name="X" type="float32" desc="" />
+            <tuple name="Y" type="float32" desc="" />
+            <tuple name="Z" type="float32" desc="" />
+        </property>
+        <property name="ToolBox" type="table" save="true" expose="owner" desc="背包">
+            <table maxrows="10">
+                <col name="Id" type="string" save="true" desc="Id"/>
+                <col name="Amount" type="int32" save="true" desc="数量"/>
+            </table>
+        </property>
+    </propertys>
+</object>

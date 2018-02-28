@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<object>
+    <package></package>
+    <name></name>
+    <type></type>
+    <include></include>
+    <archive></archive>
+    <propertys>
+        <property name="" type="" save="true" expose="owner|other|all" desc="" />
+        <property name="" type="tuple" save="true" expose="owner|other|all" desc="">
+            <tuple name="" type="" desc="" />
+        </property>
+        <property name="" type="table" save="true" expose="owner|other|all" desc="">
+            <table name="" maxrows="10" >
+                <col name="" type="" save="" desc="" />
+            </table>
+        </property>
+    </propertys>
+</object>
