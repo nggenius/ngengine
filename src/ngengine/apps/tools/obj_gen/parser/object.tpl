@@ -201,10 +201,13 @@ func (r *{{$.Name}}{{.Name}}_r) UnmarshalJSON(data []byte) error {
 {{end}}
 // {{.Name}} archive
 type {{.Name}}Archive struct {
-    flag int
+    flag int `xorm:"-"`
     Id int64
     {{range .Property}}{{if eq .Save "true"}}
-	{{.Name}} {{if eq .Type "tuple"}}*{{$.Name}}{{.Name}}_t `xorm:"json"`{{else if eq .Type "table"}}*{{$.Name}}{{.Name}}_r `xorm:"json"`{{else}}{{.Type}}{{end}}  // {{.Desc}}{{end}}{{end}}
+	{{.Name}} {{if eq .Type "tuple"}}*{{$.Name}}{{.Name}}_t `xorm:"-"`{{else if eq .Type "table"}}*{{$.Name}}{{.Name}}_r `xorm:"-"`{{else}}{{.Type}}{{end}}  // {{.Desc}}{{end}}
+    {{if eq .Type "tuple"}}
+    {{.Name}}_t []byte `xorm:"text"` // {{.Name}} serialize{{else if eq .Type "table"}}
+    {{.Name}}_r []byte `xorm:"text"` // {{.Name}} serialize{{end}}{{end}}
 }
 
 // {{.Name}} archive construct
@@ -222,6 +225,20 @@ func (a *{{.Name}}Archive) TableName() string {
 
 // store
 func (a *{{.Name}}Archive) Store() error {
+    {{range .Property}}{{if eq .Save "true"}}
+    {{if eq .Type "tuple"}}
+    {{tolower .Name}}_data, err := json.Marshal(a.{{.Name}})
+    if err != nil {
+        return err
+    }
+    a.{{.Name}}_t = {{tolower .Name}}_data
+    {{else if eq .Type "table"}}
+    {{tolower .Name}}_data, err := json.Marshal(a.{{.Name}})
+    if err != nil {
+        return err
+    }
+    a.{{.Name}}_r = {{tolower .Name}}_data
+    {{end}}{{end}}{{end}}
     return nil
 }
 
