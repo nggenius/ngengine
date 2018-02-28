@@ -151,8 +151,28 @@ func (r *{{$.Name}}{{.Name}}_r) Clear() {
 	r.Row = r.data[:0]
 }
 
+// json encode interface
+func (r *{{$.Name}}{{.Name}}_r) Marshal() ([]byte, error) {
+    return r.pack()
+}
+
+// json decode interface
+func (r *{{$.Name}}{{.Name}}_r) Unmarshal(data []byte) error {
+    return r.unpack(data)
+}
+
+// xorm encode interface
+func (r *{{$.Name}}{{.Name}}_r) ToDB() ([]byte, error) {
+    return r.pack()
+}
+
+// xorm decode interface
+func (r *{{$.Name}}{{.Name}}_r) FromDB(data []byte) error {
+    return r.unpack(data)
+}
+
 // record {{.Name}} pack
-func (r *{{$.Name}}{{.Name}}_r) MarshalJSON() ([]byte, error) {
+func (r *{{$.Name}}{{.Name}}_r) pack() ([]byte, error) {
     j := &{{$.Name}}{{.Name}}Json{}
     j.ColName = make([]string, {{len .Table.Cols}})
     j.ColType = make([]string, {{len .Table.Cols}})
@@ -173,7 +193,7 @@ func (r *{{$.Name}}{{.Name}}_r) MarshalJSON() ([]byte, error) {
 }
 
 // record {{.Name}} unpack
-func (r *{{$.Name}}{{.Name}}_r) UnmarshalJSON(data []byte) error {
+func (r *{{$.Name}}{{.Name}}_r) unpack(data []byte) error {
     r.Row = r.data[:0]
 	j := &{{$.Name}}{{.Name}}Json{}
 	err := json.Unmarshal(data, j)
@@ -202,12 +222,8 @@ func (r *{{$.Name}}{{.Name}}_r) UnmarshalJSON(data []byte) error {
 // {{.Name}} archive
 type {{.Name}}Archive struct {
     flag int `xorm:"-"`
-    Id int64
-    {{range .Property}}{{if eq .Save "true"}}
-	{{.Name}} {{if eq .Type "tuple"}}*{{$.Name}}{{.Name}}_t `xorm:"-"`{{else if eq .Type "table"}}*{{$.Name}}{{.Name}}_r `xorm:"-"`{{else}}{{.Type}}{{end}}  // {{.Desc}}{{end}}
-    {{if eq .Type "tuple"}}
-    {{.Name}}_t []byte `xorm:"text"` // {{.Name}} serialize{{else if eq .Type "table"}}
-    {{.Name}}_r []byte `xorm:"text"` // {{.Name}} serialize{{end}}{{end}}
+    Id int64 {{range .Property}} {{if eq .Save "true"}}
+	{{.Name}} {{if eq .Type "tuple"}}*{{$.Name}}{{.Name}}_t `xorm:"json"`{{else if eq .Type "table"}}*{{$.Name}}{{.Name}}_r `xorm:"json"`{{else}}{{.Type}}{{end}}  // {{.Desc}}{{end}} {{end}}
 }
 
 // {{.Name}} archive construct
@@ -225,20 +241,6 @@ func (a *{{.Name}}Archive) TableName() string {
 
 // store
 func (a *{{.Name}}Archive) Store() error {
-    {{range .Property}}{{if eq .Save "true"}}
-    {{if eq .Type "tuple"}}
-    {{tolower .Name}}_data, err := json.Marshal(a.{{.Name}})
-    if err != nil {
-        return err
-    }
-    a.{{.Name}}_t = {{tolower .Name}}_data
-    {{else if eq .Type "table"}}
-    {{tolower .Name}}_data, err := json.Marshal(a.{{.Name}})
-    if err != nil {
-        return err
-    }
-    a.{{.Name}}_r = {{tolower .Name}}_data
-    {{end}}{{end}}{{end}}
     return nil
 }
 
