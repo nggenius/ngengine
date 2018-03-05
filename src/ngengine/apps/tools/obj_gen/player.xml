@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <object>
-    <package>object</package>
+    <package>entity</package>
     <name>Player</name>
     <type>player</type>
     <include></include>
     <archive>player</archive>
     <propertys>
-        <property name="Name" type="string" save="true" expose="owner" desc="玩家名" />
+        <property name="Name" type="string" size="64" save="true" expose="owner" desc="玩家名" />
         <property name="Hp" type="int32" save="false" expose="owner" desc="血量" />
         <property name="Mp" type="int32" save="false" expose="owner" desc="魔量" />
         <property name="Location" type="tuple" save="true" expose="owner" desc="位置">

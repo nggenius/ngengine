@@ -4,6 +4,7 @@ package {{.Package}}
 
 import(
     "encoding/json"
+	"encoding/gob"
     "fmt"
 
     "github.com/mysll/toolkit"
@@ -35,6 +36,7 @@ type {{$.Name}}{{.Name}}_c struct {
 type {{$.Name}}{{.Name}}_r struct {
     Row     []*{{$.Name}}{{.Name}}_c
 	data    [{{.Table.MaxRows}}]*{{$.Name}}{{.Name}}_c
+	witness TableWitness
 }
 
 // record  {{.Name}}  serial
@@ -51,8 +53,15 @@ func New{{$.Name}}{{.Name}}() *{{$.Name}}{{.Name}}_r {
 	return {{tolower .Name}}
 }
 
+// set witness
+func (r *{{$.Name}}{{.Name}}_r) SetWitness(w TableWitness) {
+	r.witness = w
+}
+
+{{$expose := .Expose}}
 {{$pname := .Name}}
-{{range .Table.Cols}}
+
+{{range $index, $col := .Table.Cols}}{{with $col}}
 // get {{.Name}}
 func (r *{{$.Name}}{{$pname}}_r) {{.Name}}(rownum int) ({{.Type}}, error) {
 	if rownum < 0 || rownum >= len(r.Row) {
@@ -66,18 +75,28 @@ func (r *{{$.Name}}{{$pname}}_r) Set{{.Name}}(rownum int, {{tolower .Name}} {{.T
 	if rownum < 0 || rownum >= len(r.Row) {
         return fmt.Errorf("row num error")
 	}
-	r.Row[rownum].{{.Name}} = {{tolower .Name}}
+	if r.Row[rownum].{{.Name}} != {{tolower .Name}} {
+		r.Row[rownum].{{.Name}} = {{tolower .Name}}{{if ne $expose ""}}
+		if r.witness != nil {
+			r.witness.Change("{{$pname}}", rownum, {{$index}}, {{tolower .Name}})
+		}{{end}}
+	}
 	return nil
 }
-{{end}}
+{{end}}{{end}}
 
 // set row value
 func (r *{{$.Name}}{{.Name}}_r) SetRowValue(rownum int {{range .Table.Cols}}, {{tolower .Name}} {{.Type}} {{end}} ) error {
 	if rownum < 0 || rownum >= len(r.Row) {
 		return fmt.Errorf("row num error")
 	}
-    {{range .Table.Cols}}
-	r.Row[rownum].{{.Name}} = {{tolower .Name}}{{end}}
+    {{range $index, $col := .Table.Cols}}{{with $col}}
+	if r.Row[rownum].{{.Name}} != {{tolower .Name}} {
+		r.Row[rownum].{{.Name}} = {{tolower .Name}}{{if ne $expose ""}}
+		if r.witness != nil {
+			r.witness.Change("{{$pname}}", rownum, {{$index}}, {{tolower .Name}})
+		} {{end}}{{end}}
+	} {{end}}
 	return nil
 }
 
@@ -93,47 +112,59 @@ func (r *{{$.Name}}{{.Name}}_r) RowValue(rownum int) ({{range .Table.Cols}}{{.Ty
 }
 
 // add row
-func (r *{{$.Name}}{{.Name}}_r) AddRow(rownum int) int {
+func (r *{{$.Name}}{{.Name}}_r) AddRow(rownum int) (int, error) {
 	if len(r.Row) > cap(r.data) { // full
-		return -1
+		return -1, fmt.Errorf("record {{$.Name}}{{.Name}} is full")
 	}
 
 	if rownum < -1 || rownum >= cap(r.data) { // out of range
-		return -1
+		return -1, fmt.Errorf("record {{$.Name}}{{.Name}} row %d out of range", rownum)
 	}
 
 	size := len(r.Row)
 	row := &{{$.Name}}{{.Name}}_c{}
 	r.Row = r.data[:size+1]
 	if rownum == -1 || rownum == size {
-		r.Row[size] = row
-		return size
+		r.Row[size] = row{{if ne $expose ""}}
+		if r.witness != nil {
+			r.witness.AddRow("{{$pname}}", rownum)
+		} {{end}}
+		return size, nil
 	}
 	copy(r.Row[rownum+1:], r.Row[rownum:])
-	r.Row[rownum] = row
-	return rownum
+	r.Row[rownum] = row	{{if ne $expose ""}}
+	if r.witness != nil {
+		r.witness.AddRow("{{$pname}}", rownum)
+	} {{end}}
+	return rownum, nil
 }
 
 // add row value
-func (r *{{$.Name}}{{.Name}}_r) AddRowValue(rownum int {{range .Table.Cols}}, {{tolower .Name}} {{.Type}} {{end}} ) int {
+func (r *{{$.Name}}{{.Name}}_r) AddRowValue(rownum int {{range .Table.Cols}}, {{tolower .Name}} {{.Type}} {{end}} ) (int, error) {
 	if len(r.Row) > cap(r.data) { // full
-		return -1
+		return -1, fmt.Errorf("record {{$.Name}}{{.Name}} is full")
 	}
 
 	if rownum < -1 || rownum >= cap(r.data) { // out of range
-		return -1
+		return -1, fmt.Errorf("record {{$.Name}}{{.Name}} row %d out of range", rownum)
 	}
 
 	size := len(r.Row)
 	row := &{{$.Name}}{{.Name}}_c{ {{range $k, $v := .Table.Cols}} {{if ne $k 0}},{{end}} {{tolower .Name}}{{end}} }
 	r.Row = r.data[:size+1]
 	if rownum == -1 || rownum == size {
-		r.Row[size] = row
-		return size
+		r.Row[size] = row{{if ne $expose ""}}
+		if r.witness != nil {
+			r.witness.AddRowValue("{{$pname}}", rownum, {{range $k, $v := .Table.Cols}} {{if ne $k 0}},{{end}} {{tolower .Name}}{{end}} )
+		} {{end}}
+		return size, nil
 	}
 	copy(r.Row[rownum+1:], r.Row[rownum:])
-	r.Row[rownum] = row
-	return rownum
+	r.Row[rownum] = row	{{if ne $expose ""}}
+	if r.witness != nil {
+		r.witness.AddRowValue("{{$pname}}", rownum, {{range $k, $v := .Table.Cols}} {{if ne $k 0}},{{end}} {{tolower .Name}}{{end}} )
+	} {{end}}
+	return rownum, nil
 }
 
 // del row
@@ -142,13 +173,19 @@ func (r *{{$.Name}}{{.Name}}_r) Del(rownum int) error {
 		return fmt.Errorf("row num error")
 	}
 	copy(r.Row[rownum:], r.Row[rownum+1:])
-	r.Row = r.data[:len(r.Row)-1]
+	r.Row = r.data[:len(r.Row)-1]{{if ne $expose ""}}
+	if r.witness != nil {
+		r.witness.DelRow("{{$pname}}", rownum )
+	} {{end}}	
 	return nil
 }
 
 // clear
 func (r *{{$.Name}}{{.Name}}_r) Clear() {
-	r.Row = r.data[:0]
+	r.Row = r.data[:0]{{if ne $expose ""}}
+	if r.witness != nil {
+		r.witness.Clear("{{$pname}}")
+	} {{end}}
 }
 
 // json encode interface
@@ -202,6 +239,9 @@ func (r *{{$.Name}}{{.Name}}_r) unpack(data []byte) error {
 	}
 
 	for _, row := range j.Row {
+		if len(r.Row) > cap(r.data) {
+			break
+		}
 		{{tolower $pname}}row := &{{$.Name}}{{.Name}}_c{}
 		for k, col := range row {
 			switch j.ColName[k] { {{range .Table.Cols}}
@@ -212,7 +252,8 @@ func (r *{{$.Name}}{{.Name}}_r) unpack(data []byte) error {
 				}{{end}}
 			}
 		}
-		r.Row = append(r.Row, {{tolower .Name}}row)
+		r.Row = r.data[:len(r.Row)+1]
+		r.Row[len(row)-1] = toolboxrow
 	}
 	return nil
 }
@@ -223,7 +264,8 @@ func (r *{{$.Name}}{{.Name}}_r) unpack(data []byte) error {
 type {{.Name}}Archive struct {
     flag int `xorm:"-"`
     Id int64 {{range .Property}} {{if eq .Save "true"}}
-	{{.Name}} {{if eq .Type "tuple"}}*{{$.Name}}{{.Name}}_t `xorm:"json"`{{else if eq .Type "table"}}*{{$.Name}}{{.Name}}_r `xorm:"json"`{{else}}{{.Type}}{{end}}  // {{.Desc}}{{end}} {{end}}
+	{{.Name}} {{if eq .Type "tuple"}}*{{$.Name}}{{.Name}}_t `xorm:"json"`{{else if eq .Type "table"}}*{{$.Name}}{{.Name}}_r `xorm:"json"`{{else}}{{.Type}} {{if eq .Type "string"}}`xorm:"varchar({{strsize .}})"`{{end}}{{end}}  // {{.Desc}}{{end}} {{end}}
+	witness Witness
 }
 
 // {{.Name}} archive construct
@@ -239,15 +281,16 @@ func (a *{{.Name}}Archive) TableName() string {
     return "{{.Name}}"
 }
 
-// store
-func (a *{{.Name}}Archive) Store() error {
-    return nil
+// set witness
+func (a *{{.Name}}Archive) SetWitness(w Witness) {
+	a.witness = w
 }
 
 // {{.Name}} attr
 type {{.Name}}Attr struct{
     {{range .Property}}{{if ne .Save "true"}}
     {{.Name}} {{if eq .Type "tuple"}}{{$.Name}}{{.Name}}_t{{else if eq .Type "table"}}{{$.Name}}{{.Name}}_r{{else}}{{.Type}}{{end}} // {{.Desc}}{{end}}{{end}}
+	witness Witness
 }
 
 // {{.Name}} attr construct
@@ -258,10 +301,16 @@ func New{{.Name}}Attr() *{{.Name}}Attr {
     return attr
 }
 
+// set witness
+func (a *{{.Name}}Attr) SetWitness(w Witness) {
+	a.witness = w
+}
+
 // {{.Name}}
 type {{.Name}} struct{
     archive *{{.Name}}Archive // archive
     attr *{{.Name}}Attr // attr
+	witness Witness // witness
 }
 
 // {{.Name}} construct
@@ -272,9 +321,24 @@ func New{{.Name}}() *{{.Name}} {
     return o
 }
 
+// get witness
+func (o *{{.Name}}) Witness() Witness {
+	return o.witness
+}
+
+// set witness
+func (o *{{.Name}}) SetWitness(w Witness) {
+	o.witness = w
+	o.archive.SetWitness(w)
+	o.attr.SetWitness(w)
+}
+
 // {{.Name}} store
-func (o *{{.Name}}) Store() error {
-    return o.archive.Store()
+func (o *{{.Name}}) Store() {
+}
+
+// {{.Name}} load
+func (o *{{.Name}}) Load() {
 }
 
 // get archive
@@ -289,8 +353,14 @@ func (o *{{.Name}}) Attr() *{{.Name}}Attr {
 
 {{range .Property}}
 // set {{.Name}} {{.Desc}}
-func (o *{{$.Name}}) Set{{.Name}}( {{tolower .Name}} {{if eq .Type "tuple"}} *{{$.Name}}{{.Name}}_t{{else if eq .Type "table"}} *{{$.Name}}{{.Name}}_r {{else}} {{.Type}} {{end}}){
-    {{if eq .Save "true"}}o.archive.{{.Name}} = {{tolower .Name}} {{else}}o.attr.{{.Name}} = {{tolower .Name}} {{end}}
+func (o *{{$.Name}}) Set{{.Name}}( {{tolower .Name}} {{if eq .Type "tuple"}} {{$.Name}}{{.Name}}_t{{else if eq .Type "table"}} *{{$.Name}}{{.Name}}_r {{else}} {{.Type}} {{end}}){
+    {{if ne .Type "table"}}{{if eq .Save "true"}}{{if eq .Type "tuple"}}*{{end}}o.archive.{{.Name}} = {{tolower .Name}} {{else}}{{if eq .Type "tuple"}}*{{end}}o.attr.{{.Name}} = {{tolower .Name}} {{end}} {{else}} panic("{{.Name}} can't set") {{end}} {{if ne .Expose ""}} 
+	{{if eq .Type "tuple"}}	if o.witness != nil {
+		o.witness.GetTupleWitness().Update("{{.Name}}", {{tolower .Name}})
+	}{{else if eq .Type "table"}}
+	{{else}}if o.witness != nil {
+		o.witness.GetAttrWitness().Update("{{.Name}}", {{tolower .Name}})
+	} {{end}} {{end}}
 }
 
 // get {{.Name}} {{.Desc}}
@@ -298,3 +368,51 @@ func (o *{{$.Name}}) {{.Name}}() {{if eq .Type "tuple"}} *{{$.Name}}{{.Name}}_t{
     {{if eq .Save "true"}}return o.archive.{{.Name}}{{else}}return o.attr.{{.Name}}{{end}}
 }
 {{end}}
+
+// attr type
+func  (o *{{$.Name}}) GetAttrType(name string) string {
+	switch name { {{range .Property}}
+	case "{{.Name}}":
+		return "{{.Type}}" {{end}}
+	default:
+		return "unknown"
+	}
+}
+
+// get attr value
+func  (o *{{$.Name}}) GetAttr(name string) interface{} {
+	switch name { {{range .Property}}
+	case "{{.Name}}":
+		return {{if eq .Save "true"}}o.archive.{{.Name}} {{else}}o.attr.{{.Name}} {{end}} {{end}}
+	default:
+		return nil
+	}
+}
+
+// set attr value
+func  (o *{{$.Name}}) SetAttr(name string, value interface{}) error {
+	switch name { {{range .Property}}
+	case "{{.Name}}": {{if eq .Type "tuple"}}
+		if v, ok := value.(*{{$.Name}}{{.Name}}_t); ok {
+			o.Set{{.Name}}(v)
+			return nil
+		} {{else if eq .Type "table"}}
+		if v, ok := value.(*{{$.Name}}{{.Name}}_r); ok {
+			o.Set{{.Name}}(v)
+			return nil
+		} {{else}}
+		if v, ok := value.({{.Type}}); ok {
+			o.Set{{.Name}}(v)
+			return nil
+		} {{end}}
+		return  fmt.Errorf("attr {{.Name}} type not match") {{end}}
+	default:
+		return fmt.Errorf("attr %s not found", name)
+	}
+}
+
+// gob register
+func init() {
+	gob.Register(&{{.Name}}{})
+	gob.Register(&{{.Name}}Archive{})
+}

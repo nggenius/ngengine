@@ -33,6 +33,7 @@ type Element struct {
 type Property struct {
 	Name   string    `xml:"name,attr"`
 	Type   string    `xml:"type,attr"`
+	Size   int       `xml:"size,attr"`
 	Save   string    `xml:"save,attr"`
 	Expose string    `xml:"expose,attr"`
 	Desc   string    `xml:"desc,attr"`
@@ -49,8 +50,18 @@ type Object struct {
 	Property []Property `xml:"propertys>property"`
 }
 
+func StringSize(p *Property) int {
+	if p.Size == 0 {
+		return 255
+	}
+	return p.Size
+}
+
 func OutputFile(tpl, path, outfile string, obj *Object) {
-	t, err := template.New(tpl).Funcs(template.FuncMap{"tolower": strings.ToLower}).ParseFiles(path + tpl)
+	t, err := template.New(tpl).Funcs(template.FuncMap{
+		"tolower": strings.ToLower,
+		"strsize": StringSize,
+	}).ParseFiles(path + tpl)
 	if err != nil {
 		fmt.Println("writer", err)
 		return

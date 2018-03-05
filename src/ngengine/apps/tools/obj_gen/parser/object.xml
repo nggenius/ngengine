@@ -6,7 +6,7 @@
     <include></include>
     <archive></archive>
     <propertys>
-        <property name="" type="" save="true" expose="owner|other|all" desc="" />
+        <property name="" type="" size="255" save="true" expose="owner|other|all" desc="" />
         <property name="" type="tuple" save="true" expose="owner|other|all" desc="">
             <tuple name="" type="" desc="" />
         </property>
