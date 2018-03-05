@@ -21,7 +21,7 @@ func New() *ObjectModule {
 
 // Name 模块名
 func (o *ObjectModule) Name() string {
-	return "ObjectModule"
+	return "Object"
 }
 
 // Init 模块初始化

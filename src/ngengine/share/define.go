@@ -5,9 +5,11 @@ type SessionId uint64
 type ServiceId uint16
 
 const (
-	MAX_BUF_LEN = 1024 * 16      // 消息缓冲区大小16k
-	SID_MAX     = 0xFFFF         // service id 最大值
-	SESSION_MAX = 0x7FFFFFFFFFFF // session最大值
+	MAX_BUF_LEN     = 1024 * 16      // 消息缓冲区大小16k
+	SID_MAX         = 0xFFFF         // service id 最大值
+	SESSION_MAX     = 0x7FFFFFFFFFFF // session最大值
+	OBJECT_ID_MAX   = 0xFFFFFFFFFF   // objectid最大值
+	OBJECT_TYPE_MAX = 0x7F           // object type最大值
 )
 
 // mailbox类型定义

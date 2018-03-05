@@ -15,7 +15,7 @@ func New() *TimerModule {
 }
 
 func (m *TimerModule) Name() string {
-	return "TimerModule"
+	return "Timer"
 }
 
 func (m *TimerModule) Init(core service.CoreApi) bool {

@@ -19,7 +19,7 @@ func New() *CrontabModule {
 
 // Name 模块名
 func (m *CrontabModule) Name() string {
-	return "CrontabModule"
+	return "Crontab"
 }
 
 // Init 模块初始化
