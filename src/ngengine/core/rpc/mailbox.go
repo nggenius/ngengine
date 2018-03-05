@@ -9,6 +9,10 @@ import (
 	"strings"
 )
 
+const (
+	ID_MAX = 0x7FFFFFFFFFFF // id最大值
+)
+
 type Mailbox struct {
 	Sid  share.ServiceId // 所在service的id
 	Flag int8            // 见share.MB_FLAG_XXXX
@@ -29,7 +33,7 @@ func (m *Mailbox) IsClient() bool {
 }
 
 func (m *Mailbox) Generate() {
-	m.Uid = ((uint64(m.Sid) << 48) & 0xFFFF000000000000) | ((uint64(m.Flag) & 1) << 47) | (m.Id & share.SESSION_MAX)
+	m.Uid = ((uint64(m.Sid) << 48) & 0xFFFF000000000000) | ((uint64(m.Flag) & 1) << 47) | (m.Id & ID_MAX)
 }
 
 func NewMailboxFromStr(mb string) (Mailbox, error) {
@@ -50,7 +54,7 @@ func NewMailboxFromStr(mb string) (Mailbox, error) {
 		return mbox, err
 	}
 	mbox.Uid = val
-	mbox.Id = mbox.Uid & share.SESSION_MAX
+	mbox.Id = mbox.Uid & ID_MAX
 	mbox.Flag = int8((mbox.Uid >> 47) & 1)
 	mbox.Sid = share.ServiceId((mbox.Uid >> 48) & 0xFFFF)
 	return mbox, nil
@@ -59,7 +63,7 @@ func NewMailboxFromStr(mb string) (Mailbox, error) {
 func NewMailboxFromUid(val uint64) Mailbox {
 	mbox := Mailbox{}
 	mbox.Uid = val
-	mbox.Id = mbox.Uid & share.SESSION_MAX
+	mbox.Id = mbox.Uid & ID_MAX
 	mbox.Flag = int8((mbox.Uid >> 47) & 1)
 	mbox.Sid = share.ServiceId((mbox.Uid >> 48) & 0xFFFF)
 	return mbox
@@ -78,7 +82,7 @@ func GetServiceMailbox(appid share.ServiceId) Mailbox {
 }
 
 func NewSessionMailbox(appid share.ServiceId, id uint64) Mailbox {
-	if id > share.SESSION_MAX || appid > share.SID_MAX {
+	if id > ID_MAX || appid > share.SID_MAX {
 		panic("id is wrong")
 	}
 	m := Mailbox{}
@@ -90,7 +94,7 @@ func NewSessionMailbox(appid share.ServiceId, id uint64) Mailbox {
 }
 
 func NewMailbox(appid share.ServiceId, flag int8, id uint64) Mailbox {
-	if id > share.SESSION_MAX || appid > share.SID_MAX {
+	if id > ID_MAX || appid > share.SID_MAX {
 		panic("id is wrong")
 	}
 	m := Mailbox{}
