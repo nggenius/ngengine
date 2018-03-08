@@ -1,5 +1,5 @@
+// package object
 // 对象管理模块
-// 提供对象自动存储，自动同步功能
 // for example:
 //
 package object
