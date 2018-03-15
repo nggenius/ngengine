@@ -60,6 +60,7 @@ func StringSize(p *Property) int {
 func OutputFile(tpl, path, outfile string, obj *Object) {
 	t, err := template.New(tpl).Funcs(template.FuncMap{
 		"tolower": strings.ToLower,
+		"toupper": strings.ToUpper,
 		"strsize": StringSize,
 	}).ParseFiles(path + tpl)
 	if err != nil {

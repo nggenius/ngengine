@@ -47,3 +47,8 @@ func (o *ObjectModule) OnMessage(id int, args ...interface{}) {
 func (o *ObjectModule) RegisterObject(typ string, obj interface{}) {
 
 }
+
+// 创建
+func (o *ObjectModule) Create(typ string) (Object, error) {
+	return o.defaultFactory.Create(typ)
+}
