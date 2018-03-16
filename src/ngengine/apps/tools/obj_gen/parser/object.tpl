@@ -97,13 +97,19 @@ func (r *{{$.Name}}{{.Name}}_r) SetRowValue(rownum int {{range .Table.Cols}}, {{
 	if rownum < 0 || rownum >= len(r.Row) {
 		return fmt.Errorf("row num error")
 	}
-    {{range $index, $col := .Table.Cols}}{{with $col}}
+    /*{{range $index, $col := .Table.Cols}}{{with $col}}
 	if r.Row[rownum].{{.Name}} != {{tolower .Name}} {
 		r.Row[rownum].{{.Name}} = {{tolower .Name}}{{if ne $expose ""}}
 		if r.root != nil {
 			r.root.ChangeTable("{{$pname}}", rownum, {{$index}}, {{tolower .Name}})
 		} {{end}}{{end}}
 	} {{end}}
+	*/
+	{{range $index, $col := .Table.Cols}}{{with $col}}
+	r.Row[rownum].{{.Name}} = {{tolower .Name}}{{end}}{{end}}
+	if r.root != nil {
+		r.root.SetTableRowValue("{{$pname}}", rownum, 0)
+	}
 	return nil
 }
 

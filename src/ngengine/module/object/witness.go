@@ -95,6 +95,12 @@ func (o *ObjectWitness) AddTableRow(name string, row int) {
 func (o *ObjectWitness) AddTableRowValue(name string, row int, val ...interface{}) {
 	for _, observer := range o.tableobserver {
 		observer.UpdateTable(name, TABLE_ADD_ROW, row, 0)
+	}
+}
+
+// 设置表格一行的值(由object调用)
+func (o *ObjectWitness) SetTableRowValue(name string, row int, val ...interface{}) {
+	for _, observer := range o.tableobserver {
 		observer.UpdateTable(name, TABLE_SET_ROW, row, 0)
 	}
 }

@@ -72,24 +72,23 @@ func (a *AttrTrigger) RemoveCallback(attr string, cbname string) error {
 }
 
 // 增加某个表格的回调
-func (a *AttrTrigger) AddTableCallback(attr string, cbname string, cb TableAlter) error {
-	index := a.object.AttrIndex(attr)
+func (a *AttrTrigger) AddTableCallback(table string, cbname string, cb TableAlter) error {
+	index := a.object.AttrIndex(table)
 	if index == -1 {
-		return fmt.Errorf("attr not found %s", attr)
+		return fmt.Errorf("attr not found %s", table)
 	}
 
-	if a.object.GetAttrType(attr) != "table" {
-		return fmt.Errorf("attr is not table %s", attr)
+	if a.object.GetAttrType(table) != "table" {
+		return fmt.Errorf("attr is not table %s", table)
 	}
 
 	a.flag[index] |= FLAG_ALTER
 
-	if _, has := a.tableTrigger[attr]; !has {
-		a.tableTrigger[attr] = NewTableNotifier()
+	if _, has := a.tableTrigger[table]; !has {
+		a.tableTrigger[table] = NewTableNotifier()
 	}
 
-	return a.tableTrigger[attr].Add(cbname, cb)
-
+	return a.tableTrigger[table].Add(cbname, cb)
 }
 
 // 移除某个表格的回调
@@ -99,7 +98,7 @@ func (a *AttrTrigger) RemoveTableCallback(attr string, cbname string) error {
 		return fmt.Errorf("attr not found %s", attr)
 	}
 
-	if _, has := a.attrTrigger[attr]; !has {
+	if _, has := a.tableTrigger[attr]; !has {
 		return fmt.Errorf("attr callback not found %s", attr)
 	}
 

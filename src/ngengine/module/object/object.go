@@ -26,6 +26,7 @@ type Object interface {
 	UpdateTuple(name string, val interface{}, old interface{})
 	AddTableRow(name string, row int)
 	AddTableRowValue(name string, row int, val ...interface{})
+	SetTableRowValue(name string, row int, val ...interface{})
 	DelTableRow(name string, row int)
 	ClearTable(name string)
 	ChangeTable(name string, row, col int, val interface{})
