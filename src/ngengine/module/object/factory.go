@@ -18,20 +18,22 @@ func Register(name string, o ObjectCreate) {
 	regs[name] = o
 }
 
-type factory struct {
+type Factory struct {
 	serial uint32
+	owner  *ObjectModule
 }
 
-func newFactory() *factory {
-	f := &factory{}
+func newFactory(owner *ObjectModule) *Factory {
+	f := &Factory{}
+	f.owner = owner
 	return f
 }
 
-func (f *factory) Create(typ string) (Object, error) {
+func (f *Factory) Create(typ string) (Object, error) {
 	return f.createObj(typ)
 }
 
-func (f *factory) createObj(typ string) (Object, error) {
+func (f *Factory) createObj(typ string) (Object, error) {
 	if c, ok := regs[typ]; ok {
 		inst := c.Create()
 		if inst == nil {
@@ -39,6 +41,7 @@ func (f *factory) createObj(typ string) (Object, error) {
 		}
 
 		if o, ok := inst.(Object); ok {
+			o.SetFactory(f)
 			return o, nil
 		}
 

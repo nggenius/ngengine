@@ -45,9 +45,9 @@ type {{$.Name}}{{.Name}}_c struct {
 
 // record {{.Name}} {{.Desc}}
 type {{$.Name}}{{.Name}}_r struct {
-    Row     []*{{$.Name}}{{.Name}}_c
-	data    [{{.Table.MaxRows}}]*{{$.Name}}{{.Name}}_c
 	root object.Object
+	data    [{{.Table.MaxRows}}]*{{$.Name}}{{.Name}}_c
+    Row     []*{{$.Name}}{{.Name}}_c
 }
 
 // record  {{.Name}}  serial
@@ -310,7 +310,6 @@ type {{.Name}} struct{
 	object.ObjectWitness
     archive *{{.Name}}Archive // archive
     attr *{{.Name}}Attr // attr
-
 }
 
 // {{.Name}} construct
@@ -318,6 +317,7 @@ func New{{.Name}}() *{{.Name}} {
     o := &{{.Name}}{}
     o.archive = New{{.Name}}Archive(o)
     o.attr = New{{.Name}}Attr(o)
+	o.Witness(o)
     return o
 }
 
@@ -360,7 +360,7 @@ func (o *{{$.Name}}) Set{{.Name}}( {{tolower .Name}} {{if eq .Type "tuple"}} {{$
 	old := o.attr.{{.Name}}
 	o.attr.{{.Name}} = {{tolower .Name}}{{end}} {{end}} {{end}}  {{if ne .Type "table"}}{{if eq .Type "tuple"}}	
 	o.UpdateTuple("{{.Name}}", {{tolower .Name}}, old) {{else}}
-	o.UpdateAttr("{{.Name}}", "{{.Type}}", {{tolower .Name}}, old) {{end}} {{end}}
+	o.UpdateAttr("{{.Name}}", {{tolower .Name}}, old) {{end}} {{end}}
 }
 
 // get {{.Name}} {{.Desc}}
@@ -379,6 +379,31 @@ func  (o *{{$.Name}}) GetAttrType(name string) string {
 	}
 }
 
+// attr expose info 
+func  (o *{{$.Name}}) Expose(name string) int {
+	switch name { {{range .Property}}
+	case "{{.Name}}":
+		return object.EXPOSE_{{if eq .Expose ""}}NONE{{else}}{{toupper .Expose}}{{end}}{{end}}
+	default:
+		panic("unknown")
+	}
+}
+
+// get all attr name
+func (o *{{$.Name}}) AllAttr() []string {
+	return []string{ {{range $k, $p := .Property}}{{if ne $k 0}},{{end}} {{with $p}}"{{.Name}}" {{end}}{{end}} }
+}
+
+// get attr index by name
+func (o *{{$.Name}}) AttrIndex(name string) int {
+	switch name { {{range $k, $p := .Property}}{{with $p}}
+	case "{{.Name}}":
+		return {{$k}} {{end}}{{end}}
+	default:
+		return -1
+	}
+}
+
 // get attr value
 func  (o *{{$.Name}}) GetAttr(name string) interface{} {
 	switch name { {{range .Property}}
@@ -386,15 +411,6 @@ func  (o *{{$.Name}}) GetAttr(name string) interface{} {
 		return {{if eq .Save "true"}}o.archive.{{.Name}} {{else}}o.attr.{{.Name}} {{end}} {{end}}
 	default:
 		return nil
-	}
-}
-
-func  (o *{{$.Name}}) Expose(name string) int {
-	switch name { {{range .Property}}
-	case "{{.Name}}":
-		return object.EXPOSE_{{if eq .Expose ""}}NONE{{else}}{{toupper .Expose}}{{end}}{{end}}
-	default:
-		panic("unknown")
 	}
 }
 

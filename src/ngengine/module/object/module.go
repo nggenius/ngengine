@@ -4,18 +4,21 @@
 //
 package object
 
-import "ngengine/core/service"
+import (
+	"ngengine/core/service"
+	"ngengine/logger"
+)
 
 type ObjectModule struct {
 	core           service.CoreApi
-	defaultFactory *factory // 默认对象工厂
-	factorys       map[string]*factory
+	defaultFactory *Factory // 默认对象工厂
+	factorys       map[string]*Factory
 }
 
 func New() *ObjectModule {
 	o := &ObjectModule{}
-	o.defaultFactory = newFactory()
-	o.factorys = make(map[string]*factory)
+	o.defaultFactory = newFactory(o)
+	o.factorys = make(map[string]*Factory)
 	return o
 }
 
@@ -46,6 +49,11 @@ func (o *ObjectModule) OnMessage(id int, args ...interface{}) {
 // RegisterObject 注册一个对象
 func (o *ObjectModule) RegisterObject(typ string, obj interface{}) {
 
+}
+
+// 获取日志接口
+func (o *ObjectModule) Logger() logger.Logger {
+	return o.core
 }
 
 // 创建

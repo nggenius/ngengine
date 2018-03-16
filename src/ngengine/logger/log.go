@@ -15,6 +15,29 @@ const (
 	LOG_FATAL
 )
 
+type Logger interface {
+	// 日志函数
+	LogDebug(v ...interface{})
+	// 日志函数
+	LogInfo(v ...interface{})
+	// 日志函数
+	LogWarn(v ...interface{})
+	// 日志函数
+	LogErr(v ...interface{})
+	// 日志函数
+	LogFatal(v ...interface{})
+	// 日志函数
+	LogDebugf(format string, v ...interface{})
+	// 日志函数
+	LogInfof(format string, v ...interface{})
+	// 日志函数
+	LogWarnf(format string, v ...interface{})
+	// 日志函数
+	LogErrf(format string, v ...interface{})
+	// 日志函数
+	LogFatalf(format string, v ...interface{})
+}
+
 type Log struct {
 	logger   *log.Logger
 	logfile  *os.File
