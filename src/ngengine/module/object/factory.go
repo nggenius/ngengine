@@ -1,7 +1,9 @@
 package object
 
 import (
+	"errors"
 	"fmt"
+	"ngengine/core/rpc"
 )
 
 var regs = map[string]ObjectCreate{}
@@ -18,34 +20,54 @@ func Register(name string, o ObjectCreate) {
 	regs[name] = o
 }
 
-type Factory struct {
-	serial uint32
-	owner  *ObjectModule
+type FactoryObject interface {
+	Index() int
+	SetIndex(int)
+	SetMailbox(mb rpc.Mailbox)
+	SetFactory(f *Factory)
 }
 
-func newFactory(owner *ObjectModule) *Factory {
+type Factory struct {
+	objType int
+	serial  uint32
+	owner   *ObjectModule
+	pool    *ObjectList
+}
+
+func newFactory(owner *ObjectModule, typ int) *Factory {
 	f := &Factory{}
+	f.objType = typ
 	f.owner = owner
+	f.pool = NewObjectList(128, 0x1000000)
 	return f
 }
 
-func (f *Factory) Create(typ string) (Object, error) {
-	return f.createObj(typ)
-}
-
-func (f *Factory) createObj(typ string) (Object, error) {
+func (f *Factory) Create(typ string) (interface{}, error) {
 	if c, ok := regs[typ]; ok {
 		inst := c.Create()
 		if inst == nil {
 			return nil, fmt.Errorf("object create failed")
 		}
 
-		if o, ok := inst.(Object); ok {
+		if o, ok := inst.(FactoryObject); ok {
+			index, err := f.pool.Add(inst)
+			if err != nil {
+				return nil, err
+			}
+			o.SetIndex(index)
 			o.SetFactory(f)
-			return o, nil
+			return inst, nil
 		}
 
 		return nil, fmt.Errorf("new obj is not Object")
 	}
 	return nil, fmt.Errorf("object not found")
+}
+
+func (f *Factory) Destroy(object interface{}) error {
+	if fo, ok := object.(FactoryObject); ok {
+		return f.pool.Remove(fo.Index(), object)
+	}
+
+	return errors.New("object is not FactoryObject")
 }

@@ -11,6 +11,8 @@ import(
     "github.com/mysll/toolkit"
 )
 
+var _ = json.Marshal
+var _ = toolkit.ParseNumber
 {{range .Property}}
 {{if eq .Type "tuple"}}
 // tuple {{.Name}} {{.Desc}}
@@ -331,6 +333,16 @@ func New{{.Name}}() *{{.Name}} {
 func (o *{{.Name}}) Store() {
 }
 
+// {{.Name}} type
+func (o *{{.Name}}) Type() string {
+	return "{{.Type}}"
+}
+
+// {{.Name}} entity name
+func (o *{{.Name}}) Entity() string {
+	return "{{.Name}}"
+}
+
 // {{.Name}} load
 func (o *{{.Name}}) Load() {
 }
@@ -442,18 +454,8 @@ func  (o *{{$.Name}}) SetAttr(name string, value interface{}) error {
 	}
 }
 
-// object create helper
-type {{$.Name}}Creater struct{
-}
-
-// create player
-func (o *{{$.Name}}Creater) Create() interface{} {
-	return New{{$.Name}}()
-}
-
 // gob register
 func init() {
-	object.Register("{{$.Name}}", &{{$.Name}}Creater{})
 	gob.Register(&{{.Name}}{})
 	gob.Register(&{{.Name}}Archive{})
 	gob.Register([]*{{.Name}}{})

@@ -14,6 +14,8 @@ type ObjectCreate interface {
 type Object interface {
 	Factory() *Factory
 	SetFactory(f *Factory)
+	Type() string
+	Entity() string
 	GetAttrType(name string) string
 	GetAttr(name string) interface{}
 	SetAttr(name string, value interface{}) error

@@ -7,6 +7,7 @@ package object
 import (
 	"ngengine/core/service"
 	"ngengine/logger"
+	"ngengine/share"
 )
 
 type ObjectModule struct {
@@ -17,7 +18,7 @@ type ObjectModule struct {
 
 func New() *ObjectModule {
 	o := &ObjectModule{}
-	o.defaultFactory = newFactory(o)
+	o.defaultFactory = newFactory(o, share.OBJECT_TYPE_OBJECT)
 	o.factorys = make(map[string]*Factory)
 	return o
 }
@@ -57,6 +58,11 @@ func (o *ObjectModule) Logger() logger.Logger {
 }
 
 // 创建
-func (o *ObjectModule) Create(typ string) (Object, error) {
+func (o *ObjectModule) Create(typ string) (interface{}, error) {
 	return o.defaultFactory.Create(typ)
+}
+
+// 销毁一个对象
+func (o *ObjectModule) Destroy(object interface{}) error {
+	return o.defaultFactory.Destroy(object)
 }
