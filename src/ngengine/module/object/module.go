@@ -5,6 +5,7 @@
 package object
 
 import (
+	"ngengine/core/rpc"
 	"ngengine/core/service"
 	"ngengine/logger"
 	"ngengine/share"
@@ -41,15 +42,14 @@ func (o *ObjectModule) Shut() {
 
 // OnUpdate 模块Update
 func (o *ObjectModule) OnUpdate(t *service.Time) {
+	o.defaultFactory.ClearDelete()
+	for _, f := range o.factorys {
+		f.ClearDelete()
+	}
 }
 
 // OnMessage 模块消息
 func (o *ObjectModule) OnMessage(id int, args ...interface{}) {
-}
-
-// RegisterObject 注册一个对象
-func (o *ObjectModule) RegisterObject(typ string, obj interface{}) {
-
 }
 
 // 获取日志接口
@@ -65,4 +65,9 @@ func (o *ObjectModule) Create(typ string) (interface{}, error) {
 // 销毁一个对象
 func (o *ObjectModule) Destroy(object interface{}) error {
 	return o.defaultFactory.Destroy(object)
+}
+
+// 获取一个对象
+func (o *ObjectModule) GetObject(mb rpc.Mailbox) (interface{}, error) {
+	return o.defaultFactory.GetObject(mb)
 }

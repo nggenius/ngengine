@@ -5,6 +5,14 @@ import (
 	"sort"
 )
 
+const (
+	PRIORITY_LOWEST  = -1024
+	PRIORITY_LOWER   = -512
+	PRIORITY_NORMAL  = 0
+	PRIORITY_HIGH    = 512
+	PRIORITY_HIGHEST = 1024
+)
+
 type callback func(self Object, sender Object, args ...interface{}) int
 
 type PriorityDelegate struct {

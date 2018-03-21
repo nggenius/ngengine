@@ -13,7 +13,6 @@ type Role struct {
 func NewRole() *Role {
 	r := &Role{}
 	r.Player = entity.NewPlayer()
-	r.Create()
 	r.SetSpirit(r.Player)
 	return r
 }

@@ -36,6 +36,13 @@ func (m *Mailbox) Generate() {
 	m.Uid = ((uint64(m.Sid) << 48) & 0xFFFF000000000000) | ((uint64(m.Flag) & 1) << 47) | (m.Id & ID_MAX)
 }
 
+func (m Mailbox) ObjectId(otype, serial, index int) Mailbox {
+	id := uint64((otype&0x7F)<<40) | uint64(serial)<<32 | uint64(index&0xFFFFFFFF)
+	mb := Mailbox{m.Sid, 0, id, 0}
+	mb.Generate()
+	return mb
+}
+
 func NewMailboxFromStr(mb string) (Mailbox, error) {
 	mbox := Mailbox{}
 	if !strings.HasPrefix(mb, "mailbox://") {

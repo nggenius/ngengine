@@ -23,6 +23,8 @@ type SrvInfo struct {
 type CoreApi interface {
 	// 获取当前服务的goroutine id
 	GID() int64
+	// 获取当前服务的mailbox
+	Mailbox() rpc.Mailbox
 	// 返回配置选项
 	Option() *CoreOption
 	// 关闭服务
@@ -77,8 +79,14 @@ type CoreApi interface {
 	GetLog() *logger.Log
 }
 
+// 获取当前服务的goroutine id
 func (c *Core) GID() int64 {
 	return c.gid
+}
+
+// 获取当前服务的mailbox
+func (c *Core) Mailbox() rpc.Mailbox {
+	return c.mailbox
 }
 
 // 返回配置选项
@@ -135,11 +143,11 @@ func (c *Core) Mailto(src *rpc.Mailbox, dest *rpc.Mailbox, method string, args .
 	}
 
 	if src == nil {
-		src = &c.Mailbox
+		src = &c.mailbox
 	}
 
 	if !dest.IsClient() { // 判断是否是客户端的消息
-		if dest.Sid == c.Mailbox.Sid { // 本地调用
+		if dest.Sid == c.mailbox.Sid { // 本地调用
 			return c.rpcSvr.Call(rpc.GetServiceMethod(method), *src, args...)
 		}
 		srv := c.dns.LookupByMailbox(*dest)
@@ -163,14 +171,14 @@ func (c *Core) MailtoAndCallback(src *rpc.Mailbox, dest *rpc.Mailbox, method str
 	}
 
 	if src == nil {
-		src = &c.Mailbox
+		src = &c.mailbox
 	}
 
 	if dest.IsClient() { // 客户端的调用不支持回调
 		return fmt.Errorf("client not support callback")
 	}
 
-	if dest.Sid == c.Mailbox.Sid { // 本地调用
+	if dest.Sid == c.mailbox.Sid { // 本地调用
 		return c.rpcSvr.CallBack(rpc.GetServiceMethod(method), *src, cb, args...)
 	}
 
@@ -197,10 +205,10 @@ func (c *Core) ClientCall(src *rpc.Mailbox, dest *rpc.Mailbox, method string, ar
 	}
 
 	if src == nil {
-		src = &c.Mailbox
+		src = &c.mailbox
 	}
 
-	if dest.Sid == c.Mailbox.Sid {
+	if dest.Sid == c.mailbox.Sid {
 		msg := protocol.NewProtoMessage()
 		msg.Put(pb)
 		msg.Flush()

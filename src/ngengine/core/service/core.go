@@ -40,7 +40,7 @@ type Core struct {
 	rpcCh      chan *rpc.RpcCall   // rpc 调用通道
 	rpcSvr     *rpc.Server         // rpc 服务
 	Emitter    *event.AsyncEvent   // 事件调度器
-	Mailbox    rpc.Mailbox         // 服务的地址
+	mailbox    rpc.Mailbox         // 服务的地址
 	busy       bool                // 运行状态
 	Proto      protocol.ProtoCodec // 消息编码解码器
 	clientDB   *ClientDB           // 客户端管理
@@ -83,7 +83,7 @@ func (c *Core) Init(args string) error {
 	}
 
 	c.Id = opt.ServId
-	c.Mailbox = rpc.GetServiceMailbox(opt.ServId)
+	c.mailbox = rpc.GetServiceMailbox(opt.ServId)
 	c.opts = opt
 	if c.opts.LogFile == "" {
 		c.opts.LogFile = fmt.Sprintf("%s_%d.log", c.startTime.Format("06_01_02_15_04_05"), toolkit.RandRange(100, 999))

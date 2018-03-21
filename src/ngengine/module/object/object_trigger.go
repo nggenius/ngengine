@@ -146,6 +146,7 @@ func (a *AttrTrigger) UpdateTuple(attr string, val interface{}, old interface{})
 	}
 }
 
+// table变动时的回调函数，由witness回调
 func (a *AttrTrigger) UpdateTable(table string, op_type, row, col int) {
 	index := a.object.AttrIndex(table)
 	if index == -1 {

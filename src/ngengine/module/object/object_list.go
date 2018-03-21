@@ -24,10 +24,12 @@ func NewObjectList(slotlens int, maxitems int) *ObjectList {
 	o.slots = make([]ObjectSlot, 1, slotcount)
 	o.free = list.New()
 	o.slotLens = slotlens
-	o.slots[0] = make(ObjectSlot, 0, slotlens)
+	o.slots[0] = make(ObjectSlot, 1, slotlens)
+	o.maxindex = 1 // 0号位不用
 	return o
 }
 
+// 插入对象
 func (l *ObjectList) Add(object interface{}) (int, error) {
 	if object == nil {
 		return -1, errors.New("object is nil")
@@ -59,6 +61,7 @@ func (l *ObjectList) Add(object interface{}) (int, error) {
 	return index, nil
 }
 
+// 移除对象
 func (l *ObjectList) Remove(index int, object interface{}) error {
 	slot := index / l.slotLens
 	slotindex := index % l.slotLens
@@ -74,4 +77,15 @@ func (l *ObjectList) Remove(index int, object interface{}) error {
 	l.count--
 	l.free.PushBack(index)
 	return nil
+}
+
+// 获取对象
+func (l *ObjectList) Get(index int) (interface{}, error) {
+	slot := index / l.slotLens
+	slotindex := index % l.slotLens
+	if slot >= len(l.slots) || slotindex >= len(l.slots[slot]) {
+		return nil, fmt.Errorf("remove object index error, %d", index)
+	}
+
+	return l.slots[slot][slotindex], nil
 }

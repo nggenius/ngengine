@@ -63,6 +63,7 @@ func (a *AttrNotifier) Remove(name string) error {
 
 type TableAlter func(object Object, table string, op, row, col int)
 
+// 表格变动通知
 type TableNotifier struct {
 	cb       map[string]TableAlter
 	invoking bool
