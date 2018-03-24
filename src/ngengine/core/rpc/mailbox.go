@@ -24,25 +24,40 @@ func (m Mailbox) String() string {
 	return fmt.Sprintf("mailbox://%x", m.Uid)
 }
 
+// 获取服务编号
 func (m *Mailbox) ServiceId() share.ServiceId {
 	return share.ServiceId(m.Sid)
 }
 
+// 是否是一个客户端地址
 func (m *Mailbox) IsClient() bool {
 	return m.Flag == share.MB_FLAG_CLIENT
 }
 
+// create uid
 func (m *Mailbox) Generate() {
 	m.Uid = ((uint64(m.Sid) << 48) & 0xFFFF000000000000) | ((uint64(m.Flag) & 1) << 47) | (m.Id & ID_MAX)
 }
 
-func (m Mailbox) ObjectId(otype, serial, index int) Mailbox {
-	id := uint64((otype&0x7F)<<40) | uint64(serial)<<32 | uint64(index&0xFFFFFFFF)
+// get object type
+func (m Mailbox) ObjectType() int {
+	return int((m.Id >> 40) & 0x7F)
+}
+
+// get object index
+func (m Mailbox) ObjectIndex() int {
+	return int(m.Id & 0xFFFFFFFF)
+}
+
+// 生成一个新的object id
+func (m Mailbox) NewObjectId(otype, serial, index int) Mailbox {
+	id := uint64((otype&0x7F)<<40) | uint64(serial&0xFF)<<32 | uint64(index&0xFFFFFFFF)
 	mb := Mailbox{m.Sid, 0, id, 0}
 	mb.Generate()
 	return mb
 }
 
+// 通过字符串生成mailbox
 func NewMailboxFromStr(mb string) (Mailbox, error) {
 	mbox := Mailbox{}
 	if !strings.HasPrefix(mb, "mailbox://") {
@@ -67,6 +82,7 @@ func NewMailboxFromStr(mb string) (Mailbox, error) {
 	return mbox, nil
 }
 
+// 通过uid生成mailbox
 func NewMailboxFromUid(val uint64) Mailbox {
 	mbox := Mailbox{}
 	mbox.Uid = val
@@ -76,6 +92,7 @@ func NewMailboxFromUid(val uint64) Mailbox {
 	return mbox
 }
 
+// 通过服务编号获取mailbox
 func GetServiceMailbox(appid share.ServiceId) Mailbox {
 	if appid > 0xFFFF {
 		panic("id is wrong")
@@ -88,6 +105,7 @@ func GetServiceMailbox(appid share.ServiceId) Mailbox {
 	return m
 }
 
+// 生成一个新的客户端mailbox
 func NewSessionMailbox(appid share.ServiceId, id uint64) Mailbox {
 	if id > ID_MAX || appid > share.SID_MAX {
 		panic("id is wrong")
@@ -100,6 +118,7 @@ func NewSessionMailbox(appid share.ServiceId, id uint64) Mailbox {
 	return m
 }
 
+// 生成mailbox
 func NewMailbox(appid share.ServiceId, flag int8, id uint64) Mailbox {
 	if id > ID_MAX || appid > share.SID_MAX {
 		panic("id is wrong")
@@ -113,5 +132,6 @@ func NewMailbox(appid share.ServiceId, flag int8, id uint64) Mailbox {
 }
 
 func init() {
+	gob.Register([]Mailbox{})
 	gob.Register(Mailbox{})
 }

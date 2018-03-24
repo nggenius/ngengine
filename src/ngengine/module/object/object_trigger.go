@@ -1,5 +1,7 @@
 package object
 
+// trigger提供了一个通用的属性触发器，在数据产生变动的时候，进行回调。
+// 由使用方对具体的属性进行挂钩注册。需要注册进witness进行使用。
 import (
 	"fmt"
 )
@@ -54,7 +56,6 @@ func (a *AttrTrigger) AddCallback(attr string, cbname string, cb AttrAlter) erro
 	}
 
 	return a.attrTrigger[attr].Add(cbname, cb)
-
 }
 
 // 移除某个属性的回调

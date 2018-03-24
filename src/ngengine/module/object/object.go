@@ -7,11 +7,16 @@ const (
 	EXPOSE_ALL   = EXPOSE_OWNER & EXPOSE_OTHER
 )
 
+// 对象创建接口
 type ObjectCreate interface {
 	Create() interface{}
 }
 
 type Object interface {
+	// 沉默状态
+	Silence() bool
+	// 设置沉默状态
+	SetSilence(bool)
 	// 所属的工厂
 	Factory() *Factory
 	// 设置工厂，由工厂主动调用

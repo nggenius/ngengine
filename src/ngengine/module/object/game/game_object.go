@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"ngengine/core/rpc"
 	"ngengine/module/object"
+	"time"
 )
 
 type delegate interface {
@@ -17,6 +18,7 @@ type GameObject interface {
 }
 
 type ComponentInfo struct {
+	started   bool
 	comp      Component
 	useUpdate bool
 }
@@ -84,19 +86,52 @@ func (b *BaseObject) SetMailbox(mb rpc.Mailbox) {
 	b.mailbox = mb
 }
 
+// update
+func (b *BaseObject) Update(delta time.Duration) {
+	for _, comp := range b.component {
+		if !comp.comp.Enable() {
+			continue
+		}
+		if !comp.started {
+			comp.comp.Start()
+			comp.started = true
+		}
+		if comp.useUpdate {
+			comp.comp.Update(delta)
+		}
+	}
+}
+
+// 获取组件
+func (b *BaseObject) GetComponent(name string) Component {
+	if comp, has := b.component[name]; has {
+		return comp.comp
+	}
+	return nil
+}
+
 // 增加一个组件
 func (b *BaseObject) AddComponent(name string, com Component, update bool) error {
 	if _, has := b.component[name]; has {
 		return fmt.Errorf("component has register twice, %s ", name)
 	}
 
-	b.component[name] = ComponentInfo{com, update}
+	b.component[name] = ComponentInfo{
+		started:   false,
+		comp:      com,
+		useUpdate: update,
+	}
+
+	com.SetEnable(true)
+	// 调用初始化函数
+	com.Create()
 	return nil
 }
 
 // 移除一个组件
 func (b *BaseObject) RemoveComponent(name string) {
-	if _, has := b.component[name]; has {
+	if comp, has := b.component[name]; has {
+		comp.comp.Destroy() // 销毁组件
 		delete(b.component, name)
 	}
 }

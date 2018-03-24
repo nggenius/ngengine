@@ -64,7 +64,7 @@ func (f *Factory) Create(typ string) (interface{}, error) {
 			}
 			o.SetIndex(index)
 			f.serial = (f.serial + 1) % 0xFF
-			o.SetMailbox(f.owner.core.Mailbox().ObjectId(f.objType, f.serial, index))
+			o.SetMailbox(f.owner.core.Mailbox().NewObjectId(f.objType, f.serial, index))
 			o.SetFactory(f)
 			o.Create()
 			return inst, nil
@@ -103,11 +103,11 @@ func (f *Factory) ClearDelete() {
 func (f *Factory) GetObject(mb rpc.Mailbox) (interface{}, error) {
 	if f.owner.core.Mailbox().Sid != mb.Sid ||
 		mb.Flag != 0 ||
-		(mb.Id>>40)&0x7F != uint64(f.objType) {
+		mb.ObjectType() != f.objType {
 		return nil, errors.New("mailbox error")
 	}
 
-	obj, err := f.pool.Get(int(mb.Id & 0xFFFFFFFF))
+	obj, err := f.pool.Get(mb.ObjectIndex())
 	if err != nil {
 		return nil, err
 	}

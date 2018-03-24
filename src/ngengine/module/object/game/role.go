@@ -3,6 +3,7 @@ package game
 import (
 	"ngengine/module/object"
 	"ngengine/module/object/entity"
+	"time"
 )
 
 type Role struct {
@@ -23,6 +24,10 @@ func (r *Role) Create() {
 
 func (r *Role) Destroy() {
 	r.TransformObject.Destroy()
+}
+
+func (r *Role) Update(delta time.Duration) {
+	r.TransformObject.Update(delta)
 }
 
 type RoleCreater struct {

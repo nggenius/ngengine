@@ -1,5 +1,8 @@
 package object
 
+// Witness的作用是监听数据对象的变动，作为一个目击者。由数据对象直接持有。
+// 目击者作为一个事件集散地，对所有的数据变动的事件进行调度。由第三方注册。
+// 目击者不关注变动的细节，只进行转发，由第三方进行细节的处理。
 import (
 	"fmt"
 )
@@ -27,8 +30,19 @@ type tableObserver interface {
 type ObjectWitness struct {
 	object        Object
 	factory       *Factory
+	silence       bool
 	attrobserver  map[string]attrObserver
 	tableobserver map[string]tableObserver
+}
+
+// 沉默状态
+func (o *ObjectWitness) Silence() bool {
+	return o.silence
+}
+
+// 设置沉默状态
+func (o *ObjectWitness) SetSilence(s bool) {
+	o.silence = s
 }
 
 // 获取工厂
@@ -72,6 +86,9 @@ func (o *ObjectWitness) AddTableObserver(name string, observer tableObserver) er
 
 // 对象属性变动(由object调用)
 func (o *ObjectWitness) UpdateAttr(name string, val interface{}, old interface{}) {
+	if o.silence {
+		return
+	}
 	for _, observer := range o.attrobserver {
 		observer.UpdateAttr(name, val, old)
 	}
@@ -79,6 +96,9 @@ func (o *ObjectWitness) UpdateAttr(name string, val interface{}, old interface{}
 
 // 对象tupele属性变动(由object调用)
 func (o *ObjectWitness) UpdateTuple(name string, val interface{}, old interface{}) {
+	if o.silence {
+		return
+	}
 	for _, observer := range o.attrobserver {
 		observer.UpdateTuple(name, val, old)
 	}
@@ -86,6 +106,9 @@ func (o *ObjectWitness) UpdateTuple(name string, val interface{}, old interface{
 
 // 对象表格增加一行(由object调用)
 func (o *ObjectWitness) AddTableRow(name string, row int) {
+	if o.silence {
+		return
+	}
 	for _, observer := range o.tableobserver {
 		observer.UpdateTable(name, TABLE_ADD_ROW, row, 0)
 	}
@@ -93,6 +116,9 @@ func (o *ObjectWitness) AddTableRow(name string, row int) {
 
 // 对象表格增加一行，并设置值(由object调用)
 func (o *ObjectWitness) AddTableRowValue(name string, row int, val ...interface{}) {
+	if o.silence {
+		return
+	}
 	for _, observer := range o.tableobserver {
 		observer.UpdateTable(name, TABLE_ADD_ROW, row, 0)
 	}
@@ -100,6 +126,9 @@ func (o *ObjectWitness) AddTableRowValue(name string, row int, val ...interface{
 
 // 设置表格一行的值(由object调用)
 func (o *ObjectWitness) SetTableRowValue(name string, row int, val ...interface{}) {
+	if o.silence {
+		return
+	}
 	for _, observer := range o.tableobserver {
 		observer.UpdateTable(name, TABLE_SET_ROW, row, 0)
 	}
@@ -107,6 +136,9 @@ func (o *ObjectWitness) SetTableRowValue(name string, row int, val ...interface{
 
 // 对象表格删除一行(由object调用)
 func (o *ObjectWitness) DelTableRow(name string, row int) {
+	if o.silence {
+		return
+	}
 	for _, observer := range o.tableobserver {
 		observer.UpdateTable(name, TABLE_REMOVE_ROW, row, 0)
 	}
@@ -114,6 +146,9 @@ func (o *ObjectWitness) DelTableRow(name string, row int) {
 
 // 对象表格清除所有行(由object调用)
 func (o *ObjectWitness) ClearTable(name string) {
+	if o.silence {
+		return
+	}
 	for _, observer := range o.tableobserver {
 		observer.UpdateTable(name, TABLE_CLEAR_ROW, 0, 0)
 	}
@@ -121,6 +156,9 @@ func (o *ObjectWitness) ClearTable(name string) {
 
 // 对象表格单元格更新(由object调用)
 func (o *ObjectWitness) ChangeTable(name string, row, col int, val interface{}) {
+	if o.silence {
+		return
+	}
 	for _, observer := range o.tableobserver {
 		observer.UpdateTable(name, TABLE_GRID_CHANGE, row, col)
 	}
