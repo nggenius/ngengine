@@ -10,6 +10,7 @@ type Role struct {
 
 func NewRole() *Role {
 	r := &Role{}
+	r.typ = OBJECT_PLAYER
 	return r
 }
 

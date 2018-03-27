@@ -7,9 +7,14 @@ import (
 	"time"
 )
 
-type delegate interface {
-	Invoke(event string, self, sender rpc.Mailbox, args ...interface{}) int
-}
+const (
+	OBJECT_NONE = iota
+	OBJECT_SCENE
+	OBJECT_PLAYER
+	OBJECT_ITEM
+	OBJECT_NPC
+	OBJECT_MAX
+)
 
 type GameObject interface {
 	Spirit() object.Object
@@ -24,11 +29,12 @@ type ComponentInfo struct {
 }
 
 type BaseObject struct {
+	typ       int
 	delete    bool
 	index     int
 	mailbox   rpc.Mailbox
 	spirit    object.Object
-	delegate  delegate
+	delegate  object.Delegate
 	component map[string]ComponentInfo
 }
 
@@ -42,6 +48,10 @@ func (b *BaseObject) Create() {
 	if b.delegate != nil {
 		b.delegate.Invoke(E_ON_CREATE, b.mailbox, rpc.Mailbox{})
 	}
+}
+
+func (b *BaseObject) ObjectType() int {
+	return b.typ
 }
 
 // 准备销毁
@@ -73,7 +83,7 @@ func (b *BaseObject) Index() int {
 }
 
 // 设置事件代理
-func (b *BaseObject) SetDelegate(d delegate) {
+func (b *BaseObject) SetDelegate(d object.Delegate) {
 	b.delegate = d
 }
 

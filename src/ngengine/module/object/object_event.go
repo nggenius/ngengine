@@ -14,6 +14,11 @@ const (
 	PRIORITY_HIGHEST = 1024
 )
 
+type Delegate interface {
+	Invoke(event string, self, sender rpc.Mailbox, args ...interface{}) int
+	InvokeNoReturn(event string, self, sender rpc.Mailbox, args ...interface{})
+}
+
 type callback func(self, sender rpc.Mailbox, args ...interface{}) int
 
 type PriorityDelegate struct {

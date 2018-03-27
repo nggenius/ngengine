@@ -7,20 +7,6 @@ import (
 	"ngengine/core/rpc"
 )
 
-var regs = map[string]ObjectCreate{}
-
-func Register(name string, o ObjectCreate) {
-
-	if o == nil {
-		panic("object: Register object is nil")
-	}
-	if _, dup := regs[name]; dup {
-		panic("object: Register called twice for object " + name)
-	}
-
-	regs[name] = o
-}
-
 type FactoryObject interface {
 	Index() int
 	SetIndex(int)
@@ -32,6 +18,7 @@ type FactoryObject interface {
 	Destroy()
 	Delete()
 	Alive() bool
+	SetDelegate(d Delegate)
 }
 
 type Factory struct {
@@ -53,7 +40,7 @@ func newFactory(owner *ObjectModule, typ int) *Factory {
 
 // 通过类型创建一个对象
 func (f *Factory) Create(typ string) (interface{}, error) {
-	if c, ok := regs[typ]; ok {
+	if c, ok := f.owner.regs[typ]; ok {
 		inst := c.Create()
 		if inst == nil {
 			return nil, fmt.Errorf("object create failed")
@@ -68,6 +55,7 @@ func (f *Factory) Create(typ string) (interface{}, error) {
 			f.serial = (f.serial + 1) % 0xFF
 			o.SetMailbox(f.owner.core.Mailbox().NewObjectId(f.objType, f.serial, index))
 			o.SetFactory(f)
+			o.SetDelegate(f.owner.entitydelegate[typ])
 			o.Prepare()
 			o.Create()
 			return inst, nil
