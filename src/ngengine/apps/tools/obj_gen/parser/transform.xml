@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<object>
+    <propertys>
+        <property name="Pos" type="tuple" save="true" expose="" desc="位置">
+            <tuple name="X" type="float32" desc="" />
+            <tuple name="Y" type="float32" desc="" />
+            <tuple name="Z" type="float32" desc="" />
+        </property>
+        <property name="Orient" type="float32" size="" save="true" expose="" desc="朝向(弧度)" />
+    </propertys>
+</object>

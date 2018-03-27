@@ -3,14 +3,11 @@
     <package>entity</package>
     <name>Player</name>
     <type>player</type>
-    <include></include>
+    <include>parser/internal.xml</include>
+    <include>parser/visible.xml</include>
+    <include>parser/transform.xml</include>
     <archive>player</archive>
     <propertys>
-        <property name="Name" type="string" size="64" save="true" expose="owner" desc="玩家名" />
-        <property name="Pos" type="tuple" save="true" expose="owner" desc="位置">
-            <tuple name="X" type="float32" desc="" />
-            <tuple name="Y" type="float32" desc="" />
-            <tuple name="Z" type="float32" desc="" />
-        </property>
+        <property name="Name" type="string" size="128" save="true" expose="owner" desc="玩家名" />
     </propertys>
 </object>

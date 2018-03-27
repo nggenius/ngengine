@@ -45,9 +45,18 @@ type Object struct {
 	Package  string     `xml:"package"`
 	Name     string     `xml:"name"`
 	Type     string     `xml:"type"`
-	Include  string     `xml:"include"`
+	Include  []string   `xml:"include"`
 	Archive  string     `xml:"archive"`
 	Property []Property `xml:"propertys>property"`
+}
+
+func (o *Object) HasProperty(name string) bool {
+	for _, p := range o.Property {
+		if p.Name == name {
+			return true
+		}
+	}
+	return false
 }
 
 func StringSize(p *Property) int {
@@ -89,12 +98,41 @@ func OutputFile(tpl, path, outfile string, obj *Object) {
 	cmd.Run()
 }
 
-func ParseFromXml(file, tpl, path, outfile string) {
+func ParseObjectFromXml(file, tpl string) (*Object, error) {
 	obj := &Object{}
 	data, err := toolkit.ReadFile(file)
 	if err != nil {
+		return nil, err
+	}
+	err = xml.Unmarshal(data, obj)
+	if err != nil {
+		return nil, err
+	}
+
+	// 循环遍历所有包含的文件
+	if len(obj.Include) > 0 {
+		for _, i := range obj.Include {
+			child, err := ParseObjectFromXml(i, tpl)
+			if err != nil {
+				return nil, err
+			}
+
+			for _, p := range child.Property {
+				if obj.HasProperty(p.Name) { // 属性可以按层级履盖
+					continue
+				}
+				obj.Property = append(obj.Property, p)
+			}
+		}
+	}
+	return obj, err
+}
+
+func ParseFromXml(file, tpl, tpl_path, outfile string) {
+	obj, err := ParseObjectFromXml(file, tpl)
+	if err != nil {
 		panic(err)
 	}
-	xml.Unmarshal(data, obj)
-	OutputFile(tpl, path, outfile, obj)
+
+	OutputFile(tpl, tpl_path, outfile, obj)
 }
