@@ -24,6 +24,14 @@ func (m Mailbox) String() string {
 	return fmt.Sprintf("mailbox://%x", m.Uid)
 }
 
+// 是否为空
+func (m Mailbox) IsNil() bool {
+	if m.Sid == 0 && m.Flag == 0 && m.Id == 0 {
+		return true
+	}
+	return false
+}
+
 // 获取服务编号
 func (m *Mailbox) ServiceId() share.ServiceId {
 	return share.ServiceId(m.Sid)
