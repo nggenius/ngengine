@@ -1,6 +1,7 @@
 package object
 
 import (
+	"ngengine/core/rpc"
 	"reflect"
 	"sort"
 )
@@ -13,7 +14,7 @@ const (
 	PRIORITY_HIGHEST = 1024
 )
 
-type callback func(self Object, sender Object, args ...interface{}) int
+type callback func(self, sender rpc.Mailbox, args ...interface{}) int
 
 type PriorityDelegate struct {
 	sort int
@@ -46,7 +47,7 @@ func NewEventDelegate() *EventDelegate {
 }
 
 // 执行指定事件的回调,并带返回值
-func (e *EventDelegate) Invoke(event string, self, sender Object, args ...interface{}) int {
+func (e *EventDelegate) Invoke(event string, self, sender rpc.Mailbox, args ...interface{}) int {
 	ret := 0
 	if l, has := e.event[event]; has {
 		for _, v := range l {
@@ -63,7 +64,7 @@ func (e *EventDelegate) Invoke(event string, self, sender Object, args ...interf
 }
 
 // 执行指定事件的回调
-func (e *EventDelegate) InvokeNoReturn(event string, self, sender Object, args ...interface{}) {
+func (e *EventDelegate) InvokeNoReturn(event string, self, sender rpc.Mailbox, args ...interface{}) {
 	if l, has := e.event[event]; has {
 		for _, v := range l {
 			if v == nil || v.cb == nil {

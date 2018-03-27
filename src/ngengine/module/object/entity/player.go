@@ -42,9 +42,10 @@ type PlayerArchive struct {
 	root object.Object `xorm:"-"`
 	flag int           `xorm:"-"`
 
-	Id   int64
-	Name string       `xorm:"varchar(64)"` // 玩家名
-	Pos  *PlayerPos_t `xorm:"json"`        // 位置
+	Id     int64
+	Name   string       `xorm:"varchar(128)"` // 玩家名
+	Pos    *PlayerPos_t `xorm:"json"`         // 位置
+	Orient float32      // 朝向(弧度)
 }
 
 // Player archive construct
@@ -52,17 +53,22 @@ func NewPlayerArchive(root object.Object) *PlayerArchive {
 	archive := &PlayerArchive{root: root}
 
 	archive.Pos = NewPlayerPos(root)
+
 	return archive
 }
 
 // archive table name
 func (a *PlayerArchive) TableName() string {
-	return "Player"
+	return "player"
 }
 
 // Player attr
 type PlayerAttr struct {
 	root object.Object
+
+	GroupId     int32 // 分组
+	Invisible   byte  // 是否不可见(1不可见)
+	VisualRange int32 // 可视范围
 }
 
 // Player attr construct
@@ -131,6 +137,51 @@ func (o *Player) Name() string {
 	return o.archive.Name
 }
 
+// set GroupId 分组
+func (o *Player) SetGroupId(groupid int32) {
+	if o.attr.GroupId == groupid {
+		return
+	}
+	old := o.attr.GroupId
+	o.attr.GroupId = groupid
+	o.UpdateAttr("GroupId", groupid, old)
+}
+
+// get GroupId 分组
+func (o *Player) GroupId() int32 {
+	return o.attr.GroupId
+}
+
+// set Invisible 是否不可见(1不可见)
+func (o *Player) SetInvisible(invisible byte) {
+	if o.attr.Invisible == invisible {
+		return
+	}
+	old := o.attr.Invisible
+	o.attr.Invisible = invisible
+	o.UpdateAttr("Invisible", invisible, old)
+}
+
+// get Invisible 是否不可见(1不可见)
+func (o *Player) Invisible() byte {
+	return o.attr.Invisible
+}
+
+// set VisualRange 可视范围
+func (o *Player) SetVisualRange(visualrange int32) {
+	if o.attr.VisualRange == visualrange {
+		return
+	}
+	old := o.attr.VisualRange
+	o.attr.VisualRange = visualrange
+	o.UpdateAttr("VisualRange", visualrange, old)
+}
+
+// get VisualRange 可视范围
+func (o *Player) VisualRange() int32 {
+	return o.attr.VisualRange
+}
+
 // set Pos 位置
 func (o *Player) SetPos(pos PlayerPos_t) {
 	if o.archive.Pos.Equal(pos) {
@@ -146,13 +197,36 @@ func (o *Player) Pos() *PlayerPos_t {
 	return o.archive.Pos
 }
 
+// set Orient 朝向(弧度)
+func (o *Player) SetOrient(orient float32) {
+	if o.archive.Orient == orient {
+		return
+	}
+	old := o.archive.Orient
+	o.archive.Orient = orient
+	o.UpdateAttr("Orient", orient, old)
+}
+
+// get Orient 朝向(弧度)
+func (o *Player) Orient() float32 {
+	return o.archive.Orient
+}
+
 // attr type
 func (o *Player) GetAttrType(name string) string {
 	switch name {
 	case "Name":
 		return "string"
+	case "GroupId":
+		return "int32"
+	case "Invisible":
+		return "byte"
+	case "VisualRange":
+		return "int32"
 	case "Pos":
 		return "tuple"
+	case "Orient":
+		return "float32"
 	default:
 		return "unknown"
 	}
@@ -163,8 +237,16 @@ func (o *Player) Expose(name string) int {
 	switch name {
 	case "Name":
 		return object.EXPOSE_OWNER
+	case "GroupId":
+		return object.EXPOSE_NONE
+	case "Invisible":
+		return object.EXPOSE_NONE
+	case "VisualRange":
+		return object.EXPOSE_NONE
 	case "Pos":
-		return object.EXPOSE_OWNER
+		return object.EXPOSE_NONE
+	case "Orient":
+		return object.EXPOSE_NONE
 	default:
 		panic("unknown")
 	}
@@ -172,7 +254,7 @@ func (o *Player) Expose(name string) int {
 
 // get all attr name
 func (o *Player) AllAttr() []string {
-	return []string{"Name", "Pos"}
+	return []string{"Name", "GroupId", "Invisible", "VisualRange", "Pos", "Orient"}
 }
 
 // get attr index by name
@@ -180,8 +262,16 @@ func (o *Player) AttrIndex(name string) int {
 	switch name {
 	case "Name":
 		return 0
-	case "Pos":
+	case "GroupId":
 		return 1
+	case "Invisible":
+		return 2
+	case "VisualRange":
+		return 3
+	case "Pos":
+		return 4
+	case "Orient":
+		return 5
 	default:
 		return -1
 	}
@@ -192,8 +282,16 @@ func (o *Player) GetAttr(name string) interface{} {
 	switch name {
 	case "Name":
 		return o.archive.Name
+	case "GroupId":
+		return o.attr.GroupId
+	case "Invisible":
+		return o.attr.Invisible
+	case "VisualRange":
+		return o.attr.VisualRange
 	case "Pos":
 		return o.archive.Pos
+	case "Orient":
+		return o.archive.Orient
 	default:
 		return nil
 	}
@@ -208,12 +306,36 @@ func (o *Player) SetAttr(name string, value interface{}) error {
 			return nil
 		}
 		return fmt.Errorf("attr Name type not match")
+	case "GroupId":
+		if v, ok := value.(int32); ok {
+			o.SetGroupId(v)
+			return nil
+		}
+		return fmt.Errorf("attr GroupId type not match")
+	case "Invisible":
+		if v, ok := value.(byte); ok {
+			o.SetInvisible(v)
+			return nil
+		}
+		return fmt.Errorf("attr Invisible type not match")
+	case "VisualRange":
+		if v, ok := value.(int32); ok {
+			o.SetVisualRange(v)
+			return nil
+		}
+		return fmt.Errorf("attr VisualRange type not match")
 	case "Pos":
 		if v, ok := value.(PlayerPos_t); ok {
 			o.SetPos(v)
 			return nil
 		}
 		return fmt.Errorf("attr Pos type not match")
+	case "Orient":
+		if v, ok := value.(float32); ok {
+			o.SetOrient(v)
+			return nil
+		}
+		return fmt.Errorf("attr Orient type not match")
 	default:
 		return fmt.Errorf("attr %s not found", name)
 	}

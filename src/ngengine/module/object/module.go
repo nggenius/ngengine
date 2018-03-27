@@ -5,6 +5,7 @@
 package object
 
 import (
+	"fmt"
 	"ngengine/core/rpc"
 	"ngengine/core/service"
 	"ngengine/logger"
@@ -57,6 +58,14 @@ func (o *ObjectModule) Logger() logger.Logger {
 	return o.core
 }
 
+func (o *ObjectModule) FactoryCreate(factory, typ string) (interface{}, error) {
+	if f, has := o.factorys[factory]; has {
+		return f.Create(typ)
+	}
+
+	return nil, fmt.Errorf("factory %s not found", factory)
+}
+
 // 创建
 func (o *ObjectModule) Create(typ string) (interface{}, error) {
 	return o.defaultFactory.Create(typ)
@@ -64,10 +73,27 @@ func (o *ObjectModule) Create(typ string) (interface{}, error) {
 
 // 销毁一个对象
 func (o *ObjectModule) Destroy(object interface{}) error {
-	return o.defaultFactory.Destroy(object)
+	if fo, ok := object.(FactoryObject); ok {
+		f := fo.Factory()
+		if f != nil {
+			return f.Destroy(object)
+		}
+	}
+	return fmt.Errorf("destroy object failed")
 }
 
-// 获取一个对象
-func (o *ObjectModule) GetObject(mb rpc.Mailbox) (interface{}, error) {
-	return o.defaultFactory.GetObject(mb)
+// 查找对象
+func (o *ObjectModule) FindObject(mb rpc.Mailbox) (interface{}, error) {
+	if mb.ObjectType() == o.defaultFactory.objType {
+		return o.defaultFactory.FindObject(mb)
+	}
+
+	for _, f := range o.factorys {
+		if f.objType == mb.ObjectType() {
+			return f.FindObject(mb)
+		}
+	}
+
+	return nil, fmt.Errorf("object %s not found", mb)
+
 }

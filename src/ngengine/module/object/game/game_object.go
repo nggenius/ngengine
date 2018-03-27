@@ -8,7 +8,7 @@ import (
 )
 
 type delegate interface {
-	Invoke(event string, self, sender object.Object, args ...interface{}) int
+	Invoke(event string, self, sender rpc.Mailbox, args ...interface{}) int
 }
 
 type GameObject interface {
@@ -32,12 +32,23 @@ type BaseObject struct {
 	component map[string]ComponentInfo
 }
 
-func (b *BaseObject) Create() {
+// 预处理
+func (b *BaseObject) Prepare() {
 	b.component = make(map[string]ComponentInfo)
+}
+
+// 构造函数
+func (b *BaseObject) Create() {
+	if b.delegate != nil {
+		b.delegate.Invoke(E_ON_CREATE, b.mailbox, rpc.Mailbox{})
+	}
 }
 
 // 准备销毁
 func (b *BaseObject) Destroy() {
+	if b.delegate != nil {
+		b.delegate.Invoke(E_ON_DESTROY, b.mailbox, rpc.Mailbox{})
+	}
 	b.delete = true
 }
 
@@ -110,7 +121,7 @@ func (b *BaseObject) GetComponent(name string) Component {
 	return nil
 }
 
-// 增加一个组件
+// 增加组件
 func (b *BaseObject) AddComponent(name string, com Component, update bool) error {
 	if _, has := b.component[name]; has {
 		return fmt.Errorf("component has register twice, %s ", name)
@@ -128,7 +139,7 @@ func (b *BaseObject) AddComponent(name string, com Component, update bool) error
 	return nil
 }
 
-// 移除一个组件
+// 移除组件
 func (b *BaseObject) RemoveComponent(name string) {
 	if comp, has := b.component[name]; has {
 		comp.comp.Destroy() // 销毁组件

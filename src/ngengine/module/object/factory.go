@@ -25,7 +25,9 @@ type FactoryObject interface {
 	Index() int
 	SetIndex(int)
 	SetMailbox(mb rpc.Mailbox)
+	Factory() *Factory
 	SetFactory(f *Factory)
+	Prepare()
 	Create()
 	Destroy()
 	Delete()
@@ -66,6 +68,7 @@ func (f *Factory) Create(typ string) (interface{}, error) {
 			f.serial = (f.serial + 1) % 0xFF
 			o.SetMailbox(f.owner.core.Mailbox().NewObjectId(f.objType, f.serial, index))
 			o.SetFactory(f)
+			o.Prepare()
 			o.Create()
 			return inst, nil
 		}
@@ -99,8 +102,8 @@ func (f *Factory) ClearDelete() {
 	}
 }
 
-// 获取对象
-func (f *Factory) GetObject(mb rpc.Mailbox) (interface{}, error) {
+// 查找对象
+func (f *Factory) FindObject(mb rpc.Mailbox) (interface{}, error) {
 	if f.owner.core.Mailbox().Sid != mb.Sid ||
 		mb.Flag != 0 ||
 		mb.ObjectType() != f.objType {
