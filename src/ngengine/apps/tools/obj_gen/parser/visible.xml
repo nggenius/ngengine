@@ -3,5 +3,6 @@
     <propertys>
         <property name="GroupId" type="int32" size="" save="false" expose="" desc="分组" />
         <property name="Invisible" type="byte" size="" save="false" expose="" desc="是否不可见(1不可见)" />
+        <property name="VisualRange" type="int32" size="" save="false" expose="" desc="可视范围" />
     </propertys>
 </object>

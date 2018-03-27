@@ -294,7 +294,7 @@ func New{{.Name}}Archive(root object.Object) *{{.Name}}Archive {
 
 // archive table name
 func (a *{{.Name}}Archive) TableName() string {
-    return "{{.Name}}"
+    return "{{.Archive}}"
 }
 
 // {{.Name}} attr
