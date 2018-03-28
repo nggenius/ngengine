@@ -40,6 +40,11 @@ func (m *DbModule) NewJob(r *rpc.RpcCall) bool {
 	return true
 }
 
+// Start 模块启动
+func (m *DbModule) Start() {
+
+}
+
 // Shut 模块关闭
 func (m *DbModule) Shut() {
 

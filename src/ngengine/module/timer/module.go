@@ -24,6 +24,11 @@ func (m *TimerModule) Init(core service.CoreApi) bool {
 	return true
 }
 
+// Start 模块启动
+func (m *TimerModule) Start() {
+
+}
+
 func (m *TimerModule) Shut() {
 
 }

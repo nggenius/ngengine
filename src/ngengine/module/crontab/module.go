@@ -30,6 +30,11 @@ func (m *CrontabModule) Init(core service.CoreApi) bool {
 	return true
 }
 
+// Start 模块启动
+func (m *CrontabModule) Start() {
+
+}
+
 // Shut 模块关闭
 func (m *CrontabModule) Shut() {
 
