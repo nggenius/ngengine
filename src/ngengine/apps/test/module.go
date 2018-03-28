@@ -15,6 +15,10 @@ func (m *ModuleTest) Init(core service.CoreApi) bool {
 	return true
 }
 
+func (m *ModuleTest) Start() {
+
+}
+
 func (m *ModuleTest) Shut() {
 
 }
@@ -40,6 +44,10 @@ func (m *ModuleTest2) Name() string {
 func (m *ModuleTest2) Init(core service.CoreApi) bool {
 	m.core = core
 	return true
+}
+
+func (m *ModuleTest2) Start() {
+
 }
 
 func (m *ModuleTest2) Shut() {

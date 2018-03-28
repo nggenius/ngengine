@@ -10,7 +10,7 @@ import (
 type FactoryObject interface {
 	Index() int
 	SetIndex(int)
-	SetMailbox(mb rpc.Mailbox)
+	SetObjId(mb rpc.Mailbox)
 	Factory() *Factory
 	SetFactory(f *Factory)
 	Prepare()
@@ -43,7 +43,7 @@ func (f *Factory) Create(typ string) (interface{}, error) {
 	if c, ok := f.owner.regs[typ]; ok {
 		inst := c.Create()
 		if inst == nil {
-			return nil, fmt.Errorf("object create failed")
+			return nil, fmt.Errorf("object %s create failed", typ)
 		}
 
 		if o, ok := inst.(FactoryObject); ok {
@@ -53,7 +53,7 @@ func (f *Factory) Create(typ string) (interface{}, error) {
 			}
 			o.SetIndex(index)
 			f.serial = (f.serial + 1) % 0xFF
-			o.SetMailbox(f.owner.core.Mailbox().NewObjectId(f.objType, f.serial, index))
+			o.SetObjId(f.owner.core.Mailbox().NewObjectId(f.objType, f.serial, index))
 			o.SetFactory(f)
 			o.SetDelegate(f.owner.entitydelegate[typ])
 			o.Prepare()
@@ -61,12 +61,12 @@ func (f *Factory) Create(typ string) (interface{}, error) {
 			return inst, nil
 		}
 
-		return nil, fmt.Errorf("new obj is not object")
+		return nil, fmt.Errorf("new object type %s not implement FactoryObject", typ)
 	}
-	return nil, fmt.Errorf("object not found")
+	return nil, fmt.Errorf("object %s not found", typ)
 }
 
-// 销毁一个对象
+// 销毁一个对象``
 func (f *Factory) Destroy(object interface{}) error {
 	if fo, ok := object.(FactoryObject); ok {
 		if fo.Alive() {
@@ -76,12 +76,12 @@ func (f *Factory) Destroy(object interface{}) error {
 		}
 		return nil
 	}
-	return errors.New("object is not FactoryObject")
+	return errors.New("object is not implement FactoryObject")
 }
 
 // 清理需要删除的对象
 func (f *Factory) ClearDelete() {
-	for ele := f.delete.Front(); ele != nil; ele = ele.Next() {
+	for ele := f.delete.Front(); ele != nil; {
 		fo := ele.Value.(FactoryObject)
 		fo.Delete()
 		e := ele
@@ -95,7 +95,7 @@ func (f *Factory) FindObject(mb rpc.Mailbox) (interface{}, error) {
 	if f.owner.core.Mailbox().Sid != mb.Sid ||
 		mb.Flag != 0 ||
 		mb.ObjectType() != f.objType {
-		return nil, errors.New("mailbox error")
+		return nil, fmt.Errorf("mailbox %s error", mb)
 	}
 
 	obj, err := f.pool.Get(mb.ObjectIndex())

@@ -40,6 +40,11 @@ func (o *ObjectModule) Init(core service.CoreApi) bool {
 	return true
 }
 
+// Start 模块启动
+func (o *ObjectModule) Start() {
+
+}
+
 // Shut 模块关闭
 func (o *ObjectModule) Shut() {
 

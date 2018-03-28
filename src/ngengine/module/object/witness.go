@@ -73,6 +73,11 @@ func (o *ObjectWitness) AddAttrObserver(name string, observer attrObserver) erro
 	return nil
 }
 
+// 删除属性观察者
+func (o *ObjectWitness) RemoveAttrObserver(name string) {
+	delete(o.attrobserver, name)
+}
+
 // 增加表格观察者,这里的name是观察者的标识符，不是表格名称
 func (o *ObjectWitness) AddTableObserver(name string, observer tableObserver) error {
 	if _, dup := o.tableobserver[name]; dup {
@@ -82,6 +87,11 @@ func (o *ObjectWitness) AddTableObserver(name string, observer tableObserver) er
 	o.tableobserver[name] = observer
 	observer.Init(o.object)
 	return nil
+}
+
+// 删除表格观察者
+func (o *ObjectWitness) RemoveTableObserver(name string) {
+	delete(o.tableobserver, name)
 }
 
 // 对象属性变动(由object调用)

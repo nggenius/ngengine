@@ -4,12 +4,19 @@ const (
 	EXPOSE_NONE  = 0
 	EXPOSE_OWNER = 1
 	EXPOSE_OTHER = 2
-	EXPOSE_ALL   = EXPOSE_OWNER & EXPOSE_OTHER
+	EXPOSE_ALL   = EXPOSE_OWNER | EXPOSE_OTHER
 )
 
 // 对象创建接口
 type ObjectCreate interface {
 	Create() interface{}
+}
+
+// 缓存接口
+type Cacher interface {
+	Cache(key string, value interface{})
+	Value(key string) interface{}
+	ClearAllCache()
 }
 
 type Object interface {
@@ -39,8 +46,12 @@ type Object interface {
 	AttrIndex(name string) int
 	// 增加一个属性观察者
 	AddAttrObserver(name string, observer attrObserver) error
+	// 删除属性观察者
+	RemoveAttrObserver(name string)
 	// 增加表格观察者
 	AddTableObserver(name string, observer tableObserver) error
+	// 删除表格观察者
+	RemoveTableObserver(name string)
 	// 属性变动回调
 	UpdateAttr(name string, val interface{}, old interface{})
 	// tuple变动回调

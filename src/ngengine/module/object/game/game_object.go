@@ -29,10 +29,12 @@ type ComponentInfo struct {
 }
 
 type BaseObject struct {
+	object.CacheData
 	typ       int
 	delete    bool
 	index     int
-	mailbox   rpc.Mailbox
+	objid     rpc.Mailbox
+	client    rpc.Mailbox
 	spirit    object.Object
 	delegate  object.Delegate
 	component map[string]ComponentInfo
@@ -41,12 +43,13 @@ type BaseObject struct {
 // 预处理
 func (b *BaseObject) Prepare() {
 	b.component = make(map[string]ComponentInfo)
+	b.CacheData.Init()
 }
 
 // 构造函数
 func (b *BaseObject) Create() {
 	if b.delegate != nil {
-		b.delegate.Invoke(E_ON_CREATE, b.mailbox, rpc.Mailbox{})
+		b.delegate.Invoke(E_ON_CREATE, b.objid, rpc.Mailbox{})
 	}
 }
 
@@ -57,7 +60,7 @@ func (b *BaseObject) ObjectType() int {
 // 准备销毁
 func (b *BaseObject) Destroy() {
 	if b.delegate != nil {
-		b.delegate.Invoke(E_ON_DESTROY, b.mailbox, rpc.Mailbox{})
+		b.delegate.Invoke(E_ON_DESTROY, b.objid, rpc.Mailbox{})
 	}
 	b.delete = true
 }
@@ -97,14 +100,24 @@ func (b *BaseObject) SetSpirit(s object.Object) {
 	b.spirit = s
 }
 
-// 邮箱地址
-func (b *BaseObject) Mailbox() rpc.Mailbox {
-	return b.mailbox
+// 唯一ID
+func (b *BaseObject) ObjId() rpc.Mailbox {
+	return b.objid
 }
 
-// 设置邮箱地址
-func (b *BaseObject) SetMailbox(mb rpc.Mailbox) {
-	b.mailbox = mb
+// 设置唯一ID
+func (b *BaseObject) SetObjId(id rpc.Mailbox) {
+	b.objid = id
+}
+
+// 客户端地址
+func (b *BaseObject) Client() rpc.Mailbox {
+	return b.client
+}
+
+// 设置客户端地址
+func (b *BaseObject) SetClient(mb rpc.Mailbox) {
+	b.client = mb
 }
 
 // update

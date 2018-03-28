@@ -7,13 +7,8 @@ import (
 )
 
 func main() {
-	core.RegisterService("database", &Database{})
-	core.RegisterService("login", &Login{})
-	_, err := core.CreateService("database", startargs)
-	if err != nil {
-		panic(err)
-	}
-	_, err = core.CreateService("login", startargs2)
+	core.RegisterService("object", &Object{})
+	_, err := core.CreateService("object", objectargs)
 	if err != nil {
 		panic(err)
 	}

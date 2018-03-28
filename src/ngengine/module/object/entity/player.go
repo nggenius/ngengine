@@ -16,17 +16,23 @@ var _ = toolkit.ParseNumber
 
 // tuple Pos 位置
 type PlayerPos_t struct {
-	root object.Object
-
 	X float32 //
 	Y float32 //
 	Z float32 //
 }
 
 // tuple Pos construct
-func NewPlayerPos(root object.Object) *PlayerPos_t {
-	pos := &PlayerPos_t{root: root}
+func NewPlayerPos() *PlayerPos_t {
+	pos := &PlayerPos_t{}
 	return pos
+}
+
+// tuple Pos Set
+func (pos *PlayerPos_t) Set(x float32, y float32, z float32) {
+
+	pos.X = x
+	pos.Y = y
+	pos.Z = z
 }
 
 // tuple Pos equal other
@@ -52,7 +58,7 @@ type PlayerArchive struct {
 func NewPlayerArchive(root object.Object) *PlayerArchive {
 	archive := &PlayerArchive{root: root}
 
-	archive.Pos = NewPlayerPos(root)
+	archive.Pos = NewPlayerPos()
 
 	return archive
 }
@@ -184,17 +190,14 @@ func (o *Player) VisualRange() int32 {
 
 // set Pos 位置
 func (o *Player) SetPos(pos PlayerPos_t) {
-	if o.archive.Pos.Equal(pos) {
-		return
-	}
 	old := *o.archive.Pos
 	*o.archive.Pos = pos
 	o.UpdateTuple("Pos", pos, old)
 }
 
 // get Pos 位置
-func (o *Player) Pos() *PlayerPos_t {
-	return o.archive.Pos
+func (o *Player) Pos() PlayerPos_t {
+	return *o.archive.Pos
 }
 
 // set Orient 朝向(弧度)
@@ -244,9 +247,9 @@ func (o *Player) Expose(name string) int {
 	case "VisualRange":
 		return object.EXPOSE_NONE
 	case "Pos":
-		return object.EXPOSE_NONE
+		return object.EXPOSE_OWNER
 	case "Orient":
-		return object.EXPOSE_NONE
+		return object.EXPOSE_OWNER
 	default:
 		panic("unknown")
 	}
@@ -289,7 +292,7 @@ func (o *Player) GetAttr(name string) interface{} {
 	case "VisualRange":
 		return o.attr.VisualRange
 	case "Pos":
-		return o.archive.Pos
+		return *o.archive.Pos
 	case "Orient":
 		return o.archive.Orient
 	default:
