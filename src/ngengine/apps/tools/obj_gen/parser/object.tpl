@@ -17,15 +17,20 @@ var _ = toolkit.ParseNumber
 {{if eq .Type "tuple"}}
 // tuple {{.Name}} {{.Desc}}
 type {{$.Name}}{{.Name}}_t struct {
-	root object.Object
     {{range .Tuple}}
 	{{.Name}} {{.Type}} // {{.Desc}}{{end}}
 }
 
 // tuple {{.Name}} construct
-func New{{$.Name}}{{.Name}}(root object.Object) *{{$.Name}}{{.Name}}_t {
-	{{tolower .Name}} := &{{$.Name}}{{.Name}}_t{root:root}
+func New{{$.Name}}{{.Name}}() *{{$.Name}}{{.Name}}_t {
+	{{tolower .Name}} := &{{$.Name}}{{.Name}}_t{}
 	return {{tolower .Name}}
+}
+
+// tuple {{.Name}} Set
+func ({{$src := tolower .Name }}{{$src}} *{{$.Name}}{{.Name}}_t) Set({{range $k, $t := .Tuple}} {{if ne $k 0}},{{end}}{{tolower $t.Name}} {{$t.Type}} {{end}}) {
+	{{range  .Tuple}} 
+	{{$src}}.{{.Name}} = {{tolower .Name}} {{end}}
 }
 
 // tuple {{.Name}} equal other
@@ -288,7 +293,7 @@ type {{.Name}}Archive struct {
 func New{{.Name}}Archive(root object.Object) *{{.Name}}Archive {
     archive := &{{.Name}}Archive{root:root}
     {{range .Property}}{{if eq .Save "true"}}
-    {{if eq .Type "tuple"}}archive.{{.Name}} = New{{$.Name}}{{.Name}}(root){{else if eq .Type "table"}}archive.{{.Name}} = New{{$.Name}}{{.Name}}(root){{end}}{{end}}{{end}}
+    {{if eq .Type "tuple"}}archive.{{.Name}} = New{{$.Name}}{{.Name}}(){{else if eq .Type "table"}}archive.{{.Name}} = New{{$.Name}}{{.Name}}(root){{end}}{{end}}{{end}}
     return archive
 }
 
@@ -309,7 +314,7 @@ type {{.Name}}Attr struct{
 func New{{.Name}}Attr(root object.Object) *{{.Name}}Attr {
     attr := &{{.Name}}Attr{root:root} 
     {{range .Property}}{{if ne .Save "true"}}
-    {{if eq .Type "tuple"}}attr.{{.Name}} = New{{$.Name}}{{.Name}}(root){{else if eq .Type "table"}}attr.{{.Name}} = New{{$.Name}}{{.Name}}(root){{end}}{{end}}{{end}}
+    {{if eq .Type "tuple"}}attr.{{.Name}} = New{{$.Name}}{{.Name}}(){{else if eq .Type "table"}}attr.{{.Name}} = New{{$.Name}}{{.Name}}(root){{end}}{{end}}{{end}}
     return attr
 }
 
@@ -360,18 +365,12 @@ func (o *{{.Name}}) Attr() *{{.Name}}Attr {
 {{range .Property}}
 // set {{.Name}} {{.Desc}}
 func (o *{{$.Name}}) Set{{.Name}}( {{tolower .Name}} {{if eq .Type "tuple"}} {{$.Name}}{{.Name}}_t{{else if eq .Type "table"}} *{{$.Name}}{{.Name}}_r {{else}} {{.Type}} {{end}}){
-    {{if eq .Type "table"}} panic("{{.Name}} can't set") {{else}} {{if eq .Save "true"}}{{if eq .Type "tuple"}}if o.archive.{{.Name}}.Equal({{tolower .Name}}) {
-		return 
-	} 
-	old := *o.archive.{{.Name}}
+    {{if eq .Type "table"}} panic("{{.Name}} can't set") {{else}} {{if eq .Save "true"}}{{if eq .Type "tuple"}}	old := *o.archive.{{.Name}}
 	*o.archive.{{.Name}} = {{tolower .Name}} {{else}} if o.archive.{{.Name}} == {{tolower .Name}} {
 		return
 	} 
 	old := o.archive.{{.Name}}
-	o.archive.{{.Name}} = {{tolower .Name}} {{end}}	{{else}} {{if eq .Type "tuple"}}if o.attr.{{.Name}}.Equal({{tolower .Name}}) {
-		return 
-	} 
-	old := *o.attr.{{.Name}}
+	o.archive.{{.Name}} = {{tolower .Name}} {{end}}	{{else}} {{if eq .Type "tuple"}}old := *o.attr.{{.Name}}
 	*o.attr.{{.Name}} = {{tolower .Name}} {{else}} if o.attr.{{.Name}} == {{tolower .Name}} {
 		return
 	} 
@@ -382,8 +381,8 @@ func (o *{{$.Name}}) Set{{.Name}}( {{tolower .Name}} {{if eq .Type "tuple"}} {{$
 }
 
 // get {{.Name}} {{.Desc}}
-func (o *{{$.Name}}) {{.Name}}() {{if eq .Type "tuple"}} *{{$.Name}}{{.Name}}_t{{else if eq .Type "table"}} *{{$.Name}}{{.Name}}_r {{else}} {{.Type}} {{end}} {
-    {{if eq .Save "true"}}return o.archive.{{.Name}}{{else}}return o.attr.{{.Name}}{{end}}
+func (o *{{$.Name}}) {{.Name}}() {{if eq .Type "tuple"}} {{$.Name}}{{.Name}}_t{{else if eq .Type "table"}} *{{$.Name}}{{.Name}}_r {{else}} {{.Type}} {{end}} {
+    {{if eq .Save "true"}}return {{if eq .Type "tuple"}}*{{end}}o.archive.{{.Name}}{{else}}return {{if eq .Type "tuple"}}*{{end}}o.attr.{{.Name}}{{end}}
 }
 {{end}}
 
@@ -426,7 +425,7 @@ func (o *{{$.Name}}) AttrIndex(name string) int {
 func  (o *{{$.Name}}) GetAttr(name string) interface{} {
 	switch name { {{range .Property}}
 	case "{{.Name}}":
-		return {{if eq .Save "true"}}o.archive.{{.Name}} {{else}}o.attr.{{.Name}} {{end}} {{end}}
+		return {{if eq .Save "true"}}{{if eq .Type "tuple"}}*{{end}}o.archive.{{.Name}} {{else}}{{if eq .Type "tuple"}}*{{end}}o.attr.{{.Name}} {{end}} {{end}}
 	default:
 		return nil
 	}
