@@ -8,6 +8,7 @@ import (
 type ModuleHandler interface {
 	Name() string
 	Init(core CoreApi) bool
+	Start()
 	Shut()
 	OnUpdate(t *Time)
 	OnMessage(id int, args ...interface{})

@@ -109,7 +109,7 @@ func (c *Core) Init(args string) error {
 			continue
 		}
 
-		c.LogErr("module '", n, "' init ok")
+		c.LogInfo("module '", n, "' init ok")
 	}
 
 	// 删除初始化失败的模块
@@ -125,6 +125,13 @@ func (c *Core) Init(args string) error {
 func (c *Core) Serv() {
 	ctx := &context{c}
 	c.dns = NewSrvDNS(ctx)
+
+	// 调用模块Start
+	for n, m := range c.modules.modules {
+		m.Start()
+		c.LogInfo("module '", n, "' start")
+	}
+
 	if err := c.service.Start(); err != nil {
 		c.LogFatal(err)
 	}
