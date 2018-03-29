@@ -7,6 +7,7 @@ import (
 
 // CrontabModule 时间事件模块
 type CrontabModule struct {
+	service.Module
 	core  service.CoreApi
 	crtab *crontab
 }
@@ -30,23 +31,9 @@ func (m *CrontabModule) Init(core service.CoreApi) bool {
 	return true
 }
 
-// Start 模块启动
-func (m *CrontabModule) Start() {
-
-}
-
-// Shut 模块关闭
-func (m *CrontabModule) Shut() {
-
-}
-
 // OnUpdate 模块Update
 func (m *CrontabModule) OnUpdate(t *service.Time) {
 	m.check()
-}
-
-// OnMessage 模块消息
-func (m *CrontabModule) OnMessage(id int, args ...interface{}) {
 }
 
 // Check crontab插件的主调用方法

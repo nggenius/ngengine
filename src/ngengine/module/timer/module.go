@@ -5,6 +5,7 @@ import (
 )
 
 type TimerModule struct {
+	service.Module
 	core service.CoreApi
 	t    *timerManager
 }
@@ -24,21 +25,8 @@ func (m *TimerModule) Init(core service.CoreApi) bool {
 	return true
 }
 
-// Start 模块启动
-func (m *TimerModule) Start() {
-
-}
-
-func (m *TimerModule) Shut() {
-
-}
-
 func (m *TimerModule) OnUpdate(t *service.Time) {
 	m.t.run()
-}
-
-func (m *TimerModule) OnMessage(id int, args ...interface{}) {
-
 }
 
 func (m *TimerModule) AddTimer(delta int64, args interface{}, cb timerCallBack) (id int64) {

@@ -9,6 +9,7 @@ import (
 )
 
 type ReplicateModule struct {
+	service.Module
 	core           service.CoreApi
 	objectmodule   *object.ObjectModule
 	replicate      *Replicate
@@ -63,10 +64,6 @@ func (o *ReplicateModule) Shut() {
 
 // OnUpdate 模块Update
 func (o *ReplicateModule) OnUpdate(t *service.Time) {
-}
-
-// OnMessage 模块消息
-func (o *ReplicateModule) OnMessage(id int, args ...interface{}) {
 }
 
 // RegisterReplicate 注册需要同步的对象类型

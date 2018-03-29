@@ -13,6 +13,7 @@ import (
 )
 
 type ObjectModule struct {
+	service.Module
 	core           service.CoreApi
 	defaultFactory *Factory // 默认对象工厂
 	factorys       map[string]*Factory
@@ -40,26 +41,12 @@ func (o *ObjectModule) Init(core service.CoreApi) bool {
 	return true
 }
 
-// Start 模块启动
-func (o *ObjectModule) Start() {
-
-}
-
-// Shut 模块关闭
-func (o *ObjectModule) Shut() {
-
-}
-
 // OnUpdate 模块Update
 func (o *ObjectModule) OnUpdate(t *service.Time) {
 	o.defaultFactory.ClearDelete()
 	for _, f := range o.factorys {
 		f.ClearDelete()
 	}
-}
-
-// OnMessage 模块消息
-func (o *ObjectModule) OnMessage(id int, args ...interface{}) {
 }
 
 // 获取日志接口

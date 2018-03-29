@@ -10,7 +10,7 @@ import (
 
 // DbCallBack rpc调用的函数
 type DbCallBack struct {
-	DbModule
+	ctx *DbModule
 }
 
 // RegisterCallback 注册rpc回调
@@ -41,7 +41,7 @@ func (a *DbCallBack) Get(mailbox rpc.Mailbox, msg *protocol.Message) (errcode in
 		return 0, protocol.ReplyMessage(protocol.TINY, 1)
 	}
 
-	a.Core.LogDebug("查询出来的数据:", g)
+	a.ctx.Core.LogDebug("查询出来的数据:", g)
 	// 回复查询的结构
 	return 0, protocol.ReplyMessage(protocol.DEF, share.MessageBox{Message: g})
 }
@@ -58,7 +58,7 @@ func (a *DbCallBack) SQLQuery(mailbox rpc.Mailbox, msg *protocol.Message) (errco
 		return 0, protocol.ReplyMessage(protocol.TINY, 1)
 	}
 
-	a.Core.LogDebug("查询出来的数据:", g)
+	a.ctx.Core.LogDebug("查询出来的数据:", g)
 	// 回复查询的结构
 	return 0, protocol.ReplyMessage(protocol.DEF, share.MessageBox{Message: g})
 }
@@ -75,7 +75,7 @@ func (a *DbCallBack) SQLExec(mailbox rpc.Mailbox, msg *protocol.Message) (errcod
 		return 0, protocol.ReplyMessage(protocol.TINY, 1)
 	}
 
-	a.Core.LogDebug("执行结果:", g)
+	a.ctx.Core.LogDebug("执行结果:", g)
 	// 回复查询的结构
 	return 0, protocol.ReplyMessage(protocol.DEF, g)
 }
@@ -98,7 +98,7 @@ func (a *DbCallBack) Insert(mailbox rpc.Mailbox, msg *protocol.Message) (errcode
 	err := dbdriver.Insert(DbName, mes.Message)
 
 	if err != nil {
-		a.Core.LogDebug("错误:", err)
+		a.ctx.Core.LogDebug("错误:", err)
 		return 0, protocol.ReplyMessage(protocol.TINY, 1)
 	}
 
@@ -131,7 +131,7 @@ func (a *DbCallBack) Update(mailbox rpc.Mailbox, msg *protocol.Message) (errcode
 	err := dbdriver.Update(DbName, mes.Message, old.Message)
 
 	if err != nil {
-		a.Core.LogDebug("错误:", err)
+		a.ctx.Core.LogDebug("错误:", err)
 		return 0, protocol.ReplyMessage(protocol.TINY, 1)
 	}
 	// 回复查询的结构
@@ -153,7 +153,7 @@ func (a *DbCallBack) Delete(mailbox rpc.Mailbox, msg *protocol.Message) (errcode
 
 	err := dbdriver.Delete(DbName, mes.Message)
 	if err != nil {
-		a.Core.LogDebug("错误:", err)
+		a.ctx.Core.LogDebug("错误:", err)
 		return 0, protocol.ReplyMessage(protocol.TINY, 1)
 	}
 	return 0, protocol.ReplyMessage(protocol.TINY, 1)
@@ -176,7 +176,7 @@ func (a *DbCallBack) Find(mailbox rpc.Mailbox, msg *protocol.Message) (errcode i
 		fmt.Println(err)
 		return 0, protocol.ReplyMessage(protocol.TINY, 1)
 	}
-	a.Core.LogDebug("执行结果:", g)
+	a.ctx.Core.LogDebug("执行结果:", g)
 	// 这里是数组没有注册gob然后返回值失败
 	return 0, protocol.ReplyMessage(protocol.DEF, share.MessageBox{Message: g})
 }

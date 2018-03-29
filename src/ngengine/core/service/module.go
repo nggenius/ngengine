@@ -14,6 +14,26 @@ type ModuleHandler interface {
 	OnMessage(id int, args ...interface{})
 }
 
+type Module struct {
+}
+
+// Start 模块启动
+func (m *Module) Start() {
+}
+
+// Shut 模块关闭
+func (m *Module) Shut() {
+}
+
+// OnUpdate 模块Update
+func (m *Module) OnUpdate(t *Time) {
+}
+
+// OnMessage 模块消息
+func (m *Module) OnMessage(id int, args ...interface{}) {
+
+}
+
 // 模块集合
 type modules struct {
 	modules map[string]ModuleHandler

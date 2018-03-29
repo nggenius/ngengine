@@ -7,7 +7,6 @@ import (
 type Component interface {
 	Create()
 	Start()
-	Stop()
 	Update(delta time.Duration)
 	Destroy()
 	Enable() bool
@@ -32,10 +31,6 @@ func (g *GameComponent) Create() {
 }
 
 func (g *GameComponent) Start() {
-
-}
-
-func (g *GameComponent) Stop() {
 
 }
 

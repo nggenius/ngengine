@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"ngengine/core/service"
 	"ngengine/module/object"
 	"ngengine/module/object/entity"
@@ -55,6 +56,7 @@ func (o *Object) Start() error {
 	pos := gp.Pos()
 	pos.Set(1, 1, 1)
 	gp.SetPos(pos)
+	fmt.Println(gp.Value("hello"))
 	o.object.Destroy(p)
 	return nil
 }
