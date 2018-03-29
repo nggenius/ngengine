@@ -23,6 +23,8 @@ type SrvInfo struct {
 type CoreApi interface {
 	// 获取当前服务的goroutine id
 	GID() int64
+	// 获取当前service
+	Service() Service
 	// 获取当前服务的mailbox
 	Mailbox() rpc.Mailbox
 	// 返回配置选项
@@ -82,6 +84,11 @@ type CoreApi interface {
 // 获取当前服务的goroutine id
 func (c *Core) GID() int64 {
 	return c.gid
+}
+
+// 获取当前service
+func (c *Core) Service() Service {
+	return c.service
 }
 
 // 获取当前服务的mailbox

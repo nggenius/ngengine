@@ -6,6 +6,7 @@ import (
 
 // 服务接口，由各个服务自己实现
 type Service interface {
+	event.Dispatcher
 	// 服务前期准备
 	Prepare(CoreApi) error
 	// 初始化
@@ -16,8 +17,6 @@ type Service interface {
 	Ready()
 	// 关闭服务，返回false由服务自行关闭(主动调用Shut函数)
 	Close() bool
-	// 收到事件
-	OnEvent(string, event.EventArgs)
 	// 客户端连接回调
 	OnConnect(id uint64)
 	// 客户端断开连接
@@ -25,6 +24,7 @@ type Service interface {
 }
 
 type BaseService struct {
+	event.EventDispatch
 	CoreApi
 }
 
@@ -47,10 +47,6 @@ func (b *BaseService) Ready() {
 
 func (b *BaseService) Close() bool {
 	return true
-}
-
-func (b *BaseService) OnEvent(string, event.EventArgs) {
-
 }
 
 func (b *BaseService) OnConnect(id uint64) {

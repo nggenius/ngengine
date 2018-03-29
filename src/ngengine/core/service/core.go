@@ -71,6 +71,7 @@ func CreateService(s Service) *Core {
 		panic(err)
 	}
 
+	sc.service.ClearEvent() // 对eventdispatch进行初始化
 	return sc
 }
 

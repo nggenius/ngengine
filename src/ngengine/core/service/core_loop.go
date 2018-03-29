@@ -63,7 +63,8 @@ func (c *Core) doEvent(e *event.Event) {
 		c.clientDB.RemoveClient(id)
 	}
 
-	c.service.OnEvent(e.Typ, e.Args)
+	// 对消息进行分发
+	c.service.DispatchEvent(e.Typ, e.Args)
 }
 
 //EventProcess 事件遍历
