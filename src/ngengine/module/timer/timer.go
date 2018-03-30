@@ -41,7 +41,7 @@ type timerQueue struct {
 
 func newTimerQueue() *timerQueue {
 	tq := &timerQueue{
-		tickTime:      time.Now().Unix(),
+		tickTime:      time.Now().UnixNano(),
 		ticks:         0,
 		nextTimerId:   0,
 		pendingTimers: list.New(),
@@ -81,7 +81,7 @@ func (tq *timerQueue) schedule(delay int64, task *timerTask) int64 {
 }
 
 func (tq *timerQueue) run() {
-	now := time.Now().Unix()
+	now := time.Now().UnixNano()
 	if tq.last == 0 {
 		tq.last = now
 	}
