@@ -3,7 +3,6 @@ package store
 import (
 	"fmt"
 	"ngengine/core/rpc"
-	"ngengine/protocol"
 )
 
 type StoreClient struct {
@@ -27,27 +26,55 @@ func (s *StoreClient) OnDatabaseReady(evt string, args ...interface{}) {
 	s.db = &mb
 }
 
-func (s *StoreClient) Load() error {
+// 从数据库中加载一个
+func (s *StoreClient) Get(tag string, typ string, condition map[string]interface{}, reply rpc.ReplyCB) error {
 	if s.db == nil {
 		return fmt.Errorf("database not connected")
 	}
-
-	err := s.ctx.core.MailtoAndCallback(nil, s.db, "store.Load", s.LoadBack)
-	return err
+	if reply == nil {
+		return s.ctx.core.Mailto(nil, s.db, "store.Get", tag, typ, condition)
+	}
+	return s.ctx.core.MailtoAndCallback(nil, s.db, "store.Get", reply, tag, typ, condition)
 }
 
-func (s *StoreClient) LoadBack(reply *protocol.Message) {
-
+// 从数据库中加载多个
+func (s *StoreClient) Find(tag string, typ string, condition map[string]interface{}, limit int, start int, reply rpc.ReplyCB) error {
+	if s.db == nil {
+		return fmt.Errorf("database not connected")
+	}
+	if reply == nil {
+		return s.ctx.core.Mailto(nil, s.db, "store.Find", tag, typ, condition, limit, start)
+	}
+	return s.ctx.core.MailtoAndCallback(nil, s.db, "store.Find", reply, tag, typ, condition, limit, start)
 }
 
-func (s *StoreClient) Insert() error {
+// 插入数据
+func (s *StoreClient) Insert(tag string, typ string, object interface{}, reply rpc.ReplyCB) error {
+	if s.db == nil {
+		return fmt.Errorf("database not connected")
+	}
+	if reply == nil {
+		return s.ctx.core.Mailto(nil, s.db, "store.Insert", tag, typ, object)
+	}
+	return s.ctx.core.MailtoAndCallback(nil, s.db, "store.Insert", reply, tag, typ, object)
+}
+
+// 更新数据
+func (s *StoreClient) Update(tag string, reply rpc.ReplyCB) error {
 	return nil
 }
 
-func (s *StoreClient) Update() error {
+// 删除数据
+func (s *StoreClient) Delete(tag string, reply rpc.ReplyCB) error {
 	return nil
 }
 
-func (s *StoreClient) Delete() error {
+// 原生sql查询
+func (s *StoreClient) Query(tag string, sql string, reply rpc.ReplyCB) error {
+	return nil
+}
+
+// 原生sql执行
+func (s *StoreClient) Execute(tag string, sql string, reply rpc.ReplyCB) error {
 	return nil
 }
