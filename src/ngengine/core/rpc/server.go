@@ -349,7 +349,9 @@ func (server *Server) sendResponse(call *RpcCall) error {
 	resp.Seq = call.header.Seq
 	resp.Errcode = call.errcode
 	resp.cb = call.cb
-	resp.Reply = call.reply.Dup()
+	if call.reply != nil {
+		resp.Reply = call.reply.Dup()
+	}
 	session.sendQueue <- resp
 	return nil
 }

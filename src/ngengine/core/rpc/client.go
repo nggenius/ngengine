@@ -20,7 +20,10 @@ import (
 )
 
 var (
-	callCache = make(chan *Call, 32)
+	callCache   = make(chan *Call, 32)
+	timeout     = time.Second * 30
+	ErrShutdown = errors.New("connection is shut down")
+	ErrTimeout  = errors.New("timeout")
 )
 
 type ReplyCB func(*protocol.Message)
@@ -33,8 +36,6 @@ func (e ServerError) Error() string {
 	return string(e)
 }
 
-var ErrShutdown = errors.New("connection is shut down")
-
 // Call represents an active RPC.
 type Call struct {
 	ServiceMethod string            // The name of the service and method to call.
@@ -44,6 +45,7 @@ type Call struct {
 	CB            ReplyCB           //callback function
 	noreply       bool
 	mb            Mailbox
+	deadline      time.Time
 }
 
 func NewCall() *Call {
@@ -111,6 +113,7 @@ type ClientCodec interface {
 
 func (client *Client) Go() {
 	var err error
+	t := time.NewTicker(time.Second)
 	for err == nil {
 		select {
 		case call := <-client.sendqueue:
@@ -120,6 +123,25 @@ func (client *Client) Go() {
 				client.log.LogInfo("quit sending loop")
 				return
 			}
+		case <-t.C:
+			client.mutex.Lock()
+			now := time.Now()
+			for k, v := range client.pending {
+				if now.Sub(v.deadline) > 0 { // 超时删除
+					delete(client.pending, k)
+					if v.Args == nil {
+						v.Args = protocol.NewMessage(1)
+					}
+					sr := utils.NewStoreArchiver(v.Args.Header)
+					sr.Put(int8(1))
+					sr.Put(-1)
+					v.Reply = v.Args.Dup()
+					v.Error = ErrTimeout
+					client.queue <- v
+					client.log.LogDebug("response timeout, seq:", k)
+				}
+			}
+			client.mutex.Unlock()
 		default:
 			if client.shutdown || client.closing {
 				client.log.LogInfo("quit sending loop")
@@ -128,6 +150,7 @@ func (client *Client) Go() {
 			time.Sleep(time.Millisecond)
 		}
 	}
+	t.Stop()
 }
 
 func (client *Client) send(call *Call) error {
@@ -141,6 +164,7 @@ func (client *Client) send(call *Call) error {
 		}
 		client.seq++
 		seq = client.seq
+		call.deadline = time.Now().Add(timeout) //超时时间
 		client.pending[seq] = call
 		client.mutex.Unlock()
 	}
