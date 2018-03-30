@@ -36,6 +36,15 @@ func NewMessageReader(msg *Message) *utils.LoadArchive {
 	return utils.NewLoadArchiver(msg.Body)
 }
 
+func ParseReply(msg *Message) (int32, *utils.LoadArchive) {
+	if msg == nil {
+		return 0, nil
+	}
+	errcode := GetReplyError(msg)
+	ar := utils.NewLoadArchiver(msg.Body)
+	return errcode, ar
+}
+
 func NewMessageWriter(msg *Message) *BodyWriter {
 	msg.Body = msg.Body[:0]
 	w := &BodyWriter{utils.NewStoreArchiver(msg.Body), msg}
