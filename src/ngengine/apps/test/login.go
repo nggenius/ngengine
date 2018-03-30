@@ -11,7 +11,7 @@ import (
 )
 
 var startargs2 = `{
-	"ServId":2,
+	"ServId":3,
 	"ServType": "login",
 	"AdminAddr":"127.0.0.1",
 	"AdminPort":12500,

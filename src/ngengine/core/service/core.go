@@ -138,7 +138,7 @@ func (c *Core) Serv() {
 	}
 
 	c.gid = goid.Get()
-	c.LogInfo(c.opts.ServName, " start, goroutine id ", c.gid)
+	c.LogInfo("service ", c.opts.ServName, " start, goroutine id ", c.gid)
 	harbor := NewHarbor(ctx)
 	// 连接admin
 	harbor.SetAdmin(c.opts.AdminAddr, c.opts.AdminPort)

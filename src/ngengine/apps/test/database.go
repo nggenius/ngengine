@@ -1,12 +1,11 @@
 package main
 
 import (
-	"ngengine/core/rpc"
 	"ngengine/core/service"
-	"ngengine/protocol"
+	"ngengine/module/store"
 )
 
-var startargs = `{
+var dbargs = `{
 	"ServId":1,
 	"ServType": "database",
 	"AdminAddr":"127.0.0.1",
@@ -17,53 +16,33 @@ var startargs = `{
 	"Expose": false,
 	"HostAddr": "",
 	"HostPort": 0,
-	"LogFile":"test.log",
-	"Args": {}
+	"LogFile":"db.log",
+	"Args": {
+		"db":"mysql",
+		"datasource":"sa:abc@tcp(192.168.1.52:3306)/test?charset=utf8"
+	}
 }`
 
 // service
 type Database struct {
 	service.BaseService
-	acc *Account
+	store *store.StoreModule
 }
 
 func (d *Database) Prepare(core service.CoreApi) error {
 	d.CoreApi = core
-	d.acc = &Account{owner: d}
-	d.acc.Thread = rpc.NewThread("account", 5, 10)
-	core.RegisterRemote("Account", d.acc)
+	d.store = store.New()
+	return nil
+}
+
+func (d *Database) Init(opt *service.CoreOption) error {
+	d.CoreApi.AddModule(d.store)
+	d.store.SetMode(store.STORE_SERVER)
+	d.store.Register().Register("Player", &GamePlayerData{})
 	return nil
 }
 
 func (d *Database) Start() error {
 	d.CoreApi.Watch("all")
 	return nil
-}
-
-// rpc
-type Account struct {
-	*rpc.Thread
-	owner *Database
-}
-
-func (a *Account) RegisterCallback(s rpc.Servicer) {
-	s.RegisterCallback("Login", a.Login)
-}
-
-func (a *Account) Login(mailbox rpc.Mailbox, msg *protocol.Message) (errcode int32, reply *protocol.Message) {
-	m := protocol.NewMessageReader(msg)
-	name, _ := m.ReadString()
-	pass, _ := m.ReadString()
-	mb := rpc.Mailbox{}
-	m.ReadObject(&mb)
-	a.owner.CoreApi.LogDebug("login:", name, ",pass:", pass)
-
-	a.owner.CoreApi.Mailto(nil, &mb, "Client.Login", LoginResult{"ok"})
-
-	if pass == "123" {
-		return 0, protocol.ReplyMessage(protocol.TINY, "ok", mb)
-	} else {
-		return 0, protocol.ReplyMessage(protocol.TINY, "failed", mb)
-	}
-
 }
