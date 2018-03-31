@@ -111,7 +111,7 @@ loop:
 				h.Close()
 				break
 			}
-			h.ctx.Core.LogDebug("send heartbeat")
+			//h.ctx.Core.LogDebug("send heartbeat")
 		case <-h.conn.closeCh:
 			break loop
 		}

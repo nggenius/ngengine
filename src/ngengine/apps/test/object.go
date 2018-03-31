@@ -9,6 +9,8 @@ import (
 	"ngengine/module/store"
 	"ngengine/module/timer"
 	"ngengine/protocol"
+
+	"github.com/mysll/toolkit"
 )
 
 var objectargs = `{
@@ -64,6 +66,8 @@ func (o *Object) Start() error {
 }
 
 func (o *Object) Timer(id int64, count int, args interface{}) {
+	//o.store.Client().Exec("object", "DELETE from `player`", []interface{}{}, o.ExecBack)
+	o.store.Client().Query("object", "select * from player", []interface{}{}, o.QueryBack)
 	o.CoreApi.LogInfo("timer")
 	p, _ := o.object.Create("Player")
 	gp := p.(*GamePlayer)
@@ -76,52 +80,68 @@ func (o *Object) Timer(id int64, count int, args interface{}) {
 	gp.SetPos(pos)
 	o.CoreApi.LogInfo(gp.Value("hello"))
 	o.store.Client().Insert("object", "Player", gp.Archive(), o.InsertBack)
+	o.store.Client().Insert("object", "Player", gp.Archive(), o.InsertBack)
+	o.store.Client().Insert("object", "Player", gp.Archive(), o.InsertBack)
 	o.object.Destroy(p)
-	o.store.Client().Get("object", "Player", map[string]interface{}{"Id=?": 1}, o.LoadBack)
+	o.store.Client().Get("object", "Player", map[string]interface{}{"Id=?": 32}, o.LoadBack)
 	o.store.Client().Find("object", "Player", map[string]interface{}{"Name=?": "sll"}, 4, 0, o.LoadAllBack)
 }
 
-func (o *Object) InsertBack(reply *protocol.Message) {
-	err, ar := protocol.ParseReply(reply)
-	if err != 0 {
-		o.CoreApi.LogErr(err)
+func (o *Object) QueryBack(reply *protocol.Message) {
+	errcode, err, tag, result := store.ParseQueryReply(reply)
+	if err != nil {
+		o.CoreApi.LogErr(errcode, err, tag)
+		return
 	}
+	o.CoreApi.LogInfo("query result:", result)
+}
 
-	tag, _ := ar.ReadString()
-	id, _ := ar.ReadInt64()
-	o.CoreApi.LogInfo("insert ok", tag, " ", id)
+func (o *Object) ExecBack(reply *protocol.Message) {
+	errcode, err, tag, affected := store.ParseExecReply(reply)
+	if err != nil {
+		o.CoreApi.LogErr(errcode, err, tag)
+		return
+	}
+	o.CoreApi.LogInfo("exec result:", affected)
+}
+
+func (o *Object) InsertBack(reply *protocol.Message) {
+	errcode, err, tag, affected := store.ParseInsertReply(reply)
+	if err != nil {
+		o.CoreApi.LogErr(errcode, err, tag)
+		return
+	}
+	o.CoreApi.LogInfo("insert ok", tag, " ", affected)
 }
 
 func (o *Object) LoadBack(reply *protocol.Message) {
-	err, ar := protocol.ParseReply(reply)
-	tag, _ := ar.ReadString()
-	if err != 0 {
-		errstr, _ := ar.ReadString()
-		o.CoreApi.LogErr(tag, errstr)
-		return
-	}
 
 	load := &entity.PlayerArchive{}
-	if err := ar.Read(load); err != nil {
-		o.CoreApi.LogErr(err)
+	errcode, err, tag := store.ParseGetReply(reply, load)
+	if err != nil {
+		o.CoreApi.LogErr(errcode, err, tag)
 		return
 	}
-
 	o.CoreApi.LogInfo("load result: ", load)
+
+	load.Orient = toolkit.RandRangef(0, 3.1415926*2)
+	o.store.Client().Update("object", "Player", map[string]interface{}{"Id": load.Id}, []string{"Orient"}, load, o.UpdateBack)
+}
+
+func (o *Object) UpdateBack(reply *protocol.Message) {
+	errcode, err, tag, affected := store.ParseUpdateReply(reply)
+	if err != nil {
+		o.CoreApi.LogErr(errcode, err, tag)
+		return
+	}
+	o.CoreApi.LogInfo("update result:", affected)
 }
 
 func (o *Object) LoadAllBack(reply *protocol.Message) {
-	err, ar := protocol.ParseReply(reply)
-	tag, _ := ar.ReadString()
-	if err != 0 {
-		errstr, _ := ar.ReadString()
-		o.CoreApi.LogErr(tag, errstr)
-		return
-	}
-
 	var load []*entity.PlayerArchive
-	if err := ar.Read(&load); err != nil {
-		o.CoreApi.LogErr(err)
+	errcode, err, tag := store.ParseFindReply(reply, &load)
+	if err != nil {
+		o.CoreApi.LogErr(errcode, err, tag)
 		return
 	}
 
@@ -129,6 +149,17 @@ func (o *Object) LoadAllBack(reply *protocol.Message) {
 		o.CoreApi.LogInfo("load result: ", k, v)
 	}
 
+	o.store.Client().Delete("object", "Player", load[len(load)-1], o.DeleteBack)
+
+}
+
+func (o *Object) DeleteBack(reply *protocol.Message) {
+	errcode, err, tag, affected := store.ParseDeleteReply(reply)
+	if err != nil {
+		o.CoreApi.LogErr(errcode, err, tag)
+		return
+	}
+	o.CoreApi.LogInfo("delete result:", affected)
 }
 
 type GamePlayerData struct {
