@@ -302,6 +302,18 @@ func (a *{{.Name}}Archive) TableName() string {
     return "{{.Archive}}"
 }
 
+// archive creater
+type {{.Name}}ArchiveCreater struct{
+}
+
+func (c *{{.Name}}ArchiveCreater) Create() interface{} {
+	return &{{.Name}}Archive{}
+}
+
+func (c *{{.Name}}ArchiveCreater) CreateSlice() interface{} {
+	return &[]*{{.Name}}Archive{}
+}
+
 // {{.Name}} attr
 type {{.Name}}Attr struct{
 	root object.Object

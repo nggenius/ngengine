@@ -68,6 +68,18 @@ func (a *PlayerArchive) TableName() string {
 	return "player"
 }
 
+// archive creater
+type PlayerArchiveCreater struct {
+}
+
+func (c *PlayerArchiveCreater) Create() interface{} {
+	return &PlayerArchive{}
+}
+
+func (c *PlayerArchiveCreater) CreateSlice() interface{} {
+	return &[]*PlayerArchive{}
+}
+
 // Player attr
 type PlayerAttr struct {
 	root object.Object
@@ -247,9 +259,9 @@ func (o *Player) Expose(name string) int {
 	case "VisualRange":
 		return object.EXPOSE_NONE
 	case "Pos":
-		return object.EXPOSE_OWNER
+		return object.EXPOSE_ALL
 	case "Orient":
-		return object.EXPOSE_OWNER
+		return object.EXPOSE_ALL
 	default:
 		panic("unknown")
 	}
