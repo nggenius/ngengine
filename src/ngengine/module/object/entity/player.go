@@ -35,6 +35,11 @@ func (pos *PlayerPos_t) Set(x float32, y float32, z float32) {
 	pos.Z = z
 }
 
+// tuple Pos Get
+func (pos *PlayerPos_t) Get() (x float32, y float32, z float32) {
+	return pos.X, pos.Y, pos.Z
+}
+
 // tuple Pos equal other
 func (pos *PlayerPos_t) Equal(other PlayerPos_t) bool {
 	if (pos.X == other.X) && (pos.Y == other.Y) && (pos.Z == other.Z) {
@@ -212,9 +217,21 @@ func (o *Player) SetPos(pos PlayerPos_t) {
 	o.UpdateTuple("Pos", pos, old)
 }
 
+// set Pos detail
+func (o *Player) SetPosXYZ(x float32, y float32, z float32) {
+	old := *o.archive.Pos
+	o.archive.Pos.Set(x, y, z)
+	o.UpdateTuple("Pos", pos, old)
+}
+
 // get Pos 位置
 func (o *Player) Pos() PlayerPos_t {
 	return *o.archive.Pos
+}
+
+// get Pos detail
+func (o *Player) GetPosXYZ() (x float32, y float32, z float32) {
+	return o.archive.Pos.Get()
 }
 
 // set Orient 朝向(弧度)

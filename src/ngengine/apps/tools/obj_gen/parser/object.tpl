@@ -33,6 +33,11 @@ func ({{$src := tolower .Name }}{{$src}} *{{$.Name}}{{.Name}}_t) Set({{range $k,
 	{{$src}}.{{.Name}} = {{tolower .Name}} {{end}}
 }
 
+// tuple {{.Name}} Get
+func ({{$src := tolower .Name }}{{$src}} *{{$.Name}}{{.Name}}_t) Get()({{range $k, $t := .Tuple}} {{if ne $k 0}},{{end}}{{tolower $t.Name}} {{$t.Type}} {{end}}) {
+	return {{range $k, $t := .Tuple}} {{if ne $k 0}},{{end}} {{$src}}.{{$t.Name}}{{end}}
+}
+
 // tuple {{.Name}} equal other
 func ({{$src := tolower .Name }}{{$src}} *{{$.Name}}{{.Name}}_t) Equal(other {{$.Name}}{{.Name}}_t) bool {
 	if {{range $k, $t := .Tuple}} {{if ne $k 0}} && {{end}}({{$src}}.{{.Name}} == other.{{.Name}}) {{end}} {
@@ -396,11 +401,23 @@ func (o *{{$.Name}}) Set{{.Name}}( {{tolower .Name}} {{if eq .Type "tuple"}} {{$
 	o.UpdateTuple("{{.Name}}", {{tolower .Name}}, old) {{else}}
 	o.UpdateAttr("{{.Name}}", {{tolower .Name}}, old) {{end}} {{end}}
 }
+{{if eq .Type "tuple"}}
+// set {{.Name}} detail
+func (o *{{$.Name}}) Set{{.Name}}{{range  .Tuple}}{{.Name}}{{end}}({{range $k, $t := .Tuple}} {{if ne $k 0}},{{end}}{{tolower $t.Name}} {{$t.Type}} {{end}}){
+	{{if eq .Save "true"}} old := *o.archive.{{.Name}} {{else}} old := *o.attr.{{.Name}} {{end}}
+	{{if eq .Save "true"}} o.archive.{{.Name}} {{else}}o.attr.{{.Name}} {{end}}.Set({{range $k, $t := .Tuple}} {{if ne $k 0}},{{end}}{{tolower $t.Name}} {{end}})
+	o.UpdateTuple("{{.Name}}", {{tolower .Name}}, old) 
+}{{end}}
 
 // get {{.Name}} {{.Desc}}
 func (o *{{$.Name}}) {{.Name}}() {{if eq .Type "tuple"}} {{$.Name}}{{.Name}}_t{{else if eq .Type "table"}} *{{$.Name}}{{.Name}}_r {{else}} {{.Type}} {{end}} {
     {{if eq .Save "true"}}return {{if eq .Type "tuple"}}*{{end}}o.archive.{{.Name}}{{else}}return {{if eq .Type "tuple"}}*{{end}}o.attr.{{.Name}}{{end}}
 }
+{{if eq .Type "tuple"}}
+// get {{.Name}} detail
+func (o *{{$.Name}}) Get{{.Name}}{{range  .Tuple}}{{.Name}}{{end}}()({{range $k, $t := .Tuple}} {{if ne $k 0}},{{end}}{{tolower $t.Name}} {{$t.Type}} {{end}}){
+	return {{if eq .Save "true"}} o.archive.{{.Name}} {{else}}o.attr.{{.Name}} {{end}}.Get()
+} {{end}}
 {{end}}
 
 // attr type
