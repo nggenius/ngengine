@@ -221,7 +221,7 @@ func (o *Player) SetPos(pos PlayerPos_t) {
 func (o *Player) SetPosXYZ(x float32, y float32, z float32) {
 	old := *o.archive.Pos
 	o.archive.Pos.Set(x, y, z)
-	o.UpdateTuple("Pos", pos, old)
+	o.UpdateTuple("Pos", *o.archive.Pos, old)
 }
 
 // get Pos 位置

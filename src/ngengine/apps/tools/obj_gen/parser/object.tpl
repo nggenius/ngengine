@@ -406,7 +406,7 @@ func (o *{{$.Name}}) Set{{.Name}}( {{tolower .Name}} {{if eq .Type "tuple"}} {{$
 func (o *{{$.Name}}) Set{{.Name}}{{range  .Tuple}}{{.Name}}{{end}}({{range $k, $t := .Tuple}} {{if ne $k 0}},{{end}}{{tolower $t.Name}} {{$t.Type}} {{end}}){
 	{{if eq .Save "true"}} old := *o.archive.{{.Name}} {{else}} old := *o.attr.{{.Name}} {{end}}
 	{{if eq .Save "true"}} o.archive.{{.Name}} {{else}}o.attr.{{.Name}} {{end}}.Set({{range $k, $t := .Tuple}} {{if ne $k 0}},{{end}}{{tolower $t.Name}} {{end}})
-	o.UpdateTuple("{{.Name}}", {{tolower .Name}}, old) 
+	o.UpdateTuple("{{.Name}}", {{if eq .Save "true"}} *o.archive.{{.Name}} {{else}}*o.attr.{{.Name}} {{end}}, old) 
 }{{end}}
 
 // get {{.Name}} {{.Desc}}
