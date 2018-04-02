@@ -82,6 +82,6 @@ func (m *StoreModule) Client() *StoreClient {
 	return m.client
 }
 
-func (m *StoreModule) Register() *Register {
-	return m.register
+func (m *StoreModule) Register(name string, creater DataCreater) error {
+	return m.register.Register(name, creater)
 }

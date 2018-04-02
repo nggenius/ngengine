@@ -52,7 +52,7 @@ func (o *Object) Init(opt *service.CoreOption) error {
 	o.CoreApi.AddModule(o.timer)
 	// 设置store
 	o.store.SetMode(store.STORE_CLIENT)
-	o.store.Register().Register("Player", &entity.PlayerArchiveCreater{})
+	o.store.Register("Player", &entity.PlayerArchiveCreater{})
 	o.object.Register("Player", &GamePlayerCreater{})
 	o.replicate.RegisterReplicate("Player")
 	return nil
