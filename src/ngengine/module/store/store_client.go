@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"ngengine/core/rpc"
 	"ngengine/protocol"
+	"ngengine/share"
 )
 
 type StoreClient struct {
@@ -33,6 +34,10 @@ func ParseGetReply(reply *protocol.Message, object interface{}) (errcode int32, 
 	errcode, ar := protocol.ParseReply(reply)
 	tag, err = ar.ReadString()
 	if err != nil {
+		return
+	}
+	if int(errcode) == share.ERR_TIME_OUT {
+		err = rpc.ErrTimeout
 		return
 	}
 	if errcode != 0 {
@@ -65,6 +70,10 @@ func ParseFindReply(reply *protocol.Message, object interface{}) (errcode int32,
 	if err != nil {
 		return
 	}
+	if int(errcode) == share.ERR_TIME_OUT {
+		err = rpc.ErrTimeout
+		return
+	}
 	if errcode != 0 {
 		errstr, _ := ar.ReadString()
 		err = errors.New(errstr)
@@ -89,10 +98,14 @@ func (s *StoreClient) Find(tag string, typ string, condition map[string]interfac
 	return s.ctx.core.MailtoAndCallback(nil, s.db, "store.Find", reply, tag, typ, condition, limit, start)
 }
 
-func ParseInsertReply(reply *protocol.Message) (errcode int32, err error, tag string, affected int64) {
+func ParseInsertReply(reply *protocol.Message) (errcode int32, err error, tag string, affected, id int64) {
 	errcode, ar := protocol.ParseReply(reply)
 	tag, err = ar.ReadString()
 	if err != nil {
+		return
+	}
+	if int(errcode) == share.ERR_TIME_OUT {
+		err = rpc.ErrTimeout
 		return
 	}
 	if errcode != 0 {
@@ -102,6 +115,10 @@ func ParseInsertReply(reply *protocol.Message) (errcode int32, err error, tag st
 	}
 
 	affected, err = ar.ReadInt64()
+	if err != nil {
+		return
+	}
+	id, err = ar.ReadInt64()
 	return
 }
 
@@ -122,6 +139,10 @@ func ParseUpdateReply(reply *protocol.Message) (errcode int32, err error, tag st
 	if err != nil {
 		return
 	}
+	if int(errcode) == share.ERR_TIME_OUT {
+		err = rpc.ErrTimeout
+		return
+	}
 	if errcode != 0 {
 		errstr, _ := ar.ReadString()
 		err = errors.New(errstr)
@@ -131,21 +152,25 @@ func ParseUpdateReply(reply *protocol.Message) (errcode int32, err error, tag st
 	return
 }
 
-// 更新一条记录，tag为返回的标识符,typ查询的数据类型，condition为条件{column:value}，cols更新的列，object待插入的数据
-func (s *StoreClient) Update(tag string, typ string, condition map[string]interface{}, cols []string, object interface{}, reply rpc.ReplyCB) error {
+// 更新一条记录，tag为返回的标识符,typ查询的数据类型，cols更新的列，condition为条件{column:value}，object待插入的数据
+func (s *StoreClient) Update(tag string, typ string, cols []string, condition map[string]interface{}, object interface{}, reply rpc.ReplyCB) error {
 	if s.db == nil {
 		return fmt.Errorf("database not connected")
 	}
 	if reply == nil {
-		return s.ctx.core.Mailto(nil, s.db, "store.Update", tag, typ, condition, cols, object)
+		return s.ctx.core.Mailto(nil, s.db, "store.Update", tag, typ, cols, condition, object)
 	}
-	return s.ctx.core.MailtoAndCallback(nil, s.db, "store.Update", reply, tag, typ, condition, cols, object)
+	return s.ctx.core.MailtoAndCallback(nil, s.db, "store.Update", reply, tag, typ, cols, condition, object)
 }
 
 func ParseDeleteReply(reply *protocol.Message) (errcode int32, err error, tag string, affected int64) {
 	errcode, ar := protocol.ParseReply(reply)
 	tag, err = ar.ReadString()
 	if err != nil {
+		return
+	}
+	if int(errcode) == share.ERR_TIME_OUT {
+		err = rpc.ErrTimeout
 		return
 	}
 	if errcode != 0 {
@@ -174,6 +199,10 @@ func ParseQueryReply(reply *protocol.Message) (errcode int32, err error, tag str
 	if err != nil {
 		return
 	}
+	if int(errcode) == share.ERR_TIME_OUT {
+		err = rpc.ErrTimeout
+		return
+	}
 	if errcode != 0 {
 		errstr, _ := ar.ReadString()
 		err = errors.New(errstr)
@@ -199,6 +228,10 @@ func ParseExecReply(reply *protocol.Message) (errcode int32, err error, tag stri
 	errcode, ar := protocol.ParseReply(reply)
 	tag, err = ar.ReadString()
 	if err != nil {
+		return
+	}
+	if int(errcode) == share.ERR_TIME_OUT {
+		err = rpc.ErrTimeout
 		return
 	}
 	if errcode != 0 {
