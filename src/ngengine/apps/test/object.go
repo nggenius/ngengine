@@ -52,7 +52,7 @@ func (o *Object) Init(opt *service.CoreOption) error {
 	o.CoreApi.AddModule(o.timer)
 	// 设置store
 	o.store.SetMode(store.STORE_CLIENT)
-	o.store.Register().Register("Player", &GamePlayerData{})
+	o.store.Register().Register("Player", &entity.PlayerArchiveCreater{})
 	o.object.Register("Player", &GamePlayerCreater{})
 	o.replicate.RegisterReplicate("Player")
 	return nil
@@ -83,6 +83,7 @@ func (o *Object) Timer(id int64, count int, args interface{}) {
 	o.store.Client().Insert("object", "Player", gp.Archive(), o.InsertBack)
 	o.store.Client().Insert("object", "Player", gp.Archive(), o.InsertBack)
 	o.object.Destroy(p)
+	o.store.Client().Get("object", "Player", map[string]interface{}{"Id=?": -1}, o.LoadBack)
 	o.store.Client().Get("object", "Player", map[string]interface{}{"Id=?": 32}, o.LoadBack)
 	o.store.Client().Find("object", "Player", map[string]interface{}{"Name=?": "sll"}, 4, 0, o.LoadAllBack)
 }
@@ -106,12 +107,12 @@ func (o *Object) ExecBack(reply *protocol.Message) {
 }
 
 func (o *Object) InsertBack(reply *protocol.Message) {
-	errcode, err, tag, affected := store.ParseInsertReply(reply)
+	errcode, err, tag, affected, id := store.ParseInsertReply(reply)
 	if err != nil {
 		o.CoreApi.LogErr(errcode, err, tag)
 		return
 	}
-	o.CoreApi.LogInfo("insert ok", tag, " ", affected)
+	o.CoreApi.LogInfo("insert ", tag, ", ", affected, ",id: ", id)
 }
 
 func (o *Object) LoadBack(reply *protocol.Message) {
@@ -125,7 +126,7 @@ func (o *Object) LoadBack(reply *protocol.Message) {
 	o.CoreApi.LogInfo("load result: ", load)
 
 	load.Orient = toolkit.RandRangef(0, 3.1415926*2)
-	o.store.Client().Update("object", "Player", map[string]interface{}{"Id": load.Id}, []string{"Orient"}, load, o.UpdateBack)
+	o.store.Client().Update("object", "Player", []string{"Orient"}, map[string]interface{}{"Id": load.Id}, load, o.UpdateBack)
 }
 
 func (o *Object) UpdateBack(reply *protocol.Message) {
@@ -160,17 +161,6 @@ func (o *Object) DeleteBack(reply *protocol.Message) {
 		return
 	}
 	o.CoreApi.LogInfo("delete result:", affected)
-}
-
-type GamePlayerData struct {
-}
-
-func (g *GamePlayerData) Create() interface{} {
-	return &entity.PlayerArchive{}
-}
-
-func (g *GamePlayerData) CreateSlice() interface{} {
-	return &[]*entity.PlayerArchive{}
 }
 
 type GamePlayer struct {

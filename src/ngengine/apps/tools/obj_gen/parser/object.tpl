@@ -289,6 +289,11 @@ type {{.Name}}Archive struct {
 	{{.Name}} {{if eq .Type "tuple"}}*{{$.Name}}{{.Name}}_t `xorm:"json"`{{else if eq .Type "table"}}*{{$.Name}}{{.Name}}_r `xorm:"json"`{{else}}{{.Type}} {{if eq .Type "string"}}`xorm:"varchar({{strsize .}})"`{{end}}{{end}}  // {{.Desc}}{{end}} {{end}}
 }
 
+// db id
+func (a *{{.Name}}Archive) DBId() int64 {
+    return a.Id
+}
+
 // {{.Name}} archive construct
 func New{{.Name}}Archive(root object.Object) *{{.Name}}Archive {
     archive := &{{.Name}}Archive{root:root}

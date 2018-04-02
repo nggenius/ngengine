@@ -2,6 +2,7 @@ package main
 
 import (
 	"ngengine/core/service"
+	"ngengine/module/object/entity"
 	"ngengine/module/store"
 )
 
@@ -38,7 +39,7 @@ func (d *Database) Prepare(core service.CoreApi) error {
 func (d *Database) Init(opt *service.CoreOption) error {
 	d.CoreApi.AddModule(d.store)
 	d.store.SetMode(store.STORE_SERVER)
-	d.store.Register().Register("Player", &GamePlayerData{})
+	d.store.Register().Register("Player", &entity.PlayerArchiveCreater{})
 	return nil
 }
 

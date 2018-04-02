@@ -134,7 +134,8 @@ func (client *Client) Go() {
 					}
 					sr := utils.NewStoreArchiver(v.Args.Header)
 					sr.Put(int8(1))
-					sr.Put(-1)
+					sr.Put(int32(ERR_TIME_OUT))
+					v.Args.Header = v.Args.Header[:sr.Len()]
 					v.Reply = v.Args.Dup()
 					v.Error = ErrTimeout
 					client.queue <- v

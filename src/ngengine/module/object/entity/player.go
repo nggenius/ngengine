@@ -54,6 +54,11 @@ type PlayerArchive struct {
 	Orient float32      // 朝向(弧度)
 }
 
+// db id
+func (a *PlayerArchive) DBId() int64 {
+	return a.Id
+}
+
 // Player archive construct
 func NewPlayerArchive(root object.Object) *PlayerArchive {
 	archive := &PlayerArchive{root: root}

@@ -498,6 +498,8 @@ func (c *byteServerCodec) WriteResponse(seq uint64, errcode int32, body *protoco
 	if errcode != 0 {
 		w.Put(int8(1))
 		w.Put(errcode)
+	} else {
+		w.Put(int8(0))
 	}
 	body.Header = body.Header[:w.Len()]
 	size := len(body.Header) + len(body.Body)

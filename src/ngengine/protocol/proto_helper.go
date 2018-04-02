@@ -142,7 +142,7 @@ func CreateMessage(args ...interface{}) *Message {
 			err := msg.Put(args[i])
 			if err != nil {
 				msg.Free()
-				panic("write args failed")
+				panic("write args failed," + err.Error())
 			}
 		}
 		msg.Flush()
@@ -159,7 +159,7 @@ func AppendArgs(msg *Message, args ...interface{}) {
 			err := w.Put(args[i])
 			if err != nil {
 				msg.Free()
-				panic("write args failed")
+				panic("write args failed," + err.Error())
 			}
 		}
 		w.Flush()
@@ -191,46 +191,7 @@ func ReplyMessage(poolsize int, args ...interface{}) *Message {
 			err := mw.Put(args[i])
 			if err != nil {
 				msg.Free()
-				panic("write args failed")
-			}
-		}
-		mw.Flush()
-	}
-
-	return msg
-}
-
-// 错误消息
-func replyErrorMessage(errcode int32) *Message {
-	msg := NewMessage(1)
-	if errcode == 0 {
-		return msg
-	}
-	sr := utils.NewStoreArchiver(msg.Header)
-	sr.Put(int8(1))
-	sr.Put(errcode)
-	msg.Header = msg.Header[:sr.Len()]
-	return msg
-}
-
-// 错误消息
-func replyErrorAndArgs(errcode int32, args ...interface{}) *Message {
-	msg := NewMessage(share.MAX_BUF_LEN)
-
-	if errcode > 0 {
-		sr := utils.NewStoreArchiver(msg.Header)
-		sr.Put(int8(1))
-		sr.Put(errcode)
-		msg.Header = msg.Header[:sr.Len()]
-	}
-
-	if len(args) > 0 {
-		mw := NewMessageWriter(msg)
-		for i := 0; i < len(args); i++ {
-			err := mw.Put(args[i])
-			if err != nil {
-				msg.Free()
-				panic("write args failed")
+				panic("write args failed," + err.Error())
 			}
 		}
 		mw.Flush()
