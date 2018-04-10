@@ -3,6 +3,8 @@
 package {{.Package}}
 
 import(
+	"bytes"
+	"encoding/gob"
     "encoding/json"
 	"encoding/gob"
     "fmt"
@@ -76,6 +78,15 @@ func New{{$.Name}}{{.Name}}(root object.Object) *{{$.Name}}{{.Name}}_r {
 	return {{tolower .Name}}
 }
 
+// row count
+func (r *{{$.Name}}{{.Name}}_r) Rows() int {
+	return len(r.Row)
+}
+
+// row cap
+func (r *{{$.Name}}{{.Name}}_r) Cap() int {
+	return cap(r.data)
+}
 
 {{$expose := .Expose}}
 {{$pname := .Name}}
@@ -233,6 +244,16 @@ func (r *{{$.Name}}{{.Name}}_r) FromDB(data []byte) error {
     return r.unpack(data)
 }
 
+// gob encode interface
+func (r *{{$.Name}}{{.Name}}_r) GobEncode() ([]byte, error) {
+    return r.pack()
+}
+
+// gob decode interface
+func (r *{{$.Name}}{{.Name}}_r) GobDecode(data []byte) error {
+    return r.unpack(data)
+}
+
 // record {{.Name}} pack
 func (r *{{$.Name}}{{.Name}}_r) pack() ([]byte, error) {
     j := &{{$.Name}}{{.Name}}Json{}
@@ -278,7 +299,7 @@ func (r *{{$.Name}}{{.Name}}_r) unpack(data []byte) error {
 			}
 		}
 		r.Row = r.data[:len(r.Row)+1]
-		r.Row[len(row)-1] = toolboxrow
+		r.Row[len(r.Row)-1] = toolboxrow
 	}
 	return nil
 }
@@ -485,6 +506,39 @@ func  (o *{{$.Name}}) SetAttr(name string, value interface{}) error {
 	default:
 		return fmt.Errorf("attr %s not found", name)
 	}
+}
+
+// gob interface
+func (o *{{$.Name}}) GobEncode() ([]byte, error) {
+	w := new(bytes.Buffer)
+	encoder := gob.NewEncoder(w)
+	var err error
+
+	err = encoder.Encode(o.archive)
+	if err != nil {
+		return nil, err
+	}
+	err = encoder.Encode(o.attr)
+	if err != nil {
+		return nil, err
+	}
+	return w.Bytes(), nil
+}
+
+func (o *{{$.Name}}) GobDecode(buf []byte) error {
+	r := bytes.NewBuffer(buf)
+	decoder := gob.NewDecoder(r)
+	var err error
+
+	err = decoder.Decode(o.archive)
+	if err != nil {
+		return err
+	}
+	err = decoder.Decode(o.attr)
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 // gob register
