@@ -1,5 +1,6 @@
 package main
 
+// 测试对象模块
 import (
 	"ngengine/core/service"
 	"ngengine/module/object"
@@ -36,8 +37,8 @@ type Object struct {
 	timer     *timer.TimerModule
 }
 
-func (o *Object) Prepare(core service.CoreApi) error {
-	o.CoreApi = core
+func (o *Object) Prepare(core service.CoreAPI) error {
+	o.CoreAPI = core
 	o.object = object.New()
 	o.replicate = replicate.New()
 	o.store = store.New()
@@ -46,10 +47,10 @@ func (o *Object) Prepare(core service.CoreApi) error {
 }
 
 func (o *Object) Init(opt *service.CoreOption) error {
-	o.CoreApi.AddModule(o.object)
-	o.CoreApi.AddModule(o.replicate)
-	o.CoreApi.AddModule(o.store)
-	o.CoreApi.AddModule(o.timer)
+	o.CoreAPI.AddModule(o.object)
+	o.CoreAPI.AddModule(o.replicate)
+	o.CoreAPI.AddModule(o.store)
+	o.CoreAPI.AddModule(o.timer)
 	// 设置store
 	o.store.SetMode(store.STORE_CLIENT)
 	o.store.Register("Player", &entity.PlayerArchiveCreater{})
@@ -59,16 +60,16 @@ func (o *Object) Init(opt *service.CoreOption) error {
 }
 
 func (o *Object) Start() error {
-	o.CoreApi.Watch("all")
+	o.CoreAPI.Watch("all")
 	o.timer.AddCountTimer(1, 5000, nil, o.Timer)
-	o.CoreApi.LogInfo("add timer")
+	o.CoreAPI.LogInfo("add timer")
 	return nil
 }
 
 func (o *Object) Timer(id int64, count int, args interface{}) {
 	//o.store.Client().Exec("object", "DELETE from `player`", []interface{}{}, o.ExecBack)
 	o.store.Client().Query("object", "select * from player", []interface{}{}, o.QueryBack)
-	o.CoreApi.LogInfo("timer")
+	o.CoreAPI.LogInfo("timer")
 	p, _ := o.object.Create("Player")
 	gp := p.(*GamePlayer)
 	gp.Cache("hello", "hello")
@@ -78,7 +79,7 @@ func (o *Object) Timer(id int64, count int, args interface{}) {
 	pos := gp.Pos()
 	pos.Set(1, 1, 1)
 	gp.SetPos(pos)
-	o.CoreApi.LogInfo(gp.Value("hello"))
+	o.CoreAPI.LogInfo(gp.Value("hello"))
 	o.store.Client().Insert("object", "Player", gp.Archive(), o.InsertBack)
 	o.store.Client().Insert("object", "Player", gp.Archive(), o.InsertBack)
 	o.store.Client().Insert("object", "Player", gp.Archive(), o.InsertBack)
@@ -91,28 +92,28 @@ func (o *Object) Timer(id int64, count int, args interface{}) {
 func (o *Object) QueryBack(reply *protocol.Message) {
 	errcode, err, tag, result := store.ParseQueryReply(reply)
 	if err != nil {
-		o.CoreApi.LogErr(errcode, err, tag)
+		o.CoreAPI.LogErr(errcode, err, tag)
 		return
 	}
-	o.CoreApi.LogInfo("query result:", result)
+	o.CoreAPI.LogInfo("query result:", result)
 }
 
 func (o *Object) ExecBack(reply *protocol.Message) {
 	errcode, err, tag, affected := store.ParseExecReply(reply)
 	if err != nil {
-		o.CoreApi.LogErr(errcode, err, tag)
+		o.CoreAPI.LogErr(errcode, err, tag)
 		return
 	}
-	o.CoreApi.LogInfo("exec result:", affected)
+	o.CoreAPI.LogInfo("exec result:", affected)
 }
 
 func (o *Object) InsertBack(reply *protocol.Message) {
 	errcode, err, tag, affected, id := store.ParseInsertReply(reply)
 	if err != nil {
-		o.CoreApi.LogErr(errcode, err, tag)
+		o.CoreAPI.LogErr(errcode, err, tag)
 		return
 	}
-	o.CoreApi.LogInfo("insert ", tag, ", ", affected, ",id: ", id)
+	o.CoreAPI.LogInfo("insert ", tag, ", ", affected, ",id: ", id)
 }
 
 func (o *Object) LoadBack(reply *protocol.Message) {
@@ -120,10 +121,10 @@ func (o *Object) LoadBack(reply *protocol.Message) {
 	load := &entity.PlayerArchive{}
 	errcode, err, tag := store.ParseGetReply(reply, load)
 	if err != nil {
-		o.CoreApi.LogErr(errcode, err, tag)
+		o.CoreAPI.LogErr(errcode, err, tag)
 		return
 	}
-	o.CoreApi.LogInfo("load result: ", load)
+	o.CoreAPI.LogInfo("load result: ", load)
 
 	load.Orient = toolkit.RandRangef(0, 3.1415926*2)
 	o.store.Client().Update("object", "Player", []string{"Orient"}, map[string]interface{}{"Id": load.Id}, load, o.UpdateBack)
@@ -132,22 +133,23 @@ func (o *Object) LoadBack(reply *protocol.Message) {
 func (o *Object) UpdateBack(reply *protocol.Message) {
 	errcode, err, tag, affected := store.ParseUpdateReply(reply)
 	if err != nil {
-		o.CoreApi.LogErr(errcode, err, tag)
+		o.CoreAPI.LogErr(errcode, err, tag)
 		return
 	}
-	o.CoreApi.LogInfo("update result:", affected)
+	o.CoreAPI.LogInfo("update result:", affected)
+	panic("panic")
 }
 
 func (o *Object) LoadAllBack(reply *protocol.Message) {
 	var load []*entity.PlayerArchive
 	errcode, err, tag := store.ParseFindReply(reply, &load)
 	if err != nil {
-		o.CoreApi.LogErr(errcode, err, tag)
+		o.CoreAPI.LogErr(errcode, err, tag)
 		return
 	}
 
 	for k, v := range load {
-		o.CoreApi.LogInfo("load result: ", k, v)
+		o.CoreAPI.LogInfo("load result: ", k, v)
 	}
 
 	o.store.Client().Delete("object", "Player", load[len(load)-1], o.DeleteBack)
@@ -157,10 +159,10 @@ func (o *Object) LoadAllBack(reply *protocol.Message) {
 func (o *Object) DeleteBack(reply *protocol.Message) {
 	errcode, err, tag, affected := store.ParseDeleteReply(reply)
 	if err != nil {
-		o.CoreApi.LogErr(errcode, err, tag)
+		o.CoreAPI.LogErr(errcode, err, tag)
 		return
 	}
-	o.CoreApi.LogInfo("delete result:", affected)
+	o.CoreAPI.LogInfo("delete result:", affected)
 }
 
 type GamePlayer struct {

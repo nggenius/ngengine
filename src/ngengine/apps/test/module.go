@@ -3,14 +3,14 @@ package main
 import "ngengine/core/service"
 
 type ModuleTest struct {
-	core service.CoreApi
+	core service.CoreAPI
 }
 
 func (m *ModuleTest) Name() string {
 	return "ModuleTest"
 }
 
-func (m *ModuleTest) Init(core service.CoreApi) bool {
+func (m *ModuleTest) Init(core service.CoreAPI) bool {
 	m.core = core
 	return true
 }
@@ -34,14 +34,14 @@ func (m *ModuleTest) OnMessage(id int, args ...interface{}) {
 }
 
 type ModuleTest2 struct {
-	core service.CoreApi
+	core service.CoreAPI
 }
 
 func (m *ModuleTest2) Name() string {
 	return "ModuleTest2"
 }
 
-func (m *ModuleTest2) Init(core service.CoreApi) bool {
+func (m *ModuleTest2) Init(core service.CoreAPI) bool {
 	m.core = core
 	return true
 }

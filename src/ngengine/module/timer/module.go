@@ -6,7 +6,7 @@ import (
 
 type TimerModule struct {
 	service.Module
-	core service.CoreApi
+	core service.CoreAPI
 	t    *timerManager
 }
 
@@ -19,7 +19,7 @@ func (m *TimerModule) Name() string {
 	return "Timer"
 }
 
-func (m *TimerModule) Init(core service.CoreApi) bool {
+func (m *TimerModule) Init(core service.CoreAPI) bool {
 	m.core = core
 	m.t = newManager()
 	return true

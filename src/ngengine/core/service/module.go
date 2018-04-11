@@ -7,7 +7,7 @@ import (
 // 模块回调接口
 type ModuleHandler interface {
 	Name() string
-	Init(core CoreApi) bool
+	Init(core CoreAPI) bool
 	Start()
 	Shut()
 	OnUpdate(t *Time)

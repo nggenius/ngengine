@@ -8,7 +8,7 @@ import (
 // CrontabModule 时间事件模块
 type CrontabModule struct {
 	service.Module
-	core  service.CoreApi
+	core  service.CoreAPI
 	crtab *crontab
 }
 
@@ -24,7 +24,7 @@ func (m *CrontabModule) Name() string {
 }
 
 // Init 模块初始化
-func (m *CrontabModule) Init(core service.CoreApi) bool {
+func (m *CrontabModule) Init(core service.CoreAPI) bool {
 	m.core = core
 	m.core.LogInfo("CrontabModule is init")
 	m.crtab = newCrontab()

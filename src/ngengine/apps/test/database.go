@@ -30,20 +30,20 @@ type Database struct {
 	store *store.StoreModule
 }
 
-func (d *Database) Prepare(core service.CoreApi) error {
-	d.CoreApi = core
+func (d *Database) Prepare(core service.CoreAPI) error {
+	d.CoreAPI = core
 	d.store = store.New()
 	return nil
 }
 
 func (d *Database) Init(opt *service.CoreOption) error {
-	d.CoreApi.AddModule(d.store)
+	d.CoreAPI.AddModule(d.store)
 	d.store.SetMode(store.STORE_SERVER)
 	d.store.Register("Player", &entity.PlayerArchiveCreater{})
 	return nil
 }
 
 func (d *Database) Start() error {
-	d.CoreApi.Watch("all")
+	d.CoreAPI.Watch("all")
 	return nil
 }

@@ -8,7 +8,7 @@ import (
 type Service interface {
 	event.Dispatcher
 	// 服务前期准备
-	Prepare(CoreApi) error
+	Prepare(CoreAPI) error
 	// 初始化
 	Init(*CoreOption) error
 	// 开始运行
@@ -25,10 +25,10 @@ type Service interface {
 
 type BaseService struct {
 	event.EventDispatch
-	CoreApi
+	CoreAPI
 }
 
-func (b *BaseService) Prepare(CoreApi) error {
+func (b *BaseService) Prepare(CoreAPI) error {
 	return nil
 }
 
@@ -37,7 +37,7 @@ func (b *BaseService) Init(o *CoreOption) error {
 }
 
 func (b *BaseService) Start() error {
-	b.CoreApi.Watch("all")
+	b.CoreAPI.Watch("all")
 	return nil
 }
 

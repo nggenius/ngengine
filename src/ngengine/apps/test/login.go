@@ -34,8 +34,8 @@ type Login struct {
 	service.BaseService
 }
 
-func (l *Login) Prepare(core service.CoreApi) error {
-	l.CoreApi = core
+func (l *Login) Prepare(core service.CoreAPI) error {
+	l.CoreAPI = core
 	core.RegisterHandler("User", &User{l})
 	core.AddModule(&ModuleTest{})
 	core.AddModule(&ModuleTest2{})
@@ -44,12 +44,12 @@ func (l *Login) Prepare(core service.CoreApi) error {
 }
 
 func (l *Login) Start() error {
-	l.CoreApi.Watch("all")
+	l.CoreAPI.Watch("all")
 
 	timer := l.Module("TimerModule").(*timer.TimerModule)
 	id := timer.AddTimer(1000, 123, l.RepeatCallBack)
 	id2 := timer.AddCountTimer(10, 3000, 999, l.CountCallBack)
-	l.CoreApi.LogDebugf("id:%d   id2:%d", id, id2)
+	l.CoreAPI.LogDebugf("id:%d   id2:%d", id, id2)
 	return nil
 }
 
@@ -65,16 +65,16 @@ func (l *Login) CountCallBack(id int64, count int, args interface{}) {
 func (l *Login) OnEvent(e string, args event.EventArgs) {
 	switch e {
 	case share.EVENT_USER_CONNECT:
-		l.CoreApi.LogDebug("new user")
+		l.CoreAPI.LogDebug("new user")
 	case share.EVENT_USER_LOST:
-		l.CoreApi.LogDebug("lost user")
+		l.CoreAPI.LogDebug("lost user")
 	}
 }
 
 func (l *Login) OnReply(reply *protocol.Message) {
 	m := protocol.NewMessageReader(reply)
 	r, _ := m.ReadString()
-	l.CoreApi.LogDebug("login result:", r)
+	l.CoreAPI.LogDebug("login result:", r)
 }
 
 type User struct {
@@ -87,16 +87,16 @@ func (u *User) RegisterCallback(s rpc.Servicer) {
 
 func (u *User) Login(mailbox rpc.Mailbox, msg *protocol.Message) (errcode int32, reply *protocol.Message) {
 
-	srv := u.owner.CoreApi.LookupOneServiceByType("database")
+	srv := u.owner.CoreAPI.LookupOneServiceByType("database")
 	if srv == nil {
-		u.owner.CoreApi.LogErr("database not found")
+		u.owner.CoreAPI.LogErr("database not found")
 		return 0, nil
 	}
 
 	dest := rpc.GetServiceMailbox(srv.Id)
-	u.owner.CoreApi.LogDebug(mailbox, "request login")
+	u.owner.CoreAPI.LogDebug(mailbox, "request login")
 	//err := u.owner.CoreApi.MailtoAndCallback(nil, &dest, "Account.Login", u.OnReply, "sll", "123", mailbox)
-	err := u.owner.CoreApi.Mailto(nil, &dest, "Account.Login", "sll", "123", mailbox)
+	err := u.owner.CoreAPI.Mailto(nil, &dest, "Account.Login", "sll", "123", mailbox)
 	if err != nil {
 		fmt.Println(err)
 	}
@@ -109,9 +109,9 @@ func (u *User) OnReply(reply *protocol.Message) {
 	r, _ := m.ReadString()
 	mb := &rpc.Mailbox{}
 	m.ReadObject(mb)
-	if err := u.owner.CoreApi.Mailto(nil, mb, "Client.Login", LoginResult{r}); err != nil {
-		u.owner.CoreApi.LogErr("send to client failed", mb)
+	if err := u.owner.CoreAPI.Mailto(nil, mb, "Client.Login", LoginResult{r}); err != nil {
+		u.owner.CoreAPI.LogErr("send to client failed", mb)
 		return
 	}
-	u.owner.CoreApi.LogDebug("login result:", r)
+	u.owner.CoreAPI.LogDebug("login result:", r)
 }

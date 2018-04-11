@@ -12,7 +12,7 @@ import (
 type DbModule struct {
 	service.Module
 	*rpc.Thread
-	Core service.CoreApi
+	Core service.CoreAPI
 }
 
 // New 获取一个DbModule的指针
@@ -28,7 +28,7 @@ func (m *DbModule) Name() string {
 }
 
 // Init 模块初始化
-func (m *DbModule) Init(core service.CoreApi) bool {
+func (m *DbModule) Init(core service.CoreAPI) bool {
 	m.Core = core
 	m.Core.RegisterRemote("Database", &DbCallBack{
 		ctx: m,

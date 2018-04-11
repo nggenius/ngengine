@@ -3,6 +3,7 @@
 package entity
 
 import (
+	"bytes"
 	"encoding/gob"
 	"encoding/json"
 	"fmt"
@@ -13,6 +14,258 @@ import (
 
 var _ = json.Marshal
 var _ = toolkit.ParseNumber
+
+// record Toolbox row define
+type PlayerToolbox_c struct {
+	Id     int64 //
+	Amount int32 //
+}
+
+// record Toolbox 道具(表格测试)
+type PlayerToolbox_r struct {
+	root object.Object
+	data [10]*PlayerToolbox_c
+	Row  []*PlayerToolbox_c
+}
+
+// record  Toolbox  serial
+type PlayerToolboxJson struct {
+	ColName []string
+	ColType []string
+	Row     [][]interface{}
+}
+
+// record Toolbox construct
+func NewPlayerToolbox(root object.Object) *PlayerToolbox_r {
+	toolbox := &PlayerToolbox_r{root: root}
+	toolbox.Row = toolbox.data[:0]
+	return toolbox
+}
+
+// row count
+func (r *PlayerToolbox_r) Rows() int {
+	return len(r.Row)
+}
+
+// row cap
+func (r *PlayerToolbox_r) Cap() int {
+	return cap(r.data)
+}
+
+// get Id
+func (r *PlayerToolbox_r) Id(rownum int) (int64, error) {
+	if rownum < 0 || rownum >= len(r.Row) {
+		return 0, fmt.Errorf("row num error")
+	}
+	return r.Row[rownum].Id, nil
+}
+
+// set Id
+func (r *PlayerToolbox_r) SetId(rownum int, id int64) error {
+	if rownum < 0 || rownum >= len(r.Row) {
+		return fmt.Errorf("row num error")
+	}
+	if r.Row[rownum].Id != id {
+		r.Row[rownum].Id = id
+	}
+	return nil
+}
+
+// get Amount
+func (r *PlayerToolbox_r) Amount(rownum int) (int32, error) {
+	if rownum < 0 || rownum >= len(r.Row) {
+		return 0, fmt.Errorf("row num error")
+	}
+	return r.Row[rownum].Amount, nil
+}
+
+// set Amount
+func (r *PlayerToolbox_r) SetAmount(rownum int, amount int32) error {
+	if rownum < 0 || rownum >= len(r.Row) {
+		return fmt.Errorf("row num error")
+	}
+	if r.Row[rownum].Amount != amount {
+		r.Row[rownum].Amount = amount
+	}
+	return nil
+}
+
+// set row value
+func (r *PlayerToolbox_r) SetRowValue(rownum int, id int64, amount int32) error {
+	if rownum < 0 || rownum >= len(r.Row) {
+		return fmt.Errorf("row num error")
+	}
+	/*
+		if r.Row[rownum].Id != id {
+			r.Row[rownum].Id = id
+		}
+		if r.Row[rownum].Amount != amount {
+			r.Row[rownum].Amount = amount
+		}
+	*/
+
+	r.Row[rownum].Id = id
+	r.Row[rownum].Amount = amount
+	if r.root != nil {
+		r.root.SetTableRowValue("Toolbox", rownum, 0)
+	}
+	return nil
+}
+
+// get row value
+func (r *PlayerToolbox_r) RowValue(rownum int) (int64, int32, error) {
+	var row PlayerToolbox_c
+	if rownum < 0 || rownum >= len(r.Row) {
+		return row.Id, row.Amount, fmt.Errorf("row num error")
+	}
+
+	row = *r.Row[rownum]
+	return row.Id, row.Amount, nil
+}
+
+// add row
+func (r *PlayerToolbox_r) AddRow(rownum int) (int, error) {
+	if len(r.Row) > cap(r.data) { // full
+		return -1, fmt.Errorf("record PlayerToolbox is full")
+	}
+
+	if rownum < -1 || rownum >= cap(r.data) { // out of range
+		return -1, fmt.Errorf("record PlayerToolbox row %d out of range", rownum)
+	}
+
+	size := len(r.Row)
+	row := &PlayerToolbox_c{}
+	r.Row = r.data[:size+1]
+	if rownum == -1 || rownum == size {
+		r.Row[size] = row
+		return size, nil
+	}
+	copy(r.Row[rownum+1:], r.Row[rownum:])
+	r.Row[rownum] = row
+	return rownum, nil
+}
+
+// add row value
+func (r *PlayerToolbox_r) AddRowValue(rownum int, id int64, amount int32) (int, error) {
+	if len(r.Row) > cap(r.data) { // full
+		return -1, fmt.Errorf("record PlayerToolbox is full")
+	}
+
+	if rownum < -1 || rownum >= cap(r.data) { // out of range
+		return -1, fmt.Errorf("record PlayerToolbox row %d out of range", rownum)
+	}
+
+	size := len(r.Row)
+	row := &PlayerToolbox_c{id, amount}
+	r.Row = r.data[:size+1]
+	if rownum == -1 || rownum == size {
+		r.Row[size] = row
+		return size, nil
+	}
+	copy(r.Row[rownum+1:], r.Row[rownum:])
+	r.Row[rownum] = row
+	return rownum, nil
+}
+
+// del row
+func (r *PlayerToolbox_r) Del(rownum int) error {
+	if rownum < 0 || rownum >= len(r.Row) {
+		return fmt.Errorf("row num error")
+	}
+	copy(r.Row[rownum:], r.Row[rownum+1:])
+	r.Row = r.data[:len(r.Row)-1]
+	return nil
+}
+
+// clear
+func (r *PlayerToolbox_r) Clear() {
+	r.Row = r.data[:0]
+}
+
+// json encode interface
+func (r *PlayerToolbox_r) Marshal() ([]byte, error) {
+	return r.pack()
+}
+
+// json decode interface
+func (r *PlayerToolbox_r) Unmarshal(data []byte) error {
+	return r.unpack(data)
+}
+
+// xorm encode interface
+func (r *PlayerToolbox_r) ToDB() ([]byte, error) {
+	return r.pack()
+}
+
+// xorm decode interface
+func (r *PlayerToolbox_r) FromDB(data []byte) error {
+	return r.unpack(data)
+}
+
+// gob encode interface
+func (r *PlayerToolbox_r) GobEncode() ([]byte, error) {
+	return r.pack()
+}
+
+// gob decode interface
+func (r *PlayerToolbox_r) GobDecode(data []byte) error {
+	return r.unpack(data)
+}
+
+// record Toolbox pack
+func (r *PlayerToolbox_r) pack() ([]byte, error) {
+	j := &PlayerToolboxJson{}
+	j.ColName = make([]string, 2)
+	j.ColType = make([]string, 2)
+
+	j.ColName[0] = "Id"
+	j.ColType[0] = "int64"
+	j.ColName[1] = "Amount"
+	j.ColType[1] = "int32"
+
+	j.Row = make([][]interface{}, len(r.Row))
+	for k, row := range r.Row {
+		if row == nil {
+			panic("row is nil")
+		}
+		j.Row[k] = make([]interface{}, 0, 2)
+		j.Row[k] = append(j.Row[k], row.Id, row.Amount)
+	}
+
+	return json.Marshal(j)
+}
+
+// record Toolbox unpack
+func (r *PlayerToolbox_r) unpack(data []byte) error {
+	r.Row = r.data[:0]
+	j := &PlayerToolboxJson{}
+	err := json.Unmarshal(data, j)
+	if err != nil {
+		return err
+	}
+
+	for _, row := range j.Row {
+		if len(r.Row) > cap(r.data) {
+			break
+		}
+		toolboxrow := &PlayerToolbox_c{}
+		for k, col := range row {
+			switch j.ColName[k] {
+			case "Id":
+				if j.ColType[k] == "int64" {
+					toolkit.ParseNumber(col, &toolboxrow.Id)
+				}
+			case "Amount":
+				if j.ColType[k] == "int32" {
+					toolkit.ParseNumber(col, &toolboxrow.Amount)
+				}
+			}
+		}
+		r.Row = r.data[:len(r.Row)+1]
+		r.Row[len(r.Row)-1] = toolboxrow
+	}
+	return nil
+}
 
 // tuple Pos 位置
 type PlayerPos_t struct {
@@ -53,10 +306,11 @@ type PlayerArchive struct {
 	root object.Object `xorm:"-"`
 	flag int           `xorm:"-"`
 
-	Id     int64
-	Name   string       `xorm:"varchar(128)"` // 玩家名
-	Pos    *PlayerPos_t `xorm:"json"`         // 位置
-	Orient float32      // 朝向(弧度)
+	Id      int64
+	Name    string           `xorm:"varchar(128)"` // 玩家名
+	Toolbox *PlayerToolbox_r `xorm:"json"`         // 道具(表格测试)
+	Pos     *PlayerPos_t     `xorm:"json"`         // 位置
+	Orient  float32          // 朝向(弧度)
 }
 
 // db id
@@ -68,6 +322,7 @@ func (a *PlayerArchive) DBId() int64 {
 func NewPlayerArchive(root object.Object) *PlayerArchive {
 	archive := &PlayerArchive{root: root}
 
+	archive.Toolbox = NewPlayerToolbox(root)
 	archive.Pos = NewPlayerPos()
 
 	return archive
@@ -165,6 +420,16 @@ func (o *Player) Name() string {
 	return o.archive.Name
 }
 
+// set Toolbox 道具(表格测试)
+func (o *Player) SetToolbox(toolbox *PlayerToolbox_r) {
+	panic("Toolbox can't set")
+}
+
+// get Toolbox 道具(表格测试)
+func (o *Player) Toolbox() *PlayerToolbox_r {
+	return o.archive.Toolbox
+}
+
 // set GroupId 分组
 func (o *Player) SetGroupId(groupid int32) {
 	if o.attr.GroupId == groupid {
@@ -254,6 +519,8 @@ func (o *Player) GetAttrType(name string) string {
 	switch name {
 	case "Name":
 		return "string"
+	case "Toolbox":
+		return "table"
 	case "GroupId":
 		return "int32"
 	case "Invisible":
@@ -274,6 +541,8 @@ func (o *Player) Expose(name string) int {
 	switch name {
 	case "Name":
 		return object.EXPOSE_OWNER
+	case "Toolbox":
+		return object.EXPOSE_NONE
 	case "GroupId":
 		return object.EXPOSE_NONE
 	case "Invisible":
@@ -291,7 +560,7 @@ func (o *Player) Expose(name string) int {
 
 // get all attr name
 func (o *Player) AllAttr() []string {
-	return []string{"Name", "GroupId", "Invisible", "VisualRange", "Pos", "Orient"}
+	return []string{"Name", "Toolbox", "GroupId", "Invisible", "VisualRange", "Pos", "Orient"}
 }
 
 // get attr index by name
@@ -299,16 +568,18 @@ func (o *Player) AttrIndex(name string) int {
 	switch name {
 	case "Name":
 		return 0
-	case "GroupId":
+	case "Toolbox":
 		return 1
-	case "Invisible":
+	case "GroupId":
 		return 2
-	case "VisualRange":
+	case "Invisible":
 		return 3
-	case "Pos":
+	case "VisualRange":
 		return 4
-	case "Orient":
+	case "Pos":
 		return 5
+	case "Orient":
+		return 6
 	default:
 		return -1
 	}
@@ -319,6 +590,8 @@ func (o *Player) GetAttr(name string) interface{} {
 	switch name {
 	case "Name":
 		return o.archive.Name
+	case "Toolbox":
+		return o.archive.Toolbox
 	case "GroupId":
 		return o.attr.GroupId
 	case "Invisible":
@@ -343,6 +616,12 @@ func (o *Player) SetAttr(name string, value interface{}) error {
 			return nil
 		}
 		return fmt.Errorf("attr Name type not match")
+	case "Toolbox":
+		if v, ok := value.(*PlayerToolbox_r); ok {
+			o.SetToolbox(v)
+			return nil
+		}
+		return fmt.Errorf("attr Toolbox type not match")
 	case "GroupId":
 		if v, ok := value.(int32); ok {
 			o.SetGroupId(v)
@@ -376,6 +655,39 @@ func (o *Player) SetAttr(name string, value interface{}) error {
 	default:
 		return fmt.Errorf("attr %s not found", name)
 	}
+}
+
+// gob interface
+func (o *Player) GobEncode() ([]byte, error) {
+	w := new(bytes.Buffer)
+	encoder := gob.NewEncoder(w)
+	var err error
+
+	err = encoder.Encode(o.archive)
+	if err != nil {
+		return nil, err
+	}
+	err = encoder.Encode(o.attr)
+	if err != nil {
+		return nil, err
+	}
+	return w.Bytes(), nil
+}
+
+func (o *Player) GobDecode(buf []byte) error {
+	r := bytes.NewBuffer(buf)
+	decoder := gob.NewDecoder(r)
+	var err error
+
+	err = decoder.Decode(o.archive)
+	if err != nil {
+		return err
+	}
+	err = decoder.Decode(o.attr)
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 // gob register

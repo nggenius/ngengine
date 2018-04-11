@@ -16,7 +16,7 @@ func newSql() *Sql {
 	return s
 }
 
-func (s *Sql) Init(core service.CoreApi) (err error) {
+func (s *Sql) Init(core service.CoreAPI) (err error) {
 	var db, ds string
 	var has bool
 	opt := core.Option()

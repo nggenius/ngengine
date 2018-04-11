@@ -12,7 +12,7 @@ const (
 
 type StoreModule struct {
 	service.Module
-	core     service.CoreApi
+	core     service.CoreAPI
 	mode     int
 	client   *StoreClient
 	store    *Store
@@ -45,7 +45,7 @@ func (m *StoreModule) SetMode(mode int) {
 	m.mode = mode
 }
 
-func (m *StoreModule) Init(core service.CoreApi) bool {
+func (m *StoreModule) Init(core service.CoreAPI) bool {
 	m.core = core
 
 	switch m.mode {

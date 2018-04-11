@@ -14,7 +14,7 @@ import (
 
 type ObjectModule struct {
 	service.Module
-	core           service.CoreApi
+	core           service.CoreAPI
 	defaultFactory *Factory // 默认对象工厂
 	factorys       map[string]*Factory
 	regs           map[string]ObjectCreate
@@ -36,7 +36,7 @@ func (o *ObjectModule) Name() string {
 }
 
 // Init 模块初始化
-func (o *ObjectModule) Init(core service.CoreApi) bool {
+func (o *ObjectModule) Init(core service.CoreAPI) bool {
 	o.core = core
 	return true
 }

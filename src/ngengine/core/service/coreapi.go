@@ -20,7 +20,7 @@ type SrvInfo struct {
 }
 
 // Core接口
-type CoreApi interface {
+type CoreAPI interface {
 	// 获取当前服务的goroutine id
 	GID() int64
 	// 获取当前service
@@ -78,7 +78,7 @@ type CoreApi interface {
 	// 调用模块
 	Call(module string, id int, args ...interface{}) error
 	// 获取log指针
-	GetLog() *logger.Log
+	Logger() *logger.Log
 }
 
 // 获取当前服务的goroutine id
@@ -352,6 +352,6 @@ func (c *Core) Call(module string, id int, args ...interface{}) error {
 }
 
 // 获取log指针
-func (c *Core) GetLog() *logger.Log {
+func (c *Core) Logger() *logger.Log {
 	return c.Log
 }
