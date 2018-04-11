@@ -102,14 +102,18 @@ func (r *{{$.Name}}{{$pname}}_r) {{.Name}}(rownum int) ({{.Type}}, error) {
 
 // set {{.Name}}
 func (r *{{$.Name}}{{$pname}}_r) Set{{.Name}}(rownum int, {{tolower .Name}} {{.Type}}) error {
+	if r.root != nil && r.root.Dummy() {
+		r.root.ChangeTable("{{$pname}}", rownum, {{$index}}, {{tolower .Name}})
+		return
+	}
 	if rownum < 0 || rownum >= len(r.Row) {
         return fmt.Errorf("row num error")
 	}
 	if r.Row[rownum].{{.Name}} != {{tolower .Name}} {
-		r.Row[rownum].{{.Name}} = {{tolower .Name}}{{if ne $expose ""}}
+		r.Row[rownum].{{.Name}} = {{tolower .Name}}
 		if r.root != nil {
 			r.root.ChangeTable("{{$pname}}", rownum, {{$index}}, {{tolower .Name}})
-		}{{end}}
+		}
 	}
 	return nil
 }
@@ -117,21 +121,26 @@ func (r *{{$.Name}}{{$pname}}_r) Set{{.Name}}(rownum int, {{tolower .Name}} {{.T
 
 // set row value
 func (r *{{$.Name}}{{.Name}}_r) SetRowValue(rownum int {{range .Table.Cols}}, {{tolower .Name}} {{.Type}} {{end}} ) error {
+	if r.root != nil && r.root.Dummy() {
+		r.root.SetTableRowValue("{{$pname}}", rownum {{range .Table.Cols}}, {{tolower .Name}} {{end}} )
+		return
+	}
+
 	if rownum < 0 || rownum >= len(r.Row) {
 		return fmt.Errorf("row num error")
 	}
     /*{{range $index, $col := .Table.Cols}}{{with $col}}
 	if r.Row[rownum].{{.Name}} != {{tolower .Name}} {
-		r.Row[rownum].{{.Name}} = {{tolower .Name}}{{if ne $expose ""}}
+		r.Row[rownum].{{.Name}} = {{tolower .Name}}
 		if r.root != nil {
 			r.root.ChangeTable("{{$pname}}", rownum, {{$index}}, {{tolower .Name}})
-		} {{end}}{{end}}
+		} {{end}}
 	} {{end}}
 	*/
 	{{range $index, $col := .Table.Cols}}{{with $col}}
 	r.Row[rownum].{{.Name}} = {{tolower .Name}}{{end}}{{end}}
 	if r.root != nil {
-		r.root.SetTableRowValue("{{$pname}}", rownum, 0)
+		r.root.SetTableRowValue("{{$pname}}", rownum {{range .Table.Cols}}, {{tolower .Name}} {{end}} )
 	}
 	return nil
 }
@@ -149,6 +158,10 @@ func (r *{{$.Name}}{{.Name}}_r) RowValue(rownum int) ({{range .Table.Cols}}{{.Ty
 
 // add row
 func (r *{{$.Name}}{{.Name}}_r) AddRow(rownum int) (int, error) {
+	if r.root != nil && r.root.Dummy() {
+		r.root.AddTableRow("{{$pname}}", rownum )
+		return
+	}
 	if len(r.Row) > cap(r.data) { // full
 		return -1, fmt.Errorf("record {{$.Name}}{{.Name}} is full")
 	}
@@ -168,15 +181,19 @@ func (r *{{$.Name}}{{.Name}}_r) AddRow(rownum int) (int, error) {
 		return size, nil
 	}
 	copy(r.Row[rownum+1:], r.Row[rownum:])
-	r.Row[rownum] = row	{{if ne $expose ""}}
+	r.Row[rownum] = row	
 	if r.root != nil {
 		r.root.AddTableRow("{{$pname}}", rownum)
-	} {{end}}
+	}
 	return rownum, nil
 }
 
 // add row value
 func (r *{{$.Name}}{{.Name}}_r) AddRowValue(rownum int {{range .Table.Cols}}, {{tolower .Name}} {{.Type}} {{end}} ) (int, error) {
+	if r.root != nil && r.root.Dummy() {
+		r.root.AddTableRowValue("{{$pname}}", rownum {{range .Table.Cols}}, {{tolower .Name}} {{end}})
+		return
+	}
 	if len(r.Row) > cap(r.data) { // full
 		return -1, fmt.Errorf("record {{$.Name}}{{.Name}} is full")
 	}
@@ -189,39 +206,47 @@ func (r *{{$.Name}}{{.Name}}_r) AddRowValue(rownum int {{range .Table.Cols}}, {{
 	row := &{{$.Name}}{{.Name}}_c{ {{range $k, $v := .Table.Cols}} {{if ne $k 0}},{{end}} {{tolower .Name}}{{end}} }
 	r.Row = r.data[:size+1]
 	if rownum == -1 || rownum == size {
-		r.Row[size] = row{{if ne $expose ""}}
+		r.Row[size] = row
 		if r.root != nil {
-			r.root.AddTableRowValue("{{$pname}}", rownum, {{range $k, $v := .Table.Cols}} {{if ne $k 0}},{{end}} {{tolower .Name}}{{end}} )
-		} {{end}}
+			r.root.AddTableRowValue("{{$pname}}", rownum {{range .Table.Cols}}, {{tolower .Name}} {{end}} )
+		} 
 		return size, nil
 	}
 	copy(r.Row[rownum+1:], r.Row[rownum:])
-	r.Row[rownum] = row	{{if ne $expose ""}}
+	r.Row[rownum] = row	
 	if r.root != nil {
-		r.root.AddTableRowValue("{{$pname}}", rownum, {{range $k, $v := .Table.Cols}} {{if ne $k 0}},{{end}} {{tolower .Name}}{{end}} )
-	} {{end}}
+		r.root.AddTableRowValue("{{$pname}}", rownum {{range .Table.Cols}}, {{tolower .Name}} {{end}} )
+	}
 	return rownum, nil
 }
 
 // del row
 func (r *{{$.Name}}{{.Name}}_r) Del(rownum int) error {
+	if r.root != nil && r.root.Dummy() {
+		r.root.DelTableRow("{{$pname}}", rownum )
+		return
+	}
 	if rownum < 0 || rownum >= len(r.Row) {
 		return fmt.Errorf("row num error")
 	}
 	copy(r.Row[rownum:], r.Row[rownum+1:])
-	r.Row = r.data[:len(r.Row)-1]{{if ne $expose ""}}
+	r.Row = r.data[:len(r.Row)-1]
 	if r.root != nil {
 		r.root.DelTableRow("{{$pname}}", rownum )
-	} {{end}}	
+	}	
 	return nil
 }
 
 // clear
 func (r *{{$.Name}}{{.Name}}_r) Clear() {
-	r.Row = r.data[:0]{{if ne $expose ""}}
+	if r.root != nil && r.root.Dummy() {
+		r.root.ClearTable("{{$pname}}")
+		return
+	}
+	r.Row = r.data[:0]
 	if r.root != nil {
 		r.root.ClearTable("{{$pname}}")
-	} {{end}}
+	}
 }
 
 // json encode interface
@@ -408,7 +433,10 @@ func (o *{{.Name}}) Attr() *{{.Name}}Attr {
 {{range .Property}}
 // set {{.Name}} {{.Desc}}
 func (o *{{$.Name}}) Set{{.Name}}( {{tolower .Name}} {{if eq .Type "tuple"}} {{$.Name}}{{.Name}}_t{{else if eq .Type "table"}} *{{$.Name}}{{.Name}}_r {{else}} {{.Type}} {{end}}){
-    {{if eq .Type "table"}} panic("{{.Name}} can't set") {{else}} {{if eq .Save "true"}}{{if eq .Type "tuple"}}	old := *o.archive.{{.Name}}
+    {{if eq .Type "table"}} panic("{{.Name}} can't set") {{else}}if o.Dummy() {
+		{{if eq .Type "tuple"}}o.UpdateTuple("{{.Name}}", {{tolower .Name}}, nil){{else}}o.UpdateAttr("{{.Name}}", {{tolower .Name}}, nil){{end}}
+	}
+	{{if eq .Save "true"}}{{if eq .Type "tuple"}}	old := *o.archive.{{.Name}}
 	*o.archive.{{.Name}} = {{tolower .Name}} {{else}} if o.archive.{{.Name}} == {{tolower .Name}} {
 		return
 	} 
@@ -425,6 +453,11 @@ func (o *{{$.Name}}) Set{{.Name}}( {{tolower .Name}} {{if eq .Type "tuple"}} {{$
 {{if eq .Type "tuple"}}
 // set {{.Name}} detail
 func (o *{{$.Name}}) Set{{.Name}}{{range  .Tuple}}{{.Name}}{{end}}({{range $k, $t := .Tuple}} {{if ne $k 0}},{{end}}{{tolower $t.Name}} {{$t.Type}} {{end}}){
+	if o.Dummy() {
+		val := {{$.Name}}{{.Name}}_t{ {{range $k, $t := .Tuple}} {{if ne $k 0}},{{end}}{{tolower $t.Name}} {{end}} }
+		o.UpdateTuple("{{.Name}}", val, nil) 
+		return
+	}
 	{{if eq .Save "true"}} old := *o.archive.{{.Name}} {{else}} old := *o.attr.{{.Name}} {{end}}
 	{{if eq .Save "true"}} o.archive.{{.Name}} {{else}}o.attr.{{.Name}} {{end}}.Set({{range $k, $t := .Tuple}} {{if ne $k 0}},{{end}}{{tolower $t.Name}} {{end}})
 	o.UpdateTuple("{{.Name}}", {{if eq .Save "true"}} *o.archive.{{.Name}} {{else}}*o.attr.{{.Name}} {{end}}, old) 

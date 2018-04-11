@@ -62,11 +62,18 @@ func (r *PlayerToolbox_r) Id(rownum int) (int64, error) {
 
 // set Id
 func (r *PlayerToolbox_r) SetId(rownum int, id int64) error {
+	if r.root != nil && r.root.Dummy() {
+		r.root.ChangeTable("Toolbox", rownum, 0, id)
+		return
+	}
 	if rownum < 0 || rownum >= len(r.Row) {
 		return fmt.Errorf("row num error")
 	}
 	if r.Row[rownum].Id != id {
 		r.Row[rownum].Id = id
+		if r.root != nil {
+			r.root.ChangeTable("Toolbox", rownum, 0, id)
+		}
 	}
 	return nil
 }
@@ -81,33 +88,51 @@ func (r *PlayerToolbox_r) Amount(rownum int) (int32, error) {
 
 // set Amount
 func (r *PlayerToolbox_r) SetAmount(rownum int, amount int32) error {
+	if r.root != nil && r.root.Dummy() {
+		r.root.ChangeTable("Toolbox", rownum, 1, amount)
+		return
+	}
 	if rownum < 0 || rownum >= len(r.Row) {
 		return fmt.Errorf("row num error")
 	}
 	if r.Row[rownum].Amount != amount {
 		r.Row[rownum].Amount = amount
+		if r.root != nil {
+			r.root.ChangeTable("Toolbox", rownum, 1, amount)
+		}
 	}
 	return nil
 }
 
 // set row value
 func (r *PlayerToolbox_r) SetRowValue(rownum int, id int64, amount int32) error {
+	if r.root != nil && r.root.Dummy() {
+		r.root.SetTableRowValue("Toolbox", rownum, id, amount)
+		return
+	}
+
 	if rownum < 0 || rownum >= len(r.Row) {
 		return fmt.Errorf("row num error")
 	}
 	/*
 		if r.Row[rownum].Id != id {
 			r.Row[rownum].Id = id
+			if r.root != nil {
+				r.root.ChangeTable("Toolbox", rownum, 0, id)
+			}
 		}
 		if r.Row[rownum].Amount != amount {
 			r.Row[rownum].Amount = amount
+			if r.root != nil {
+				r.root.ChangeTable("Toolbox", rownum, 1, amount)
+			}
 		}
 	*/
 
 	r.Row[rownum].Id = id
 	r.Row[rownum].Amount = amount
 	if r.root != nil {
-		r.root.SetTableRowValue("Toolbox", rownum, 0)
+		r.root.SetTableRowValue("Toolbox", rownum, id, amount)
 	}
 	return nil
 }
@@ -125,6 +150,10 @@ func (r *PlayerToolbox_r) RowValue(rownum int) (int64, int32, error) {
 
 // add row
 func (r *PlayerToolbox_r) AddRow(rownum int) (int, error) {
+	if r.root != nil && r.root.Dummy() {
+		r.root.AddTableRow("Toolbox", rownum)
+		return
+	}
 	if len(r.Row) > cap(r.data) { // full
 		return -1, fmt.Errorf("record PlayerToolbox is full")
 	}
@@ -142,11 +171,18 @@ func (r *PlayerToolbox_r) AddRow(rownum int) (int, error) {
 	}
 	copy(r.Row[rownum+1:], r.Row[rownum:])
 	r.Row[rownum] = row
+	if r.root != nil {
+		r.root.AddTableRow("Toolbox", rownum)
+	}
 	return rownum, nil
 }
 
 // add row value
 func (r *PlayerToolbox_r) AddRowValue(rownum int, id int64, amount int32) (int, error) {
+	if r.root != nil && r.root.Dummy() {
+		r.root.AddTableRowValue("Toolbox", rownum, id, amount)
+		return
+	}
 	if len(r.Row) > cap(r.data) { // full
 		return -1, fmt.Errorf("record PlayerToolbox is full")
 	}
@@ -160,26 +196,46 @@ func (r *PlayerToolbox_r) AddRowValue(rownum int, id int64, amount int32) (int, 
 	r.Row = r.data[:size+1]
 	if rownum == -1 || rownum == size {
 		r.Row[size] = row
+		if r.root != nil {
+			r.root.AddTableRowValue("Toolbox", rownum, id, amount)
+		}
 		return size, nil
 	}
 	copy(r.Row[rownum+1:], r.Row[rownum:])
 	r.Row[rownum] = row
+	if r.root != nil {
+		r.root.AddTableRowValue("Toolbox", rownum, id, amount)
+	}
 	return rownum, nil
 }
 
 // del row
 func (r *PlayerToolbox_r) Del(rownum int) error {
+	if r.root != nil && r.root.Dummy() {
+		r.root.DelTableRow("Toolbox", rownum)
+		return
+	}
 	if rownum < 0 || rownum >= len(r.Row) {
 		return fmt.Errorf("row num error")
 	}
 	copy(r.Row[rownum:], r.Row[rownum+1:])
 	r.Row = r.data[:len(r.Row)-1]
+	if r.root != nil {
+		r.root.DelTableRow("Toolbox", rownum)
+	}
 	return nil
 }
 
 // clear
 func (r *PlayerToolbox_r) Clear() {
+	if r.root != nil && r.root.Dummy() {
+		r.root.ClearTable("Toolbox")
+		return
+	}
 	r.Row = r.data[:0]
+	if r.root != nil {
+		r.root.ClearTable("Toolbox")
+	}
 }
 
 // json encode interface
@@ -407,6 +463,9 @@ func (o *Player) Attr() *PlayerAttr {
 
 // set Name 玩家名
 func (o *Player) SetName(name string) {
+	if o.Dummy() {
+		o.UpdateAttr("Name", name, nil)
+	}
 	if o.archive.Name == name {
 		return
 	}
@@ -432,6 +491,9 @@ func (o *Player) Toolbox() *PlayerToolbox_r {
 
 // set GroupId 分组
 func (o *Player) SetGroupId(groupid int32) {
+	if o.Dummy() {
+		o.UpdateAttr("GroupId", groupid, nil)
+	}
 	if o.attr.GroupId == groupid {
 		return
 	}
@@ -447,6 +509,9 @@ func (o *Player) GroupId() int32 {
 
 // set Invisible 是否不可见(1不可见)
 func (o *Player) SetInvisible(invisible byte) {
+	if o.Dummy() {
+		o.UpdateAttr("Invisible", invisible, nil)
+	}
 	if o.attr.Invisible == invisible {
 		return
 	}
@@ -462,6 +527,9 @@ func (o *Player) Invisible() byte {
 
 // set VisualRange 可视范围
 func (o *Player) SetVisualRange(visualrange int32) {
+	if o.Dummy() {
+		o.UpdateAttr("VisualRange", visualrange, nil)
+	}
 	if o.attr.VisualRange == visualrange {
 		return
 	}
@@ -477,6 +545,9 @@ func (o *Player) VisualRange() int32 {
 
 // set Pos 位置
 func (o *Player) SetPos(pos PlayerPos_t) {
+	if o.Dummy() {
+		o.UpdateTuple("Pos", pos, nil)
+	}
 	old := *o.archive.Pos
 	*o.archive.Pos = pos
 	o.UpdateTuple("Pos", pos, old)
@@ -484,6 +555,11 @@ func (o *Player) SetPos(pos PlayerPos_t) {
 
 // set Pos detail
 func (o *Player) SetPosXYZ(x float32, y float32, z float32) {
+	if o.Dummy() {
+		val := PlayerPos_t{x, y, z}
+		o.UpdateTuple("Pos", val, nil)
+		return
+	}
 	old := *o.archive.Pos
 	o.archive.Pos.Set(x, y, z)
 	o.UpdateTuple("Pos", *o.archive.Pos, old)
@@ -501,6 +577,9 @@ func (o *Player) GetPosXYZ() (x float32, y float32, z float32) {
 
 // set Orient 朝向(弧度)
 func (o *Player) SetOrient(orient float32) {
+	if o.Dummy() {
+		o.UpdateAttr("Orient", orient, nil)
+	}
 	if o.archive.Orient == orient {
 		return
 	}

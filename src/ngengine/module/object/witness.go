@@ -5,6 +5,7 @@ package object
 // 目击者不关注变动的细节，只进行转发，由第三方进行细节的处理。
 import (
 	"fmt"
+	"ngengine/core/rpc"
 )
 
 const (
@@ -31,6 +32,8 @@ type ObjectWitness struct {
 	object        Object
 	factory       *Factory
 	silence       bool
+	dummy         bool
+	original      *rpc.Mailbox
 	attrobserver  map[string]attrObserver
 	tableobserver map[string]tableObserver
 }
@@ -43,6 +46,26 @@ func (o *ObjectWitness) Silence() bool {
 // 设置沉默状态
 func (o *ObjectWitness) SetSilence(s bool) {
 	o.silence = s
+}
+
+// 是否是复制对象
+func (o *ObjectWitness) Dummy() bool {
+	return o.dummy
+}
+
+// 设置为复制对象
+func (o *ObjectWitness) SetDummy(c bool) {
+	o.dummy = c
+}
+
+// 原始对象
+func (o *ObjectWitness) Original() *rpc.Mailbox {
+	return o.original
+}
+
+// 设置原始对象
+func (o *ObjectWitness) SetOriginal(m *rpc.Mailbox) {
+	o.original = m
 }
 
 // 获取工厂

@@ -1,5 +1,7 @@
 package object
 
+import "ngengine/core/rpc"
+
 const (
 	EXPOSE_NONE  = 0
 	EXPOSE_OWNER = 1
@@ -33,6 +35,14 @@ type Object interface {
 	Silence() bool
 	// 设置沉默状态
 	SetSilence(bool)
+	// 是否是复制对象
+	Dummy() bool
+	// 设置为复制对象
+	SetDummy(c bool)
+	// 原始对象
+	Original() *rpc.Mailbox
+	// 设置原始对象
+	SetOriginal(m *rpc.Mailbox)
 	// 所属的工厂
 	Factory() *Factory
 	// 设置工厂，由工厂主动调用
