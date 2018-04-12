@@ -30,42 +30,14 @@ type tableObserver interface {
 
 type ObjectWitness struct {
 	object        Object
+	objid         rpc.Mailbox
 	factory       *Factory
-	silence       bool
-	dummy         bool
 	original      *rpc.Mailbox
+	dummy         bool // 是否是副本
+	sync          bool // 同步状态
+	silence       bool // 沉默状态
 	attrobserver  map[string]attrObserver
 	tableobserver map[string]tableObserver
-}
-
-// 沉默状态
-func (o *ObjectWitness) Silence() bool {
-	return o.silence
-}
-
-// 设置沉默状态
-func (o *ObjectWitness) SetSilence(s bool) {
-	o.silence = s
-}
-
-// 是否是复制对象
-func (o *ObjectWitness) Dummy() bool {
-	return o.dummy
-}
-
-// 设置为复制对象
-func (o *ObjectWitness) SetDummy(c bool) {
-	o.dummy = c
-}
-
-// 原始对象
-func (o *ObjectWitness) Original() *rpc.Mailbox {
-	return o.original
-}
-
-// 设置原始对象
-func (o *ObjectWitness) SetOriginal(m *rpc.Mailbox) {
-	o.original = m
 }
 
 // 获取工厂
@@ -76,6 +48,26 @@ func (o *ObjectWitness) Factory() *Factory {
 // 所属的工厂
 func (o *ObjectWitness) SetFactory(f *Factory) {
 	o.factory = f
+}
+
+// 唯一ID
+func (o *ObjectWitness) ObjId() rpc.Mailbox {
+	return o.objid
+}
+
+// 设置唯一ID
+func (o *ObjectWitness) SetObjId(id rpc.Mailbox) {
+	o.objid = id
+}
+
+// 沉默状态
+func (o *ObjectWitness) Silence() bool {
+	return o.silence
+}
+
+// 设置沉默状态
+func (o *ObjectWitness) SetSilence(s bool) {
+	o.silence = s
 }
 
 // 设置对象
@@ -119,6 +111,10 @@ func (o *ObjectWitness) RemoveTableObserver(name string) {
 
 // 对象属性变动(由object调用)
 func (o *ObjectWitness) UpdateAttr(name string, val interface{}, old interface{}) {
+	if o.dummy && !o.sync { // 需要操作远程对象
+		o.RemoteUpdateAttr(name, val)
+		return
+	}
 	if o.silence {
 		return
 	}
@@ -129,6 +125,10 @@ func (o *ObjectWitness) UpdateAttr(name string, val interface{}, old interface{}
 
 // 对象tupele属性变动(由object调用)
 func (o *ObjectWitness) UpdateTuple(name string, val interface{}, old interface{}) {
+	if o.dummy && !o.sync { // 需要操作远程对象
+		o.RemoteUpdateTuple(name, val)
+		return
+	}
 	if o.silence {
 		return
 	}
@@ -139,6 +139,10 @@ func (o *ObjectWitness) UpdateTuple(name string, val interface{}, old interface{
 
 // 对象表格增加一行(由object调用)
 func (o *ObjectWitness) AddTableRow(name string, row int) {
+	if o.dummy && !o.sync { // 需要操作远程对象
+		o.RemoteAddTableRow(name, row)
+		return
+	}
 	if o.silence {
 		return
 	}
@@ -149,6 +153,10 @@ func (o *ObjectWitness) AddTableRow(name string, row int) {
 
 // 对象表格增加一行，并设置值(由object调用)
 func (o *ObjectWitness) AddTableRowValue(name string, row int, val ...interface{}) {
+	if o.dummy && !o.sync { // 需要操作远程对象
+		o.RemoteAddTableRowValue(name, row, val...)
+		return
+	}
 	if o.silence {
 		return
 	}
@@ -159,6 +167,10 @@ func (o *ObjectWitness) AddTableRowValue(name string, row int, val ...interface{
 
 // 设置表格一行的值(由object调用)
 func (o *ObjectWitness) SetTableRowValue(name string, row int, val ...interface{}) {
+	if o.dummy && !o.sync { // 需要操作远程对象
+		o.RemoteSetTableRowValue(name, row, val...)
+		return
+	}
 	if o.silence {
 		return
 	}
@@ -169,6 +181,10 @@ func (o *ObjectWitness) SetTableRowValue(name string, row int, val ...interface{
 
 // 对象表格删除一行(由object调用)
 func (o *ObjectWitness) DelTableRow(name string, row int) {
+	if o.dummy && !o.sync { // 需要操作远程对象
+		o.RemoteDelTableRow(name, row)
+		return
+	}
 	if o.silence {
 		return
 	}
@@ -179,6 +195,10 @@ func (o *ObjectWitness) DelTableRow(name string, row int) {
 
 // 对象表格清除所有行(由object调用)
 func (o *ObjectWitness) ClearTable(name string) {
+	if o.dummy && !o.sync { // 需要操作远程对象
+		o.RemoteClearTable(name)
+		return
+	}
 	if o.silence {
 		return
 	}
@@ -189,6 +209,10 @@ func (o *ObjectWitness) ClearTable(name string) {
 
 // 对象表格单元格更新(由object调用)
 func (o *ObjectWitness) ChangeTable(name string, row, col int, val interface{}) {
+	if o.dummy && !o.sync { // 需要操作远程对象
+		o.RemoteChangeTable(name, row, col, val)
+		return
+	}
 	if o.silence {
 		return
 	}

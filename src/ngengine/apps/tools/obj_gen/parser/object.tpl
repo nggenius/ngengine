@@ -102,7 +102,7 @@ func (r *{{$.Name}}{{$pname}}_r) {{.Name}}(rownum int) ({{.Type}}, error) {
 
 // set {{.Name}}
 func (r *{{$.Name}}{{$pname}}_r) Set{{.Name}}(rownum int, {{tolower .Name}} {{.Type}}) error {
-	if r.root != nil && r.root.Dummy() {
+	if r.root != nil && r.root.Dummy() && !r.root.Sync() {
 		r.root.ChangeTable("{{$pname}}", rownum, {{$index}}, {{tolower .Name}})
 		return
 	}
@@ -121,7 +121,7 @@ func (r *{{$.Name}}{{$pname}}_r) Set{{.Name}}(rownum int, {{tolower .Name}} {{.T
 
 // set row value
 func (r *{{$.Name}}{{.Name}}_r) SetRowValue(rownum int {{range .Table.Cols}}, {{tolower .Name}} {{.Type}} {{end}} ) error {
-	if r.root != nil && r.root.Dummy() {
+	if r.root != nil && r.root.Dummy() && !r.root.Sync() {
 		r.root.SetTableRowValue("{{$pname}}", rownum {{range .Table.Cols}}, {{tolower .Name}} {{end}} )
 		return
 	}
@@ -158,7 +158,7 @@ func (r *{{$.Name}}{{.Name}}_r) RowValue(rownum int) ({{range .Table.Cols}}{{.Ty
 
 // add row
 func (r *{{$.Name}}{{.Name}}_r) AddRow(rownum int) (int, error) {
-	if r.root != nil && r.root.Dummy() {
+	if r.root != nil && r.root.Dummy() && !r.root.Sync() {
 		r.root.AddTableRow("{{$pname}}", rownum )
 		return
 	}
@@ -190,7 +190,7 @@ func (r *{{$.Name}}{{.Name}}_r) AddRow(rownum int) (int, error) {
 
 // add row value
 func (r *{{$.Name}}{{.Name}}_r) AddRowValue(rownum int {{range .Table.Cols}}, {{tolower .Name}} {{.Type}} {{end}} ) (int, error) {
-	if r.root != nil && r.root.Dummy() {
+	if r.root != nil && r.root.Dummy() && !r.root.Sync() {
 		r.root.AddTableRowValue("{{$pname}}", rownum {{range .Table.Cols}}, {{tolower .Name}} {{end}})
 		return
 	}
@@ -222,7 +222,7 @@ func (r *{{$.Name}}{{.Name}}_r) AddRowValue(rownum int {{range .Table.Cols}}, {{
 
 // del row
 func (r *{{$.Name}}{{.Name}}_r) Del(rownum int) error {
-	if r.root != nil && r.root.Dummy() {
+	if r.root != nil && r.root.Dummy() && !r.root.Sync() {
 		r.root.DelTableRow("{{$pname}}", rownum )
 		return
 	}
@@ -239,7 +239,7 @@ func (r *{{$.Name}}{{.Name}}_r) Del(rownum int) error {
 
 // clear
 func (r *{{$.Name}}{{.Name}}_r) Clear() {
-	if r.root != nil && r.root.Dummy() {
+	if r.root != nil && r.root.Dummy() && !r.root.Sync() {
 		r.root.ClearTable("{{$pname}}")
 		return
 	}
@@ -433,8 +433,9 @@ func (o *{{.Name}}) Attr() *{{.Name}}Attr {
 {{range .Property}}
 // set {{.Name}} {{.Desc}}
 func (o *{{$.Name}}) Set{{.Name}}( {{tolower .Name}} {{if eq .Type "tuple"}} {{$.Name}}{{.Name}}_t{{else if eq .Type "table"}} *{{$.Name}}{{.Name}}_r {{else}} {{.Type}} {{end}}){
-    {{if eq .Type "table"}} panic("{{.Name}} can't set") {{else}}if o.Dummy() {
+    {{if eq .Type "table"}} panic("{{.Name}} can't set") {{else}}if o.Dummy() && !o.Sync() {
 		{{if eq .Type "tuple"}}o.UpdateTuple("{{.Name}}", {{tolower .Name}}, nil){{else}}o.UpdateAttr("{{.Name}}", {{tolower .Name}}, nil){{end}}
+		return
 	}
 	{{if eq .Save "true"}}{{if eq .Type "tuple"}}	old := *o.archive.{{.Name}}
 	*o.archive.{{.Name}} = {{tolower .Name}} {{else}} if o.archive.{{.Name}} == {{tolower .Name}} {
@@ -453,7 +454,7 @@ func (o *{{$.Name}}) Set{{.Name}}( {{tolower .Name}} {{if eq .Type "tuple"}} {{$
 {{if eq .Type "tuple"}}
 // set {{.Name}} detail
 func (o *{{$.Name}}) Set{{.Name}}{{range  .Tuple}}{{.Name}}{{end}}({{range $k, $t := .Tuple}} {{if ne $k 0}},{{end}}{{tolower $t.Name}} {{$t.Type}} {{end}}){
-	if o.Dummy() {
+	if o.Dummy()  && !o.Sync() {
 		val := {{$.Name}}{{.Name}}_t{ {{range $k, $t := .Tuple}} {{if ne $k 0}},{{end}}{{tolower $t.Name}} {{end}} }
 		o.UpdateTuple("{{.Name}}", val, nil) 
 		return

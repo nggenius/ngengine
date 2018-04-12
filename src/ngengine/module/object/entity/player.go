@@ -62,7 +62,7 @@ func (r *PlayerToolbox_r) Id(rownum int) (int64, error) {
 
 // set Id
 func (r *PlayerToolbox_r) SetId(rownum int, id int64) error {
-	if r.root != nil && r.root.Dummy() {
+	if r.root != nil && r.root.Dummy() && !r.root.Sync() {
 		r.root.ChangeTable("Toolbox", rownum, 0, id)
 		return
 	}
@@ -88,7 +88,7 @@ func (r *PlayerToolbox_r) Amount(rownum int) (int32, error) {
 
 // set Amount
 func (r *PlayerToolbox_r) SetAmount(rownum int, amount int32) error {
-	if r.root != nil && r.root.Dummy() {
+	if r.root != nil && r.root.Dummy() && !r.root.Sync() {
 		r.root.ChangeTable("Toolbox", rownum, 1, amount)
 		return
 	}
@@ -106,7 +106,7 @@ func (r *PlayerToolbox_r) SetAmount(rownum int, amount int32) error {
 
 // set row value
 func (r *PlayerToolbox_r) SetRowValue(rownum int, id int64, amount int32) error {
-	if r.root != nil && r.root.Dummy() {
+	if r.root != nil && r.root.Dummy() && !r.root.Sync() {
 		r.root.SetTableRowValue("Toolbox", rownum, id, amount)
 		return
 	}
@@ -150,7 +150,7 @@ func (r *PlayerToolbox_r) RowValue(rownum int) (int64, int32, error) {
 
 // add row
 func (r *PlayerToolbox_r) AddRow(rownum int) (int, error) {
-	if r.root != nil && r.root.Dummy() {
+	if r.root != nil && r.root.Dummy() && !r.root.Sync() {
 		r.root.AddTableRow("Toolbox", rownum)
 		return
 	}
@@ -179,7 +179,7 @@ func (r *PlayerToolbox_r) AddRow(rownum int) (int, error) {
 
 // add row value
 func (r *PlayerToolbox_r) AddRowValue(rownum int, id int64, amount int32) (int, error) {
-	if r.root != nil && r.root.Dummy() {
+	if r.root != nil && r.root.Dummy() && !r.root.Sync() {
 		r.root.AddTableRowValue("Toolbox", rownum, id, amount)
 		return
 	}
@@ -211,7 +211,7 @@ func (r *PlayerToolbox_r) AddRowValue(rownum int, id int64, amount int32) (int, 
 
 // del row
 func (r *PlayerToolbox_r) Del(rownum int) error {
-	if r.root != nil && r.root.Dummy() {
+	if r.root != nil && r.root.Dummy() && !r.root.Sync() {
 		r.root.DelTableRow("Toolbox", rownum)
 		return
 	}
@@ -228,7 +228,7 @@ func (r *PlayerToolbox_r) Del(rownum int) error {
 
 // clear
 func (r *PlayerToolbox_r) Clear() {
-	if r.root != nil && r.root.Dummy() {
+	if r.root != nil && r.root.Dummy() && !r.root.Sync() {
 		r.root.ClearTable("Toolbox")
 		return
 	}
@@ -463,8 +463,9 @@ func (o *Player) Attr() *PlayerAttr {
 
 // set Name 玩家名
 func (o *Player) SetName(name string) {
-	if o.Dummy() {
+	if o.Dummy() && !o.Sync() {
 		o.UpdateAttr("Name", name, nil)
+		return
 	}
 	if o.archive.Name == name {
 		return
@@ -491,8 +492,9 @@ func (o *Player) Toolbox() *PlayerToolbox_r {
 
 // set GroupId 分组
 func (o *Player) SetGroupId(groupid int32) {
-	if o.Dummy() {
+	if o.Dummy() && !o.Sync() {
 		o.UpdateAttr("GroupId", groupid, nil)
+		return
 	}
 	if o.attr.GroupId == groupid {
 		return
@@ -509,8 +511,9 @@ func (o *Player) GroupId() int32 {
 
 // set Invisible 是否不可见(1不可见)
 func (o *Player) SetInvisible(invisible byte) {
-	if o.Dummy() {
+	if o.Dummy() && !o.Sync() {
 		o.UpdateAttr("Invisible", invisible, nil)
+		return
 	}
 	if o.attr.Invisible == invisible {
 		return
@@ -527,8 +530,9 @@ func (o *Player) Invisible() byte {
 
 // set VisualRange 可视范围
 func (o *Player) SetVisualRange(visualrange int32) {
-	if o.Dummy() {
+	if o.Dummy() && !o.Sync() {
 		o.UpdateAttr("VisualRange", visualrange, nil)
+		return
 	}
 	if o.attr.VisualRange == visualrange {
 		return
@@ -545,8 +549,9 @@ func (o *Player) VisualRange() int32 {
 
 // set Pos 位置
 func (o *Player) SetPos(pos PlayerPos_t) {
-	if o.Dummy() {
+	if o.Dummy() && !o.Sync() {
 		o.UpdateTuple("Pos", pos, nil)
+		return
 	}
 	old := *o.archive.Pos
 	*o.archive.Pos = pos
@@ -555,7 +560,7 @@ func (o *Player) SetPos(pos PlayerPos_t) {
 
 // set Pos detail
 func (o *Player) SetPosXYZ(x float32, y float32, z float32) {
-	if o.Dummy() {
+	if o.Dummy() && !o.Sync() {
 		val := PlayerPos_t{x, y, z}
 		o.UpdateTuple("Pos", val, nil)
 		return
@@ -577,8 +582,9 @@ func (o *Player) GetPosXYZ() (x float32, y float32, z float32) {
 
 // set Orient 朝向(弧度)
 func (o *Player) SetOrient(orient float32) {
-	if o.Dummy() {
+	if o.Dummy() && !o.Sync() {
 		o.UpdateAttr("Orient", orient, nil)
+		return
 	}
 	if o.archive.Orient == orient {
 		return

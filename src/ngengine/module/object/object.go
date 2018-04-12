@@ -39,6 +39,10 @@ type Object interface {
 	Dummy() bool
 	// 设置为复制对象
 	SetDummy(c bool)
+	// 同步状态
+	Sync() bool
+	// 设置同步状态
+	SetSync(bool)
 	// 原始对象
 	Original() *rpc.Mailbox
 	// 设置原始对象

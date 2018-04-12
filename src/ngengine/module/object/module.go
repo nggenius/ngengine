@@ -19,6 +19,7 @@ type ObjectModule struct {
 	factorys       map[string]*Factory
 	regs           map[string]ObjectCreate
 	entitydelegate map[string]*EventDelegate
+	sync           *SyncObject
 }
 
 func New() *ObjectModule {
@@ -27,6 +28,7 @@ func New() *ObjectModule {
 	o.factorys = make(map[string]*Factory)
 	o.regs = make(map[string]ObjectCreate)
 	o.entitydelegate = make(map[string]*EventDelegate)
+	o.sync = &SyncObject{o}
 	return o
 }
 
@@ -38,6 +40,7 @@ func (o *ObjectModule) Name() string {
 // Init 模块初始化
 func (o *ObjectModule) Init(core service.CoreAPI) bool {
 	o.core = core
+	o.core.RegisterRemote("object", o.sync)
 	return true
 }
 
