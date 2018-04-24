@@ -3,9 +3,9 @@ package main
 // 测试对象模块
 import (
 	"ngengine/core/service"
+	"ngengine/game/gameobject"
+	"ngengine/game/gameobject/entity"
 	"ngengine/module/object"
-	"ngengine/module/object/entity"
-	"ngengine/module/object/game"
 	"ngengine/module/replicate"
 	"ngengine/module/store"
 	"ngengine/module/timer"
@@ -166,13 +166,13 @@ func (o *Object) DeleteBack(reply *protocol.Message) {
 }
 
 type GamePlayer struct {
-	*game.Role
+	*gameobject.Role
 	*entity.Player
 }
 
 func NewGamePlayer() *GamePlayer {
 	p := &GamePlayer{}
-	p.Role = game.NewRole()
+	p.Role = gameobject.NewRole()
 	p.Player = entity.NewPlayer()
 	p.Role.SetSpirit(p.Player)
 	return p

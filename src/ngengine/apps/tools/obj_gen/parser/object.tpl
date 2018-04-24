@@ -104,7 +104,7 @@ func (r *{{$.Name}}{{$pname}}_r) {{.Name}}(rownum int) ({{.Type}}, error) {
 func (r *{{$.Name}}{{$pname}}_r) Set{{.Name}}(rownum int, {{tolower .Name}} {{.Type}}) error {
 	if r.root != nil && r.root.Dummy() && !r.root.Sync() {
 		r.root.ChangeTable("{{$pname}}", rownum, {{$index}}, {{tolower .Name}})
-		return
+		return nil
 	}
 	if rownum < 0 || rownum >= len(r.Row) {
         return fmt.Errorf("row num error")
@@ -123,7 +123,7 @@ func (r *{{$.Name}}{{$pname}}_r) Set{{.Name}}(rownum int, {{tolower .Name}} {{.T
 func (r *{{$.Name}}{{.Name}}_r) SetRowValue(rownum int {{range .Table.Cols}}, {{tolower .Name}} {{.Type}} {{end}} ) error {
 	if r.root != nil && r.root.Dummy() && !r.root.Sync() {
 		r.root.SetTableRowValue("{{$pname}}", rownum {{range .Table.Cols}}, {{tolower .Name}} {{end}} )
-		return
+		return nil
 	}
 
 	if rownum < 0 || rownum >= len(r.Row) {
@@ -160,7 +160,7 @@ func (r *{{$.Name}}{{.Name}}_r) RowValue(rownum int) ({{range .Table.Cols}}{{.Ty
 func (r *{{$.Name}}{{.Name}}_r) AddRow(rownum int) (int, error) {
 	if r.root != nil && r.root.Dummy() && !r.root.Sync() {
 		r.root.AddTableRow("{{$pname}}", rownum )
-		return
+		return -1, nil
 	}
 	if len(r.Row) > cap(r.data) { // full
 		return -1, fmt.Errorf("record {{$.Name}}{{.Name}} is full")
@@ -192,7 +192,7 @@ func (r *{{$.Name}}{{.Name}}_r) AddRow(rownum int) (int, error) {
 func (r *{{$.Name}}{{.Name}}_r) AddRowValue(rownum int {{range .Table.Cols}}, {{tolower .Name}} {{.Type}} {{end}} ) (int, error) {
 	if r.root != nil && r.root.Dummy() && !r.root.Sync() {
 		r.root.AddTableRowValue("{{$pname}}", rownum {{range .Table.Cols}}, {{tolower .Name}} {{end}})
-		return
+		return -1, nil
 	}
 	if len(r.Row) > cap(r.data) { // full
 		return -1, fmt.Errorf("record {{$.Name}}{{.Name}} is full")
@@ -224,7 +224,7 @@ func (r *{{$.Name}}{{.Name}}_r) AddRowValue(rownum int {{range .Table.Cols}}, {{
 func (r *{{$.Name}}{{.Name}}_r) Del(rownum int) error {
 	if r.root != nil && r.root.Dummy() && !r.root.Sync() {
 		r.root.DelTableRow("{{$pname}}", rownum )
-		return
+		return nil
 	}
 	if rownum < 0 || rownum >= len(r.Row) {
 		return fmt.Errorf("row num error")

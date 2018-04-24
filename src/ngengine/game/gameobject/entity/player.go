@@ -64,7 +64,7 @@ func (r *PlayerToolbox_r) Id(rownum int) (int64, error) {
 func (r *PlayerToolbox_r) SetId(rownum int, id int64) error {
 	if r.root != nil && r.root.Dummy() && !r.root.Sync() {
 		r.root.ChangeTable("Toolbox", rownum, 0, id)
-		return
+		return nil
 	}
 	if rownum < 0 || rownum >= len(r.Row) {
 		return fmt.Errorf("row num error")
@@ -90,7 +90,7 @@ func (r *PlayerToolbox_r) Amount(rownum int) (int32, error) {
 func (r *PlayerToolbox_r) SetAmount(rownum int, amount int32) error {
 	if r.root != nil && r.root.Dummy() && !r.root.Sync() {
 		r.root.ChangeTable("Toolbox", rownum, 1, amount)
-		return
+		return nil
 	}
 	if rownum < 0 || rownum >= len(r.Row) {
 		return fmt.Errorf("row num error")
@@ -108,7 +108,7 @@ func (r *PlayerToolbox_r) SetAmount(rownum int, amount int32) error {
 func (r *PlayerToolbox_r) SetRowValue(rownum int, id int64, amount int32) error {
 	if r.root != nil && r.root.Dummy() && !r.root.Sync() {
 		r.root.SetTableRowValue("Toolbox", rownum, id, amount)
-		return
+		return nil
 	}
 
 	if rownum < 0 || rownum >= len(r.Row) {
@@ -152,7 +152,7 @@ func (r *PlayerToolbox_r) RowValue(rownum int) (int64, int32, error) {
 func (r *PlayerToolbox_r) AddRow(rownum int) (int, error) {
 	if r.root != nil && r.root.Dummy() && !r.root.Sync() {
 		r.root.AddTableRow("Toolbox", rownum)
-		return
+		return -1, nil
 	}
 	if len(r.Row) > cap(r.data) { // full
 		return -1, fmt.Errorf("record PlayerToolbox is full")
@@ -181,7 +181,7 @@ func (r *PlayerToolbox_r) AddRow(rownum int) (int, error) {
 func (r *PlayerToolbox_r) AddRowValue(rownum int, id int64, amount int32) (int, error) {
 	if r.root != nil && r.root.Dummy() && !r.root.Sync() {
 		r.root.AddTableRowValue("Toolbox", rownum, id, amount)
-		return
+		return -1, nil
 	}
 	if len(r.Row) > cap(r.data) { // full
 		return -1, fmt.Errorf("record PlayerToolbox is full")
@@ -213,7 +213,7 @@ func (r *PlayerToolbox_r) AddRowValue(rownum int, id int64, amount int32) (int, 
 func (r *PlayerToolbox_r) Del(rownum int) error {
 	if r.root != nil && r.root.Dummy() && !r.root.Sync() {
 		r.root.DelTableRow("Toolbox", rownum)
-		return
+		return nil
 	}
 	if rownum < 0 || rownum >= len(r.Row) {
 		return fmt.Errorf("row num error")

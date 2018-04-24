@@ -2,7 +2,7 @@ package main
 
 import (
 	"ngengine/core/service"
-	"ngengine/module/object/entity"
+	"ngengine/game/gameobject/entity"
 	"ngengine/module/store"
 )
 

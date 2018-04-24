@@ -1,4 +1,4 @@
-package game
+package gameobject
 
 const (
 	E_ON_CREATE  = "on_create"
