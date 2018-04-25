@@ -10,7 +10,7 @@ const (
 
 type State interface {
 	Enter()
-	Execute(event int, param []interface{}) string
+	Handle(event int, param []interface{}) string
 	Exit()
 }
 
@@ -27,7 +27,8 @@ func NewFSM() *FSM {
 	return f
 }
 
-func (f *FSM) AddState(name string, state State) {
+// 注册事件
+func (f *FSM) Register(name string, state State) {
 	if _, dup := f.state[name]; dup {
 		panic("register state twice")
 	}
@@ -35,15 +36,14 @@ func (f *FSM) AddState(name string, state State) {
 	f.state[name] = state
 }
 
-func (f *FSM) SetDefaultState(state string) {
+// 启动状态机, state是初始状态
+func (f *FSM) Start(state string) error {
 	if _, exist := f.state[state]; !exist {
 		panic("state not found")
 	}
 
 	f.def = state
-}
 
-func (f *FSM) Start() error {
 	s, exist := f.state[f.def]
 	if !exist {
 		return fmt.Errorf("state not found, %s", f.def)
@@ -55,12 +55,13 @@ func (f *FSM) Start() error {
 	return nil
 }
 
-func (f *FSM) Exec(event int, param []interface{}) (bool, error) {
+// 分发事件
+func (f *FSM) Dispatch(event int, param []interface{}) (bool, error) {
 	if f.current == nil {
 		return true, fmt.Errorf("current state is nil")
 	}
 
-	ret := f.current.Execute(event, param)
+	ret := f.current.Handle(event, param)
 	if ret == "" {
 		return false, nil
 	}

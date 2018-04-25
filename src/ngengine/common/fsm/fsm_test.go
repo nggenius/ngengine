@@ -12,7 +12,7 @@ func (s *State1) Enter() {
 	fmt.Println("state1 enter")
 }
 
-func (s *State1) Execute(event int, param []interface{}) string {
+func (s *State1) Handle(event int, param []interface{}) string {
 	fmt.Println("execute", event)
 	if event == 1 {
 		return "State2"
@@ -32,7 +32,7 @@ func (s *State2) Enter() {
 	fmt.Println("state2 enter")
 }
 
-func (s *State2) Execute(event int, param []interface{}) string {
+func (s *State2) Handle(event int, param []interface{}) string {
 	if event == 1 {
 		return "State3"
 	}
@@ -50,7 +50,7 @@ func (s *State3) Enter() {
 	fmt.Println("state3 enter")
 }
 
-func (s *State3) Execute(event int, param []interface{}) string {
+func (s *State3) Handle(event int, param []interface{}) string {
 	if event == 1 {
 		return STOP
 	}
@@ -62,32 +62,31 @@ func (s *State3) Exit() {
 }
 func TestFSM(t *testing.T) {
 	fsm := NewFSM()
-	fsm.AddState("State1", &State1{})
-	fsm.AddState("State2", &State2{})
-	fsm.AddState("State3", &State3{})
-	fsm.SetDefaultState("State1")
-	fsm.Start()
-	fsm.Exec(2, nil)
+	fsm.Register("State1", &State1{})
+	fsm.Register("State2", &State2{})
+	fsm.Register("State3", &State3{})
+	fsm.Start("State1")
+	fsm.Dispatch(2, nil)
 	if fsm.curstate != "State1" {
 		t.Fatalf("current state is %s, need State1", fsm.curstate)
 	}
-	fsm.Exec(1, nil)
+	fsm.Dispatch(1, nil)
 	if fsm.curstate != "State2" {
 		t.Fatalf("current state is %s, need State1", fsm.curstate)
 	}
-	fsm.Exec(2, nil)
+	fsm.Dispatch(2, nil)
 	if fsm.curstate != "State2" {
 		t.Fatalf("current state is %s, need State2", fsm.curstate)
 	}
-	fsm.Exec(1, nil)
+	fsm.Dispatch(1, nil)
 	if fsm.curstate != "State3" {
 		t.Fatalf("current state is %s, need State3", fsm.curstate)
 	}
-	fsm.Exec(2, nil)
+	fsm.Dispatch(2, nil)
 	if fsm.curstate != "State3" {
 		t.Fatalf("current state is %s, need State3", fsm.curstate)
 	}
-	ret, _ := fsm.Exec(1, nil)
+	ret, _ := fsm.Dispatch(1, nil)
 	if !ret {
 		t.Fatalf("current state is not stop, need true")
 	}
