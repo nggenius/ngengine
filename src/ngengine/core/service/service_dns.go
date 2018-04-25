@@ -6,6 +6,8 @@ import (
 	"ngengine/protocol"
 	. "ngengine/share"
 	"sync"
+
+	"github.com/mysll/toolkit"
 )
 
 // 服务的DNS
@@ -179,6 +181,38 @@ func (s *SrvDNS) LookupByType(typ string) []*Srv {
 	}
 
 	return ret
+}
+
+// 获取某个类型的一个服务
+func (s *SrvDNS) LookupOneByType(typ string) *Srv {
+	s.RLock()
+	defer s.RUnlock()
+	var ret *Srv
+	for _, v := range s.srvs {
+		if v.Type == typ {
+			ret = v
+			break
+		}
+	}
+
+	return ret
+}
+
+// 随机获取某个类型的一个服务
+func (s *SrvDNS) LookupRandByType(typ string) *Srv {
+	s.RLock()
+	defer s.RUnlock()
+	ret := make([]*Srv, 0, 8)
+	for _, v := range s.srvs {
+		if v.Type == typ {
+			ret = append(ret, v)
+		}
+	}
+
+	if len(ret) > 0 {
+		return ret[toolkit.RandRange(0, len(ret))]
+	}
+	return nil
 }
 
 // 通过Mailbox获取服务

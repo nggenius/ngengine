@@ -68,9 +68,9 @@ func (c *Client) RecvMessage() {
 
 func (c *Client) Login(name, pass string) {
 	l := c2s.Login{}
-	l.Name = "test"
-	l.Pass = "123"
-	c.SendMessage("User.Login", &l)
+	l.Name = name
+	l.Pass = pass
+	c.SendMessage("Account.Login", &l)
 	c.RecvMessage()
 }
 

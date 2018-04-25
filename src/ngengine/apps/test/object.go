@@ -137,7 +137,6 @@ func (o *Object) UpdateBack(reply *protocol.Message) {
 		return
 	}
 	o.CoreAPI.LogInfo("update result:", affected)
-	panic("panic")
 }
 
 func (o *Object) LoadAllBack(reply *protocol.Message) {

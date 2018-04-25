@@ -39,13 +39,15 @@ type CoreAPI interface {
 	Mailto(src *rpc.Mailbox, dest *rpc.Mailbox, method string, args ...interface{}) error
 	// 发起远程调用并调用回调函数
 	MailtoAndCallback(src *rpc.Mailbox, dest *rpc.Mailbox, method string, cb rpc.ReplyCB, args ...interface{}) error
-	// 查看服务信息
+	// 通过服务ID获取服务信息
 	LookupService(id share.ServiceId) *SrvInfo
-	// 查看服务信息
+	// 获取一个特定类型的服务
 	LookupOneServiceByType(typ string) *SrvInfo
-	// 查看服务信息
+	// 随机获取一个特定类型的服务
+	LookupRandServiceByType(typ string) *SrvInfo
+	// 获取所有服务信息
 	LookupAllServiceByType(typ string) []*SrvInfo
-	// 查看服务信息
+	// 通过服务名获取服务信息
 	LookupServiceByName(name string) *SrvInfo
 	// 日志函数
 	LogDebug(v ...interface{})
@@ -79,6 +81,8 @@ type CoreAPI interface {
 	Call(module string, id int, args ...interface{}) error
 	// 获取log指针
 	Logger() *logger.Log
+	// 消息协议解码
+	ParseProto(msg *protocol.Message, obj interface{}) error
 }
 
 // 获取当前服务的goroutine id
@@ -254,25 +258,43 @@ func (c *Core) LookupService(id share.ServiceId) *SrvInfo {
 		Addr:   s.Addr,
 		Port:   s.Port,
 	}
-
 }
 
-// 查找服务
+// 获取某个类型的一个服务
 func (c *Core) LookupOneServiceByType(typ string) *SrvInfo {
 	c.dns.RLock()
 	defer c.dns.RUnlock()
-	s := c.dns.LookupByType(typ)
-	if s == nil || len(s) == 0 {
+	s := c.dns.LookupOneByType(typ)
+	if s == nil {
 		return nil
 	}
 
 	return &SrvInfo{
-		Id:     s[0].Id,
-		Name:   s[0].Name,
-		Type:   s[0].Type,
-		Status: s[0].Status,
-		Addr:   s[0].Addr,
-		Port:   s[0].Port,
+		Id:     s.Id,
+		Name:   s.Name,
+		Type:   s.Type,
+		Status: s.Status,
+		Addr:   s.Addr,
+		Port:   s.Port,
+	}
+}
+
+// 随机获取某个类型的一个服务
+func (c *Core) LookupRandServiceByType(typ string) *SrvInfo {
+	c.dns.RLock()
+	defer c.dns.RUnlock()
+	s := c.dns.LookupRandByType(typ)
+	if s == nil {
+		return nil
+	}
+
+	return &SrvInfo{
+		Id:     s.Id,
+		Name:   s.Name,
+		Type:   s.Type,
+		Status: s.Status,
+		Addr:   s.Addr,
+		Port:   s.Port,
 	}
 }
 
@@ -354,4 +376,9 @@ func (c *Core) Call(module string, id int, args ...interface{}) error {
 // 获取log指针
 func (c *Core) Logger() *logger.Log {
 	return c.Log
+}
+
+// 消息协议解码
+func (c *Core) ParseProto(msg *protocol.Message, obj interface{}) error {
+	return c.Proto.DecodeMessage(msg, obj)
 }

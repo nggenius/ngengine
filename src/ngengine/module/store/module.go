@@ -53,7 +53,7 @@ func (m *StoreModule) Init(core service.CoreAPI) bool {
 		m.core.Service().AddListener(share.EVENT_READY, m.client.OnDatabaseReady)
 	case STORE_SERVER:
 		m.sql.Init(core)
-		core.RegisterRemote("store", m.store)
+		core.RegisterRemote("Store", m.store)
 	default:
 		return false
 	}

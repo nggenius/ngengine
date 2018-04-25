@@ -59,9 +59,9 @@ func (s *StoreClient) Get(tag string, typ string, condition map[string]interface
 		return fmt.Errorf("database not connected")
 	}
 	if reply == nil {
-		return s.ctx.core.Mailto(nil, s.db, "store.Get", tag, typ, condition)
+		return s.ctx.core.Mailto(nil, s.db, "Store.Get", tag, typ, condition)
 	}
-	return s.ctx.core.MailtoAndCallback(nil, s.db, "store.Get", reply, tag, typ, condition)
+	return s.ctx.core.MailtoAndCallback(nil, s.db, "Store.Get", reply, tag, typ, condition)
 }
 
 func ParseFindReply(reply *protocol.Message, object interface{}) (errcode int32, err error, tag string) {
@@ -93,9 +93,9 @@ func (s *StoreClient) Find(tag string, typ string, condition map[string]interfac
 		return fmt.Errorf("database not connected")
 	}
 	if reply == nil {
-		return s.ctx.core.Mailto(nil, s.db, "store.Find", tag, typ, condition, limit, start)
+		return s.ctx.core.Mailto(nil, s.db, "Store.Find", tag, typ, condition, limit, start)
 	}
-	return s.ctx.core.MailtoAndCallback(nil, s.db, "store.Find", reply, tag, typ, condition, limit, start)
+	return s.ctx.core.MailtoAndCallback(nil, s.db, "Store.Find", reply, tag, typ, condition, limit, start)
 }
 
 func ParseInsertReply(reply *protocol.Message) (errcode int32, err error, tag string, affected, id int64) {
@@ -128,9 +128,9 @@ func (s *StoreClient) Insert(tag string, typ string, object interface{}, reply r
 		return fmt.Errorf("database not connected")
 	}
 	if reply == nil {
-		return s.ctx.core.Mailto(nil, s.db, "store.Insert", tag, typ, object)
+		return s.ctx.core.Mailto(nil, s.db, "Store.Insert", tag, typ, object)
 	}
-	return s.ctx.core.MailtoAndCallback(nil, s.db, "store.Insert", reply, tag, typ, object)
+	return s.ctx.core.MailtoAndCallback(nil, s.db, "Store.Insert", reply, tag, typ, object)
 }
 
 func ParseUpdateReply(reply *protocol.Message) (errcode int32, err error, tag string, affected int64) {
@@ -158,9 +158,9 @@ func (s *StoreClient) Update(tag string, typ string, cols []string, condition ma
 		return fmt.Errorf("database not connected")
 	}
 	if reply == nil {
-		return s.ctx.core.Mailto(nil, s.db, "store.Update", tag, typ, cols, condition, object)
+		return s.ctx.core.Mailto(nil, s.db, "Store.Update", tag, typ, cols, condition, object)
 	}
-	return s.ctx.core.MailtoAndCallback(nil, s.db, "store.Update", reply, tag, typ, cols, condition, object)
+	return s.ctx.core.MailtoAndCallback(nil, s.db, "Store.Update", reply, tag, typ, cols, condition, object)
 }
 
 func ParseDeleteReply(reply *protocol.Message) (errcode int32, err error, tag string, affected int64) {
@@ -188,9 +188,9 @@ func (s *StoreClient) Delete(tag string, typ string, object interface{}, reply r
 		return fmt.Errorf("database not connected")
 	}
 	if reply == nil {
-		return s.ctx.core.Mailto(nil, s.db, "store.Delete", tag, typ, object)
+		return s.ctx.core.Mailto(nil, s.db, "Store.Delete", tag, typ, object)
 	}
-	return s.ctx.core.MailtoAndCallback(nil, s.db, "store.Delete", reply, tag, typ, object)
+	return s.ctx.core.MailtoAndCallback(nil, s.db, "Store.Delete", reply, tag, typ, object)
 }
 
 func ParseQueryReply(reply *protocol.Message) (errcode int32, err error, tag string, result []map[string][]byte) {
@@ -219,9 +219,9 @@ func (s *StoreClient) Query(tag string, sql string, args []interface{}, reply rp
 		return fmt.Errorf("database not connected")
 	}
 	if reply == nil {
-		return s.ctx.core.Mailto(nil, s.db, "store.Query", tag, sql, args)
+		return s.ctx.core.Mailto(nil, s.db, "Store.Query", tag, sql, args)
 	}
-	return s.ctx.core.MailtoAndCallback(nil, s.db, "store.Query", reply, tag, sql, args)
+	return s.ctx.core.MailtoAndCallback(nil, s.db, "Store.Query", reply, tag, sql, args)
 }
 
 func ParseExecReply(reply *protocol.Message) (errcode int32, err error, tag string, affected int64) {
@@ -249,7 +249,7 @@ func (s *StoreClient) Exec(tag string, sql string, args []interface{}, reply rpc
 		return fmt.Errorf("database not connected")
 	}
 	if reply == nil {
-		return s.ctx.core.Mailto(nil, s.db, "store.Exec", tag, sql, args)
+		return s.ctx.core.Mailto(nil, s.db, "Store.Exec", tag, sql, args)
 	}
-	return s.ctx.core.MailtoAndCallback(nil, s.db, "store.Exec", reply, tag, sql, args)
+	return s.ctx.core.MailtoAndCallback(nil, s.db, "Store.Exec", reply, tag, sql, args)
 }

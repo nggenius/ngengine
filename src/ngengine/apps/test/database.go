@@ -39,7 +39,7 @@ func (d *Database) Prepare(core service.CoreAPI) error {
 func (d *Database) Init(opt *service.CoreOption) error {
 	d.CoreAPI.AddModule(d.store)
 	d.store.SetMode(store.STORE_SERVER)
-	d.store.Register("Player", &entity.PlayerArchiveCreater{})
+	entity.RegisterToDB(d.store)
 	return nil
 }
 

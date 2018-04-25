@@ -5,3 +5,7 @@ type Rpc struct {
 	Servicemethod string
 	Data          []byte
 }
+
+type Error struct {
+	ErrCode int32
+}
