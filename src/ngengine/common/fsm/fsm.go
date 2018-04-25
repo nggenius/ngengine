@@ -14,6 +14,7 @@ type State interface {
 	Exit()
 }
 
+// 有限状态机
 type FSM struct {
 	state    map[string]State
 	def      string
@@ -27,7 +28,7 @@ func NewFSM() *FSM {
 	return f
 }
 
-// 注册事件
+// 注册状态
 func (f *FSM) Register(name string, state State) {
 	if _, dup := f.state[name]; dup {
 		panic("register state twice")
@@ -55,7 +56,7 @@ func (f *FSM) Start(state string) error {
 	return nil
 }
 
-// 分发事件
+// 派发事件
 func (f *FSM) Dispatch(event int, param []interface{}) (bool, error) {
 	if f.current == nil {
 		return true, fmt.Errorf("current state is nil")
