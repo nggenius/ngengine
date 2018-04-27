@@ -15,7 +15,8 @@ type CoreOption struct {
 	ServAddr   string            //服务内部地址(内部通讯用)
 	ServPort   int               //服务内部端口号
 	Expose     bool              //是否启动外网连接
-	HostAddr   string            //外网连接地址
+	OuterAddr  string            //外网连接地址
+	HostAddr   string            //外网连接的监听地址
 	HostPort   int               //外网连接端口号
 	LogFile    string            //日志文件
 	LogLevel   int               //日志等级

@@ -64,6 +64,14 @@ func (c *ClientDB) FindClient(session uint64) *Client {
 	return nil
 }
 
+func (c *ClientDB) BreakClient(session uint64) {
+	c.RLock()
+	defer c.RUnlock()
+	if client, has := c.clients[session]; has {
+		client.Close()
+	}
+}
+
 func (c *ClientDB) RemoveClient(session uint64) {
 	c.Lock()
 	defer c.Unlock()

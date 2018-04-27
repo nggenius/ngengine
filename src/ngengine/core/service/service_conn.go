@@ -5,76 +5,76 @@ import (
 	"net"
 	"ngengine/core/rpc"
 	"ngengine/logger"
-	. "ngengine/share"
 )
 
 // 服务信息
 type Srv struct {
-	Id        ServiceId   // 服务ID
-	Name      string      // 服务名称
-	Type      string      // 服务类型
-	Status    int         // 状态
-	Addr      string      // ip地址
-	Port      int         // 端口号
-	Conn      net.Conn    // 网络连接
-	RpcClient *rpc.Client // rpc client
-	Connected bool        // 是否已经成功连接
+	SrvInfo
+	mb        *rpc.Mailbox
+	conn      net.Conn    // 网络连接
+	client    *rpc.Client // rpc client
+	connected bool        // 是否已经成功连接
 	l         *logger.Log // 日志
+}
+
+func (s Srv) Mailbox() *rpc.Mailbox {
+	return s.mb
 }
 
 // 格式化输出
 func (s Srv) String() string {
-	return fmt.Sprintf("Service{Id:%d,Name:%s,Type:%s,Status:%d,Addr:%s,Port:%d}", s.Id, s.Name, s.Type, s.Status, s.Addr, s.Port)
+	return fmt.Sprintf("Service{Id:%d,Name:%s,Type:%s,Status:%d,Addr:%s,Port:%d,Outer addr:%s,Outer Port:%d,Load:%d}",
+		s.Id, s.Name, s.Type, s.Status, s.Addr, s.Port, s.OuterAddr, s.OuterPort, s.Load)
 }
 
 // 建立连接
 func (s *Srv) Connect() error {
-	if s.Connected {
+	if s.connected {
 		return nil
 	}
 	conn, err := net.Dial("tcp", fmt.Sprintf("%s:%d", s.Addr, s.Port))
 	if err != nil {
 		return err
 	}
-	s.Conn = conn
-	s.RpcClient = rpc.NewClient(s.Conn, s.l)
-	s.Connected = true
+	s.conn = conn
+	s.client = rpc.NewClient(s.conn, s.l)
+	s.connected = true
 
 	return nil
 }
 
 // 关闭连接
 func (s *Srv) Close() {
-	if s.Connected {
-		if s.RpcClient != nil {
-			s.RpcClient.Close()
-			s.RpcClient = nil
+	if s.connected {
+		if s.client != nil {
+			s.client.Close()
+			s.client = nil
 		}
-		if s.Conn != nil {
-			s.Conn.Close()
-			s.Conn = nil
+		if s.conn != nil {
+			s.conn.Close()
+			s.conn = nil
 		}
 
-		s.Connected = false
+		s.connected = false
 	}
 }
 
 func (s *Srv) Process() {
-	if s.Connected && s.RpcClient != nil {
-		s.RpcClient.Process()
+	if s.connected && s.client != nil {
+		s.client.Process()
 	}
 }
 
 // 远程调用
 func (s *Srv) Call(src rpc.Mailbox, method string, args ...interface{}) error {
-	if !s.Connected {
+	if !s.connected {
 		if err := s.Connect(); err != nil {
 			return err
 		}
 	}
 
 	s.l.LogInfo("call ", src, "/", method)
-	err := s.RpcClient.Call(rpc.GetServiceMethod(method), src, args...)
+	err := s.client.Call(rpc.GetServiceMethod(method), src, args...)
 	if err != nil {
 		s.Close()
 	}
@@ -84,7 +84,7 @@ func (s *Srv) Call(src rpc.Mailbox, method string, args ...interface{}) error {
 
 // 带返回函数的调用
 func (s *Srv) Callback(src rpc.Mailbox, method string, cb rpc.ReplyCB, args ...interface{}) error {
-	if !s.Connected {
+	if !s.connected {
 		if err := s.Connect(); err != nil {
 			return err
 		}
@@ -92,7 +92,7 @@ func (s *Srv) Callback(src rpc.Mailbox, method string, cb rpc.ReplyCB, args ...i
 
 	s.l.LogInfo("call ", src, "/", method)
 
-	err := s.RpcClient.CallBack(rpc.GetServiceMethod(method), src, cb, args...)
+	err := s.client.CallBack(rpc.GetServiceMethod(method), src, cb, args...)
 	if err != nil {
 		s.Close()
 	}
@@ -101,14 +101,14 @@ func (s *Srv) Callback(src rpc.Mailbox, method string, cb rpc.ReplyCB, args ...i
 }
 
 func (s *Srv) Handle(src rpc.Mailbox, method string, args ...interface{}) error {
-	if !s.Connected {
+	if !s.connected {
 		if err := s.Connect(); err != nil {
 			return err
 		}
 	}
 
 	s.l.LogInfo("client call ", src, "/", method)
-	err := s.RpcClient.Call(rpc.GetHandleMethod(method), src, args...)
+	err := s.client.Call(rpc.GetHandleMethod(method), src, args...)
 	if err != nil {
 		s.Close()
 	}

@@ -33,8 +33,8 @@ func (c *Client) String() string {
 
 func (c *Client) Close() {
 	if !c.quit {
-		c.conn.Close()
 		c.quit = true
+		c.conn.Close()
 	}
 }
 

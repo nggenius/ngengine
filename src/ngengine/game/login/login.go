@@ -1,52 +1,37 @@
-package main
+package login
 
 import (
 	"ngengine/common/event"
 	"ngengine/core/service"
 	"ngengine/game/gameobject/entity"
-	"ngengine/game/module/login"
+	"ngengine/game/login/login"
 	"ngengine/module/store"
+	"ngengine/module/timer"
 	"ngengine/share"
 )
-
-var startlogin = `{
-	"ServId":3,
-	"ServType": "login",
-	"AdminAddr":"127.0.0.1",
-	"AdminPort":12500,
-	"ServName": "login_1",
-	"ServAddr": "127.0.0.1",
-	"ServPort": 0,
-	"Expose": true,
-	"HostAddr": "0.0.0.0",
-	"HostPort": 2002,
-	"LogFile":"test1.log",
-	"Args": {}
-}`
-
-type LoginResult struct {
-	Result string
-}
 
 // service
 type Login struct {
 	service.BaseService
 	login *login.LoginModule
 	store *store.StoreModule
+	timer *timer.TimerModule
 }
 
 func (l *Login) Prepare(core service.CoreAPI) error {
 	l.CoreAPI = core
 	l.login = login.New()
 	l.store = store.New()
+	l.timer = timer.New()
 	return nil
 }
 
 func (l *Login) Init(opt *service.CoreOption) error {
 	l.CoreAPI.AddModule(l.store)
+	l.CoreAPI.AddModule(l.login)
+	l.CoreAPI.AddModule(l.timer)
 	l.store.SetMode(store.STORE_CLIENT)
 	entity.RegisterToDB(l.store)
-	l.CoreAPI.AddModule(l.login)
 	return nil
 }
 

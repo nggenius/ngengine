@@ -82,15 +82,22 @@ func (s *SrvDNS) sync(all bool, srvs []protocol.ServiceInfo) {
 // 增加一个服务
 func (s *SrvDNS) addSrv(srv protocol.ServiceInfo) {
 	newsrv := &Srv{
-		Id:     srv.Id,
-		Name:   srv.Name,
-		Type:   srv.Type,
-		Status: srv.Status,
-		Addr:   srv.Addr,
-		Port:   srv.Port,
-		l:      s.ctx.Core.Log,
+		SrvInfo: SrvInfo{
+			Id:        srv.Id,
+			Name:      srv.Name,
+			Type:      srv.Type,
+			Status:    srv.Status,
+			Addr:      srv.Addr,
+			Port:      srv.Port,
+			OuterAddr: srv.OuterAddr,
+			OuterPort: srv.OuterPort,
+			Load:      srv.Load,
+		},
+		l: s.ctx.Core.Log,
 	}
 
+	mb := rpc.GetServiceMailbox(srv.Id)
+	newsrv.mb = &mb
 	index := -1
 	for k, v := range s.srvs {
 		if v == nil {
@@ -109,6 +116,14 @@ func (s *SrvDNS) addSrv(srv protocol.ServiceInfo) {
 	s.ctx.Core.Emitter.Fire(EVENT_READY, event.EventArgs{"id": srv.Id}, true)
 }
 
+func (s *SrvDNS) UpdateLoad(load protocol.LoadInfo) {
+	s.Lock()
+	defer s.Unlock()
+	if index, find := s.idToIndex[load.Id]; find {
+		s.srvs[index].Load = load.Load
+	}
+}
+
 // 更新某个服务信息
 func (s *SrvDNS) updateSrv(srv protocol.ServiceInfo) {
 	if index, find := s.idToIndex[srv.Id]; find {
@@ -117,11 +132,17 @@ func (s *SrvDNS) updateSrv(srv protocol.ServiceInfo) {
 			old.Type != srv.Type ||
 			old.Status != srv.Status ||
 			old.Addr != srv.Addr ||
-			old.Port != srv.Port {
+			old.Port != srv.Port ||
+			old.OuterAddr != srv.OuterAddr ||
+			old.OuterPort != srv.OuterPort ||
+			old.Load != srv.Load {
 			s.ctx.Core.LogInfo("update service,", *old, srv)
 			old.Name = srv.Name
 			old.Type = srv.Type
 			old.Status = srv.Status
+			old.Load = srv.Load
+			old.OuterAddr = srv.OuterAddr
+			old.OuterPort = srv.OuterPort
 			if old.Addr != srv.Addr || old.Port != srv.Port {
 				old.Addr = srv.Addr
 				old.Port = srv.Port
@@ -177,6 +198,22 @@ func (s *SrvDNS) LookupByType(typ string) []*Srv {
 	for _, v := range s.srvs {
 		if v.Type == typ {
 			ret = append(ret, v)
+		}
+	}
+
+	return ret
+}
+
+// 获取某个类型的一个服务
+func (s *SrvDNS) LookupMinLoadByType(typ string) *Srv {
+	s.RLock()
+	defer s.RUnlock()
+	var ret *Srv
+	load := int32(0x7FFFFFFF)
+	for _, v := range s.srvs {
+		if v.Type == typ && v.Load < load {
+			ret = v
+			load = v.Load
 		}
 	}
 

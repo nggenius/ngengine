@@ -19,7 +19,8 @@ type Harbor struct {
 	serviceAddr     string // 服务地址
 	servicePort     int    // 服务端口
 	clientListener  net.Listener
-	clientAddr      string // 供客户端连接的地址
+	outerAddr       string // 外网地址
+	clientAddr      string // 供客户端连接的监听地址
 	clientPort      int    // 供客户端连接的端口
 	quit            bool
 	watchs          []string
@@ -103,13 +104,14 @@ func (h *Harbor) Serv(addr string, port int) error {
 }
 
 // 启动客户端的监听
-func (h *Harbor) Expose(addr string, port int) error {
+func (h *Harbor) Expose(outer string, addr string, port int) error {
 	l, err := net.Listen("tcp", fmt.Sprintf("%s:%d", addr, port))
 	if err != nil {
 		return err
 	}
 
 	h.clientListener = l
+	h.outerAddr = outer
 	h.clientAddr = addr
 	h.clientPort = port
 	if port == 0 {

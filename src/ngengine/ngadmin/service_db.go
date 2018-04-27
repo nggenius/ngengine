@@ -21,12 +21,15 @@ type ServiceDB struct {
 }
 
 type PeerInfo struct {
-	ServId     ServiceId //服务ID
-	ServName   string    //服务名称
-	ServType   string    //服务类型
-	Status     int       //状态
-	RemoteAddr string    //ip地址
-	RemotePort int       //端口号
+	ServId     ServiceId // 服务ID
+	ServName   string    // 服务名称
+	ServType   string    // 服务类型
+	Status     int8      // 状态
+	RemoteAddr string    // ip地址
+	RemotePort int       // 端口号
+	OuterAddr  string    // 外网端口
+	OuterPort  int       // 端口号
+	Load       int32     // 负载情况
 }
 
 type ServiceInfo struct {
@@ -35,13 +38,16 @@ type ServiceInfo struct {
 }
 
 func (s *ServiceInfo) String() string {
-	return fmt.Sprintf("Service{Id:%d,Name:%s,Type:%s,Status:%d,Addr:%s,Port:%d}",
+	return fmt.Sprintf("Service{Id:%d,Name:%s,Type:%s,Status:%d,Addr:%s,Port:%d,Outer Addr:%s,Outer Port:%d,Load:%d}",
 		s.PeerInfo.ServId,
 		s.PeerInfo.ServName,
 		s.PeerInfo.ServType,
 		s.PeerInfo.Status,
 		s.PeerInfo.RemoteAddr,
 		s.PeerInfo.RemotePort,
+		s.PeerInfo.OuterAddr,
+		s.PeerInfo.OuterPort,
+		s.PeerInfo.Load,
 	)
 }
 
@@ -88,6 +94,9 @@ func (s *ServiceDB) AddService(id ServiceId, service *ServiceInfo) error {
 	srvs.Service[0].Status = service.PeerInfo.Status
 	srvs.Service[0].Addr = service.PeerInfo.RemoteAddr
 	srvs.Service[0].Port = service.PeerInfo.RemotePort
+	srvs.Service[0].OuterAddr = service.PeerInfo.OuterAddr
+	srvs.Service[0].OuterPort = service.PeerInfo.OuterPort
+	srvs.Service[0].Load = service.PeerInfo.Load
 
 	for t, l := range s.watcher { //通知其它服务增加
 		if t == "all" || t == service.PeerInfo.ServType {
@@ -122,11 +131,6 @@ func (s *ServiceDB) RemoveService(name string, id ServiceId) bool {
 		}
 
 		srvs.Service[0].Id = srv.PeerInfo.ServId
-		srvs.Service[0].Name = srv.PeerInfo.ServName
-		srvs.Service[0].Type = srv.PeerInfo.ServType
-		srvs.Service[0].Status = srv.PeerInfo.Status
-		srvs.Service[0].Addr = srv.PeerInfo.RemoteAddr
-		srvs.Service[0].Port = srv.PeerInfo.RemotePort
 
 		for t, l := range s.watcher {
 			ele := l.Front() //首先从关注列表移除
@@ -179,13 +183,15 @@ func (s *ServiceDB) LookupSrvByType(typ string) []*ServiceInfo {
 
 // 关注服务变动
 func (s *ServiceDB) Watch(id ServiceId, typ []string) {
-	self := s.LookupService(id)
-	if self == nil {
-		return
-	}
 	s.Lock()
 	defer s.Unlock()
 	if len(typ) == 0 {
+		return
+	}
+
+	var self *ServiceInfo
+	found := false
+	if self, found = s.serviceMap[id]; !found {
 		return
 	}
 
@@ -234,6 +240,9 @@ func (s *ServiceDB) Watch(id ServiceId, typ []string) {
 				si.Status = v.PeerInfo.Status
 				si.Addr = v.PeerInfo.RemoteAddr
 				si.Port = v.PeerInfo.RemotePort
+				si.OuterAddr = v.PeerInfo.OuterAddr
+				si.OuterPort = v.PeerInfo.OuterPort
+				si.Load = v.PeerInfo.Load
 				srvs.Service = append(srvs.Service, si)
 			}
 		}
@@ -243,6 +252,37 @@ func (s *ServiceDB) Watch(id ServiceId, typ []string) {
 		}
 	}
 
+}
+
+// 关注服务变动
+func (s *ServiceDB) UpdateLoad(id ServiceId, load int32) {
+	s.Lock()
+	defer s.Unlock()
+	var srv *ServiceInfo
+	found := false
+	if srv, found = s.serviceMap[id]; !found {
+		return
+	}
+	// 更新负载时间
+	srv.PeerInfo.Load = load
+	update := &protocol.LoadInfo{
+		Id:   id,
+		Load: load,
+	}
+
+	//通知其它服务更新
+	for t, l := range s.watcher {
+		for ele := l.Front(); ele != nil; ele = ele.Next() {
+			if t == "all" || t == srv.PeerInfo.ServType {
+				if srv, has := s.serviceMap[ele.Value.(ServiceId)]; has {
+					if _, err := srv.Client.SendProtocol(protocol.A2S_LOAD, update); err != nil {
+						s.ctx.ngadmin.LogErr("update service load failed, ", err)
+					}
+				}
+			}
+		}
+
+	}
 }
 
 //取消关注
