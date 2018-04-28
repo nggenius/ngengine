@@ -91,12 +91,4 @@ type Object interface {
 	ClearTable(name string)
 	// 表格单元格变动
 	ChangeTable(name string, row, col int, val interface{})
-	// 对象上锁(远程调用，本地禁止调用)
-	AddLocker(locker rpc.Mailbox, lockindex uint32, isSyncLock bool)
-	// 对象解锁
-	UnLockObj(locker rpc.Mailbox, lockindex uint32, isSynclock bool)
-	// 回调通知上锁成功
-	LockObjSuccess(locker rpc.Mailbox, lockindex uint32, isSynclock bool)
-	// 回调通知远程解锁成功
-	UnLockObjSuccess(isSynclock bool)
 }

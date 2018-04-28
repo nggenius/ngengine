@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"encoding/gob"
 	"fmt"
-	"ngengine/game/gameobject/entity"
+	"ngengine/module/object/entity"
 )
 
 func main() {
