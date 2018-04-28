@@ -19,6 +19,7 @@ type HarborProtocol struct {
 	connected bool
 	heartbeat [4]byte
 	watchs    []string
+	lastload  int32
 }
 
 // 网络主循环
@@ -37,6 +38,7 @@ func (h *HarborProtocol) IOLoop(conn net.Conn) {
 		h.ctx.Core.LogErr(err)
 		return
 	}
+	h.lastload = h.ctx.Core.load
 	h.connected = true
 	// 发送自己关心的服务
 	if err := h.Watch(); err != nil {
@@ -76,6 +78,15 @@ func (h *HarborProtocol) Exec(msgid uint16, msg *protocol.Message) {
 			}
 			h.ctx.Core.dns.Update(srvs)
 		}
+	case protocol.A2S_LOAD:
+		{
+			var load protocol.LoadInfo
+			if err := json.Unmarshal(msg.Body, &load); err != nil {
+				h.ctx.Core.LogErr(err)
+				break
+			}
+			h.ctx.Core.dns.UpdateLoad(load)
+		}
 	}
 }
 
@@ -111,6 +122,11 @@ loop:
 				h.Close()
 				break
 			}
+			// 更新服务负载
+			if h.lastload != h.ctx.Core.load {
+				h.lastload = h.ctx.Core.load
+				h.UpdateLoad()
+			}
 			//h.ctx.Core.LogDebug("send heartbeat")
 		case <-h.conn.closeCh:
 			break loop
@@ -138,6 +154,16 @@ func (h *HarborProtocol) Close() {
 	}
 }
 
+// 更新负载信息
+func (h *HarborProtocol) UpdateLoad() error {
+	load := &protocol.LoadInfo{
+		Id:   h.ctx.Core.Id,
+		Load: h.ctx.Core.load,
+	}
+	_, err := h.WriteProtocol(protocol.S2A_LOAD, load)
+	return err
+}
+
 // 注册服务协议
 func (h *HarborProtocol) Register() error {
 	opts := h.ctx.Core.opts
@@ -147,7 +173,10 @@ func (h *HarborProtocol) Register() error {
 	r.Service.Type = opts.ServType
 	r.Service.Addr = h.ctx.Core.harbor.serviceAddr
 	r.Service.Port = h.ctx.Core.harbor.servicePort
+	r.Service.OuterAddr = h.ctx.Core.harbor.outerAddr
+	r.Service.OuterPort = h.ctx.Core.harbor.clientPort
 	r.Service.Status = 0
+	r.Service.Load = h.ctx.Core.load
 	_, err := h.WriteProtocol(protocol.S2A_REGISTER, r)
 	return err
 }

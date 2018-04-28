@@ -11,12 +11,15 @@ import (
 )
 
 type SrvInfo struct {
-	Id     share.ServiceId // 服务ID
-	Name   string          // 服务名称
-	Type   string          // 服务类型
-	Status int             // 状态
-	Addr   string          // ip地址
-	Port   int             // 端口号
+	Id        share.ServiceId // 服务ID
+	Name      string          // 服务名称
+	Type      string          // 服务类型
+	Status    int8            // 状态
+	Addr      string          // ip地址
+	Port      int             // 端口号
+	OuterAddr string          // 外网地址
+	OuterPort int             // 外网端口
+	Load      int32           // 负载
 }
 
 // Core接口
@@ -40,15 +43,17 @@ type CoreAPI interface {
 	// 发起远程调用并调用回调函数
 	MailtoAndCallback(src *rpc.Mailbox, dest *rpc.Mailbox, method string, cb rpc.ReplyCB, args ...interface{}) error
 	// 通过服务ID获取服务信息
-	LookupService(id share.ServiceId) *SrvInfo
+	LookupService(id share.ServiceId) *Srv
 	// 获取一个特定类型的服务
-	LookupOneServiceByType(typ string) *SrvInfo
+	LookupOneServiceByType(typ string) *Srv
+	// 获取一个负载最小的特定类型的服务
+	LookupMinLoadByType(typ string) *Srv
 	// 随机获取一个特定类型的服务
-	LookupRandServiceByType(typ string) *SrvInfo
+	LookupRandServiceByType(typ string) *Srv
 	// 获取所有服务信息
-	LookupAllServiceByType(typ string) []*SrvInfo
+	LookupAllServiceByType(typ string) []*Srv
 	// 通过服务名获取服务信息
-	LookupServiceByName(name string) *SrvInfo
+	LookupServiceByName(name string) *Srv
 	// 日志函数
 	LogDebug(v ...interface{})
 	// 日志函数
@@ -83,6 +88,12 @@ type CoreAPI interface {
 	Logger() *logger.Log
 	// 消息协议解码
 	ParseProto(msg *protocol.Message, obj interface{}) error
+	// 更新负载信息
+	UpdateLoad(load int32)
+	// 获取负载信息
+	Load() int32
+	// 断开client连接
+	Break(session uint64)
 }
 
 // 获取当前服务的goroutine id
@@ -242,104 +253,32 @@ func (c *Core) ClientCall(src *rpc.Mailbox, dest *rpc.Mailbox, method string, ar
 }
 
 // 查找服务
-func (c *Core) LookupService(id share.ServiceId) *SrvInfo {
-	c.dns.RLock()
-	defer c.dns.RUnlock()
-	s := c.dns.Lookup(id)
-	if s == nil {
-		return nil
-	}
+func (c *Core) LookupService(id share.ServiceId) *Srv {
+	return c.dns.Lookup(id)
+}
 
-	return &SrvInfo{
-		Id:     s.Id,
-		Name:   s.Name,
-		Type:   s.Type,
-		Status: s.Status,
-		Addr:   s.Addr,
-		Port:   s.Port,
-	}
+func (c *Core) LookupMinLoadByType(typ string) *Srv {
+	return c.dns.LookupMinLoadByType(typ)
 }
 
 // 获取某个类型的一个服务
-func (c *Core) LookupOneServiceByType(typ string) *SrvInfo {
-	c.dns.RLock()
-	defer c.dns.RUnlock()
-	s := c.dns.LookupOneByType(typ)
-	if s == nil {
-		return nil
-	}
-
-	return &SrvInfo{
-		Id:     s.Id,
-		Name:   s.Name,
-		Type:   s.Type,
-		Status: s.Status,
-		Addr:   s.Addr,
-		Port:   s.Port,
-	}
+func (c *Core) LookupOneServiceByType(typ string) *Srv {
+	return c.dns.LookupOneByType(typ)
 }
 
 // 随机获取某个类型的一个服务
-func (c *Core) LookupRandServiceByType(typ string) *SrvInfo {
-	c.dns.RLock()
-	defer c.dns.RUnlock()
-	s := c.dns.LookupRandByType(typ)
-	if s == nil {
-		return nil
-	}
-
-	return &SrvInfo{
-		Id:     s.Id,
-		Name:   s.Name,
-		Type:   s.Type,
-		Status: s.Status,
-		Addr:   s.Addr,
-		Port:   s.Port,
-	}
+func (c *Core) LookupRandServiceByType(typ string) *Srv {
+	return c.dns.LookupRandByType(typ)
 }
 
 // 查找服务
-func (c *Core) LookupAllServiceByType(typ string) []*SrvInfo {
-	c.dns.RLock()
-	defer c.dns.RUnlock()
-	sa := c.dns.LookupByType(typ)
-	if sa == nil || len(sa) == 0 {
-		return nil
-	}
-
-	result := make([]*SrvInfo, 0, len(sa))
-
-	for _, s := range sa {
-		result = append(result, &SrvInfo{
-			Id:     s.Id,
-			Name:   s.Name,
-			Type:   s.Type,
-			Status: s.Status,
-			Addr:   s.Addr,
-			Port:   s.Port,
-		})
-	}
-
-	return result
+func (c *Core) LookupAllServiceByType(typ string) []*Srv {
+	return c.dns.LookupByType(typ)
 }
 
 // 查找服务
-func (c *Core) LookupServiceByName(name string) *SrvInfo {
-	c.dns.RLock()
-	defer c.dns.RUnlock()
-	s := c.dns.LookupByName(name)
-	if s == nil {
-		return nil
-	}
-
-	return &SrvInfo{
-		Id:     s.Id,
-		Name:   s.Name,
-		Type:   s.Type,
-		Status: s.Status,
-		Addr:   s.Addr,
-		Port:   s.Port,
-	}
+func (c *Core) LookupServiceByName(name string) *Srv {
+	return c.dns.LookupByName(name)
 }
 
 // 注册 c2s 模块
@@ -381,4 +320,19 @@ func (c *Core) Logger() *logger.Log {
 // 消息协议解码
 func (c *Core) ParseProto(msg *protocol.Message, obj interface{}) error {
 	return c.Proto.DecodeMessage(msg, obj)
+}
+
+// 更新负载
+func (c *Core) UpdateLoad(load int32) {
+	c.load = load
+}
+
+// 负载
+func (c *Core) Load() int32 {
+	return c.load
+}
+
+// 断开client连接
+func (c *Core) Break(session uint64) {
+	c.clientDB.BreakClient(session)
 }

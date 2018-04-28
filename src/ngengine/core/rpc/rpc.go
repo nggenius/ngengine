@@ -55,7 +55,7 @@ func CreateService(rs *Server, l net.Listener, log *logger.Log) {
 			continue
 		}
 		if err != nil {
-			log.LogWarn("rpc service quit")
+			log.LogInfo("rpc service quit")
 			break
 		}
 		//启动服务

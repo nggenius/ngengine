@@ -10,10 +10,25 @@ const (
 
 type State interface {
 	Enter()
-	Handle(event int, param []interface{}) string
+	Handle(event int, param interface{}) string
 	Exit()
 }
 
+type Default struct{}
+
+func (d *Default) Enter() {
+
+}
+
+func (d *Default) Handle(event int, param interface{}) string {
+	return STOP
+}
+
+func (d *Default) Exit() {
+
+}
+
+// 有限状态机
 type FSM struct {
 	state    map[string]State
 	def      string
@@ -27,7 +42,7 @@ func NewFSM() *FSM {
 	return f
 }
 
-// 注册事件
+// 注册状态
 func (f *FSM) Register(name string, state State) {
 	if _, dup := f.state[name]; dup {
 		panic("register state twice")
@@ -55,8 +70,8 @@ func (f *FSM) Start(state string) error {
 	return nil
 }
 
-// 分发事件
-func (f *FSM) Dispatch(event int, param []interface{}) (bool, error) {
+// 派发事件
+func (f *FSM) Dispatch(event int, param interface{}) (bool, error) {
 	if f.current == nil {
 		return true, fmt.Errorf("current state is nil")
 	}
@@ -68,11 +83,15 @@ func (f *FSM) Dispatch(event int, param []interface{}) (bool, error) {
 
 	if ret == STOP {
 		f.current.Exit()
+		f.current = nil
+		f.curstate = ""
 		return true, nil
 	}
 
 	next, exist := f.state[ret]
 	if !exist {
+		f.current = nil
+		f.curstate = ""
 		return true, fmt.Errorf("state is nil, %s", ret)
 	}
 

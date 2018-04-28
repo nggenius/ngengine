@@ -46,7 +46,8 @@ type Core struct {
 	clientDB   *ClientDB           // 客户端管理
 	rpcmgr     *RpcRegister        // rpc注册
 	s2chelper  *S2CHelper          // 客户端调用工具
-	modules    *modules
+	modules    *modules            // 模块管理
+	load       int32               // 负载
 }
 
 // 创建一个服务
@@ -158,7 +159,7 @@ func (c *Core) Serv() {
 
 	// 启动外部连接
 	if c.opts.Expose {
-		if err := harbor.Expose(c.opts.HostAddr, c.opts.HostPort); err != nil {
+		if err := harbor.Expose(c.opts.OuterAddr, c.opts.HostAddr, c.opts.HostPort); err != nil {
 			c.LogFatal(err)
 		}
 

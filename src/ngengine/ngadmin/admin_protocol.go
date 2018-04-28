@@ -112,6 +112,9 @@ func (p *AdminProtocol) Register(conn net.Conn) (*PeerInfo, error) {
 		Status:     reg.Service.Status,
 		RemoteAddr: reg.Service.Addr,
 		RemotePort: reg.Service.Port,
+		OuterAddr:  reg.Service.OuterAddr,
+		OuterPort:  reg.Service.OuterPort,
+		Load:       reg.Service.Load,
 	}
 
 	return pi, nil
@@ -130,6 +133,15 @@ func (p *AdminProtocol) Exec(srv *ServiceInfo, msgid uint16, msg *protocol.Messa
 		}
 	case protocol.S2A_HEARTBEAT:
 		p.ctx.ngadmin.LogDebug("recv heartbeat")
+	case protocol.S2A_LOAD:
+		{
+			var load protocol.LoadInfo
+			if err := json.Unmarshal(msg.Body, &load); err != nil {
+				p.ctx.ngadmin.LogErr(err)
+				break
+			}
+			p.ctx.ngadmin.DB.UpdateLoad(load.Id, load.Load)
+		}
 	}
 }
 

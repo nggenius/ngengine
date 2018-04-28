@@ -12,7 +12,7 @@ func (s *State1) Enter() {
 	fmt.Println("state1 enter")
 }
 
-func (s *State1) Handle(event int, param []interface{}) string {
+func (s *State1) Handle(event int, param interface{}) string {
 	fmt.Println("execute", event)
 	if event == 1 {
 		return "State2"
@@ -32,7 +32,7 @@ func (s *State2) Enter() {
 	fmt.Println("state2 enter")
 }
 
-func (s *State2) Handle(event int, param []interface{}) string {
+func (s *State2) Handle(event int, param interface{}) string {
 	if event == 1 {
 		return "State3"
 	}
@@ -50,7 +50,7 @@ func (s *State3) Enter() {
 	fmt.Println("state3 enter")
 }
 
-func (s *State3) Handle(event int, param []interface{}) string {
+func (s *State3) Handle(event int, param interface{}) string {
 	if event == 1 {
 		return STOP
 	}

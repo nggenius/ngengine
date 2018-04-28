@@ -10,3 +10,8 @@ type Login struct {
 	Name string
 	Pass string
 }
+
+type LoginNest struct {
+	Account string
+	Token   string
+}
