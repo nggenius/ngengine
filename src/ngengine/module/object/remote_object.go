@@ -97,3 +97,39 @@ func (o *ObjectWitness) RemoteChangeTable(name string, row, col int, val interfa
 
 	o.factory.owner.core.Mailto(&o.objid, o.original, "object.ChangeTable", name, row, col, val)
 }
+
+// RemoteLockObj 远程上锁
+func (o *ObjectWitness) RemoteLockObj(lockID uint32) {
+	if o.original == nil {
+		o.factory.owner.core.LogErr("original is nil")
+		return
+	}
+	o.factory.owner.core.Mailto(&o.objid, o.original, "LockObj", lockID)
+}
+
+// RemoteUnLockObj 远程解锁
+func (o *ObjectWitness) RemoteUnLockObj(lockID uint32) {
+	if o.original == nil {
+		o.factory.owner.core.LogErr("original is nil")
+		return
+	}
+	o.factory.owner.core.Mailto(&o.objid, o.original, "UnLockObj", lockID)
+}
+
+// RemoteLockObjSuccess 远程上锁成功通知
+func (o *ObjectWitness) RemoteLockObjSuccess(lockID uint32) {
+	if o.original == nil {
+		o.factory.owner.core.LogErr("original is nil")
+		return
+	}
+	o.factory.owner.core.Mailto(&o.objid, o.original, "LockObjSuccess", lockID)
+}
+
+// RemoteUnLockObjSuccess 远程解锁成功通知
+func (o *ObjectWitness) RemoteUnLockObjSuccess() {
+	if o.original == nil {
+		o.factory.owner.core.LogErr("original is nil")
+		return
+	}
+	o.factory.owner.core.Mailto(&o.objid, o.original, "UnLockObjSuccess")
+}
