@@ -52,6 +52,9 @@ func (s *SrvDNS) Update(srvs protocol.Services) {
 func (s *SrvDNS) sync(all bool, srvs []protocol.ServiceInfo) {
 	del := make([]ServiceId, 0, 16)
 	for _, v := range s.srvs {
+		if v == nil {
+			continue
+		}
 		find := false
 		for _, srv := range srvs {
 			if v.Id == srv.Id {
