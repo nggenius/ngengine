@@ -9,22 +9,6 @@ import (
 	"github.com/mysll/toolkit"
 )
 
-var startlogin = `{
-	"ServId":3,
-	"ServType": "login",
-	"AdminAddr":"127.0.0.1",
-	"AdminPort":12500,
-	"ServName": "login_1",
-	"ServAddr": "127.0.0.1",
-	"ServPort": 0,
-	"Expose": true,
-	"OuterAddr":"192.168.1.12",
-	"HostAddr": "0.0.0.0",
-	"HostPort": 2002,
-	"LogFile":"login.log",
-	"Args": {}
-}`
-
 var startnest = `{
 	"ServId":4,
 	"ServType": "nest",

@@ -4,7 +4,7 @@ import (
 	"ngengine/common/event"
 	"ngengine/core/service"
 	"ngengine/game/gameobject/entity"
-	"ngengine/game/module/login"
+	"ngengine/game/login/login"
 	"ngengine/module/store"
 	"ngengine/share"
 )
