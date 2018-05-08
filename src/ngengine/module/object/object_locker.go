@@ -58,7 +58,7 @@ func (o *ObjectWitness) AddLocker(locker rpc.Mailbox, lockindex uint32, isSynclo
 func (o *ObjectWitness) UnLockObj(locker rpc.Mailbox, lockindex uint32, isSynclock bool) {
 
 	// 检查是否是上锁者
-	if !o.Islock || locker.Sid != o.locker.Locker.Sid || lockindex != o.locker.LockIndex {
+	if !o.Islock || locker.ServiceId() != o.locker.Locker.ServiceId() || lockindex != o.locker.LockIndex {
 		return
 	}
 
@@ -79,7 +79,7 @@ func (o *ObjectWitness) LockObjSuccess(locker rpc.Mailbox, lockindex uint32, isS
 	o.Islock = true
 	o.locker = NewLocker(locker, lockindex, isSynclock)
 
-	// 需要操作远程对象
+	// 是否是远程操作上锁
 	if isSynclock {
 		o.RemoteLockObjSuccess(lockindex)
 		return
@@ -96,14 +96,13 @@ func (o *ObjectWitness) LockObjSuccess(locker rpc.Mailbox, lockindex uint32, isS
 
 // UnLockObjSuccess 解锁成功
 func (o *ObjectWitness) UnLockObjSuccess(isSynclock bool) {
-	o.Islock = false
-	o.locker = nil
-
 	// 通知远程
 	if isSynclock {
 		o.RemoteUnLockObjSuccess()
 	}
 
+	o.Islock = false
+	o.locker = nil
 	// 对象是本地的查看列表还有没有任务
 	if !o.dummy {
 		o.ExecuteNextLock()
