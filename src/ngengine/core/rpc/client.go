@@ -308,7 +308,7 @@ func (c *byteClientCodec) WriteRequest(sending *sync.Mutex, seq uint64, call *Ca
 	msg.Header = msg.Header[:0]
 	w := utils.NewStoreArchiver(msg.Header)
 	w.Put(seq)
-	w.Put(call.mb)
+	w.Put(call.mb.Uid())
 	w.PutString(call.ServiceMethod)
 	msg.Header = msg.Header[:w.Len()]
 	count := uint16(len(msg.Header) + len(msg.Body))

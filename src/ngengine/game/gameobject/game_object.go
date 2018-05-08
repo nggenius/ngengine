@@ -49,7 +49,7 @@ func (b *BaseObject) Prepare() {
 // 构造函数
 func (b *BaseObject) Create() {
 	if b.delegate != nil {
-		b.delegate.Invoke(E_ON_CREATE, b.objid, rpc.Mailbox{})
+		b.delegate.Invoke(E_ON_CREATE, b.objid, rpc.NullMailbox)
 	}
 }
 
@@ -60,7 +60,7 @@ func (b *BaseObject) ObjectType() int {
 // 准备销毁
 func (b *BaseObject) Destroy() {
 	if b.delegate != nil {
-		b.delegate.Invoke(E_ON_DESTROY, b.objid, rpc.Mailbox{})
+		b.delegate.Invoke(E_ON_DESTROY, b.objid, rpc.NullMailbox)
 	}
 	b.delete = true
 }

@@ -9,7 +9,8 @@ import (
 )
 
 const (
-	ID_MAX = 0x7FFFFFFFFFFF // id最大值
+	ID_MAX      = 0x7FFFFFFFFFFF // id最大值
+	NullMailbox = Mailbox(0)
 )
 
 type Mailbox uint64
@@ -34,6 +35,10 @@ func (m Mailbox) Flag() int8 {
 
 func (m Mailbox) Id() uint64 {
 	return uint64(m & ID_MAX)
+}
+
+func (m Mailbox) Uid() uint64 {
+	return uint64(m)
 }
 
 // create uid

@@ -33,7 +33,7 @@ func (c *ClientCodec) ReadRequest(maxrc uint16) (*protocol.Message, error) {
 			msg := protocol.NewMessage(len(data))
 			ar := protocol.NewHeadWriter(msg)
 			ar.Put(uint64(0))
-			ar.Put(c.client.Mailbox)
+			ar.Put(c.client.Mailbox.Uid())
 			ar.Put(rpc.GetHandleMethod("C2SHelper.Call"))
 			msg.Header = msg.Header[:ar.Len()]
 			msg.Body = append(msg.Body, data...)
