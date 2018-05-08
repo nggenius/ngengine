@@ -44,7 +44,8 @@ type Call struct {
 	Error         error             // After completion, the error status.
 	CB            ReplyCB           //callback function
 	noreply       bool
-	mb            Mailbox
+	src           Mailbox
+	dest          Mailbox
 	deadline      time.Time
 }
 
@@ -308,7 +309,8 @@ func (c *byteClientCodec) WriteRequest(sending *sync.Mutex, seq uint64, call *Ca
 	msg.Header = msg.Header[:0]
 	w := utils.NewStoreArchiver(msg.Header)
 	w.Put(seq)
-	w.Put(call.mb.Uid())
+	w.Put(call.src.Uid())
+	w.Put(call.dest.Uid())
 	w.PutString(call.ServiceMethod)
 	msg.Header = msg.Header[:w.Len()]
 	count := uint16(len(msg.Header) + len(msg.Body))
@@ -351,47 +353,51 @@ func (client *Client) Close() error {
 }
 
 // Call invokes the named function, waits for it to complete, and returns its error status.
-func (client *Client) SyncCall(serviceMethod string, src Mailbox, args *protocol.Message) error {
+func (client *Client) SyncCall(serviceMethod string, src, dest Mailbox, args *protocol.Message) error {
 	call := NewCall()
 	call.ServiceMethod = serviceMethod
 	call.Args = args.Dup()
 	call.noreply = true
-	call.mb = src
+	call.src = src
+	call.dest = dest
 	return client.send(call)
 }
 
-func (client *Client) SyncCallBack(serviceMethod string, src Mailbox, args *protocol.Message, reply ReplyCB) error {
+func (client *Client) SyncCallBack(serviceMethod string, src, dest Mailbox, args *protocol.Message, reply ReplyCB) error {
 	call := NewCall()
 	call.ServiceMethod = serviceMethod
 	call.Args = args.Dup()
 	call.CB = reply
 	call.noreply = false
-	call.mb = src
+	call.src = src
+	call.dest = dest
 	return client.send(call)
 }
 
-func (client *Client) CallMessage(serviceMethod string, src Mailbox, args *protocol.Message) error {
+func (client *Client) CallMessage(serviceMethod string, src, dest Mailbox, args *protocol.Message) error {
 	call := NewCall()
 	call.ServiceMethod = serviceMethod
 	call.Args = args.Dup()
 	call.noreply = true
-	call.mb = src
+	call.src = src
+	call.dest = dest
 	client.sendqueue <- call
 	return nil
 }
 
-func (client *Client) CallMessageBack(serviceMethod string, src Mailbox, args *protocol.Message, reply ReplyCB) error {
+func (client *Client) CallMessageBack(serviceMethod string, src, dest Mailbox, args *protocol.Message, reply ReplyCB) error {
 	call := NewCall()
 	call.ServiceMethod = serviceMethod
 	call.Args = args.Dup()
 	call.CB = reply
 	call.noreply = false
-	call.mb = src
+	call.src = src
+	call.dest = dest
 	client.sendqueue <- call
 	return nil
 }
 
-func (client *Client) Call(serviceMethod string, src Mailbox, args ...interface{}) error {
+func (client *Client) Call(serviceMethod string, src, dest Mailbox, args ...interface{}) error {
 	var msg *protocol.Message
 	if len(args) > 0 {
 		msg = protocol.NewMessage(MAX_BUF_LEN)
@@ -407,14 +413,14 @@ func (client *Client) Call(serviceMethod string, src Mailbox, args ...interface{
 		msg.Body = msg.Body[:ar.Len()]
 	}
 
-	err := client.CallMessage(serviceMethod, src, msg)
+	err := client.CallMessage(serviceMethod, src, dest, msg)
 	if msg != nil {
 		msg.Free()
 	}
 	return err
 }
 
-func (client *Client) CallBack(serviceMethod string, src Mailbox, reply ReplyCB, args ...interface{}) error {
+func (client *Client) CallBack(serviceMethod string, src, dest Mailbox, reply ReplyCB, args ...interface{}) error {
 	var msg *protocol.Message
 	if len(args) > 0 {
 		msg = protocol.NewMessage(MAX_BUF_LEN)
@@ -429,7 +435,7 @@ func (client *Client) CallBack(serviceMethod string, src Mailbox, reply ReplyCB,
 		msg.Body = msg.Body[:ar.Len()]
 	}
 
-	err := client.CallMessageBack(serviceMethod, src, msg, reply)
+	err := client.CallMessageBack(serviceMethod, src, dest, msg, reply)
 	if msg != nil {
 		msg.Free()
 	}

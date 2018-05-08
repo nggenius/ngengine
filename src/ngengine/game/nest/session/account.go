@@ -23,7 +23,7 @@ func (a *Account) RegisterCallback(s rpc.Servicer) {
 }
 
 // login服务调用
-func (a *Account) Logged(mailbox rpc.Mailbox, msg *protocol.Message) (errcode int32, reply *protocol.Message) {
+func (a *Account) Logged(sender, _ rpc.Mailbox, msg *protocol.Message) (errcode int32, reply *protocol.Message) {
 	m := protocol.NewMessageReader(msg)
 	var id uint64
 	var account string

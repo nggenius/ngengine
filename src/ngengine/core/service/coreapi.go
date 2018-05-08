@@ -170,13 +170,13 @@ func (c *Core) Mailto(src *rpc.Mailbox, dest *rpc.Mailbox, method string, args .
 
 	if !dest.IsClient() { // 判断是否是客户端的消息
 		if dest.ServiceId() == c.mailbox.ServiceId() { // 本地调用
-			return c.rpcSvr.Call(rpc.GetServiceMethod(method), *src, args...)
+			return c.rpcSvr.Call(rpc.GetServiceMethod(method), *src, *dest, args...)
 		}
 		srv := c.dns.LookupByMailbox(*dest)
 		if srv == nil {
 			return errors.New("service not found")
 		}
-		return srv.Call(*src, method, args...)
+		return srv.Call(*src, *dest, method, args...)
 	}
 
 	if len(args) == 0 {
@@ -201,7 +201,7 @@ func (c *Core) MailtoAndCallback(src *rpc.Mailbox, dest *rpc.Mailbox, method str
 	}
 
 	if dest.ServiceId() == c.mailbox.ServiceId() { // 本地调用
-		return c.rpcSvr.CallBack(rpc.GetServiceMethod(method), *src, cb, args...)
+		return c.rpcSvr.CallBack(rpc.GetServiceMethod(method), *src, *dest, cb, args...)
 	}
 
 	srv := c.dns.LookupByMailbox(*dest)
@@ -209,7 +209,7 @@ func (c *Core) MailtoAndCallback(src *rpc.Mailbox, dest *rpc.Mailbox, method str
 		return errors.New("service not found")
 	}
 
-	return srv.Callback(*src, method, cb, args...)
+	return srv.Callback(*src, *dest, method, cb, args...)
 }
 
 // 向客记端发送消息
@@ -234,7 +234,7 @@ func (c *Core) ClientCall(src *rpc.Mailbox, dest *rpc.Mailbox, method string, ar
 		msg := protocol.NewProtoMessage()
 		msg.Put(pb)
 		msg.Flush()
-		c.s2chelper.Call(*src, msg.GetMessage())
+		c.s2chelper.Call(*src, rpc.NullMailbox, msg.GetMessage())
 		msg.Free()
 		return nil
 	}
@@ -244,7 +244,7 @@ func (c *Core) ClientCall(src *rpc.Mailbox, dest *rpc.Mailbox, method string, ar
 		return errors.New("service not found")
 	}
 
-	err = srv.Call(*src, "S2CHelper.Call", pb)
+	err = srv.Call(*src, rpc.NullMailbox, "S2CHelper.Call", pb)
 	if err == rpc.ErrShutdown {
 		srv.Close()
 	}

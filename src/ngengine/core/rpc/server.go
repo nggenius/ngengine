@@ -22,7 +22,7 @@ var (
 	responseCache = make(chan *Response, 32)
 )
 
-type CB func(Mailbox, *protocol.Message) (int32, *protocol.Message)
+type CB func(Mailbox, Mailbox, *protocol.Message) (int32, *protocol.Message)
 
 type RpcRegister interface {
 	RegisterCallback(Servicer)
@@ -66,10 +66,15 @@ func NewResponse() *Response {
 type Header struct {
 	ServiceMethod string // format: "Service.Method"
 	Seq           uint64 // sequence number chosen by client
-	Mb            uint64
+	Src           uint64
+	Dest          uint64
 }
 
 func (h *Header) Free() {
+	h.ServiceMethod = ""
+	h.Seq = 0
+	h.Src = 0
+	h.Dest = 0
 	select {
 	case headerCache <- h:
 	default:
@@ -107,13 +112,14 @@ type RpcCall struct {
 }
 
 func (call *RpcCall) Call() error {
-	mb := NewMailboxFromUid(call.header.Mb)
-	call.errcode, call.reply = call.method(mb, call.message)
+	sender := NewMailboxFromUid(call.header.Src)
+	dest := NewMailboxFromUid(call.header.Dest)
+	call.errcode, call.reply = call.method(sender, dest, call.message)
 	return nil
 }
 
 func (call *RpcCall) GetSrc() Mailbox {
-	mb := NewMailboxFromUid(call.header.Mb)
+	mb := NewMailboxFromUid(call.header.Src)
 	return mb
 }
 
@@ -186,7 +192,7 @@ type Server struct {
 	log        *logger.Log
 }
 
-func (server *Server) getCall(servicemethod string, src Mailbox, cb ReplyCB, args ...interface{}) (*RpcCall, error) {
+func (server *Server) getCall(servicemethod string, src, dest Mailbox, cb ReplyCB, args ...interface{}) (*RpcCall, error) {
 	var msg *protocol.Message
 	if len(args) > 0 {
 		msg = protocol.NewMessage(share.MAX_BUF_LEN)
@@ -203,7 +209,8 @@ func (server *Server) getCall(servicemethod string, src Mailbox, cb ReplyCB, arg
 	call.header = NewHeader()
 	call.message = msg
 	call.header.Seq = 0
-	call.header.Mb = src.Uid()
+	call.header.Src = src.Uid()
+	call.header.Dest = dest.Uid()
 	call.header.ServiceMethod = servicemethod
 	call.cb = cb
 	dot := strings.LastIndex(call.header.ServiceMethod, ".")
@@ -235,16 +242,16 @@ func (server *Server) getCall(servicemethod string, src Mailbox, cb ReplyCB, arg
 	return call, nil
 }
 
-func (server *Server) Call(servicemethod string, src Mailbox, args ...interface{}) error {
-	call, err := server.getCall(servicemethod, src, nil, args...)
+func (server *Server) Call(servicemethod string, src, dest Mailbox, args ...interface{}) error {
+	call, err := server.getCall(servicemethod, src, dest, nil, args...)
 	if call != nil {
 		server.ch <- call
 	}
 	return err
 }
 
-func (server *Server) CallBack(servicemethod string, src Mailbox, cb ReplyCB, args ...interface{}) error {
-	call, err := server.getCall(servicemethod, src, cb, args...)
+func (server *Server) CallBack(servicemethod string, src, dest Mailbox, cb ReplyCB, args ...interface{}) error {
+	call, err := server.getCall(servicemethod, src, dest, cb, args...)
 	if call != nil {
 		server.ch <- call
 	}
@@ -368,7 +375,13 @@ func (server *Server) createCall(msg *protocol.Message) *RpcCall {
 		call.Free()
 		return nil
 	}
-	call.header.Mb, err = ar.ReadUInt64()
+	call.header.Src, err = ar.ReadUInt64()
+	if err != nil {
+		server.log.LogErr(err)
+		call.Free()
+		return nil
+	}
+	call.header.Dest, err = ar.ReadUInt64()
 	if err != nil {
 		server.log.LogErr(err)
 		call.Free()

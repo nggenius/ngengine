@@ -41,7 +41,7 @@ func (s *Store) RegisterCallback(svr rpc.Servicer) {
 	svr.RegisterCallback("Exec", s.Exec)
 }
 
-func (s *Store) Get(mailbox rpc.Mailbox, msg *protocol.Message) (errcode int32, reply *protocol.Message) {
+func (s *Store) Get(sender, _ rpc.Mailbox, msg *protocol.Message) (errcode int32, reply *protocol.Message) {
 	m := protocol.NewMessageReader(msg)
 	tag, _ := m.ReadString()
 	typ, _ := m.ReadString()
@@ -78,7 +78,7 @@ func (s *Store) Get(mailbox rpc.Mailbox, msg *protocol.Message) (errcode int32, 
 	return share.ERR_REPLY_SUCCEED, protocol.ReplyMessage(protocol.DEF, tag, obj)
 }
 
-func (s *Store) Find(mailbox rpc.Mailbox, msg *protocol.Message) (errcode int32, reply *protocol.Message) {
+func (s *Store) Find(sender, _ rpc.Mailbox, msg *protocol.Message) (errcode int32, reply *protocol.Message) {
 	m := protocol.NewMessageReader(msg)
 	tag, _ := m.ReadString()
 	typ, _ := m.ReadString()
@@ -118,7 +118,7 @@ func (s *Store) Find(mailbox rpc.Mailbox, msg *protocol.Message) (errcode int32,
 	return share.ERR_REPLY_SUCCEED, protocol.ReplyMessage(protocol.DEF, tag, obj)
 }
 
-func (s *Store) Insert(mailbox rpc.Mailbox, msg *protocol.Message) (errcode int32, reply *protocol.Message) {
+func (s *Store) Insert(sender, _ rpc.Mailbox, msg *protocol.Message) (errcode int32, reply *protocol.Message) {
 	m := protocol.NewMessageReader(msg)
 	tag, _ := m.ReadString()
 	typ, _ := m.ReadString()
@@ -139,7 +139,7 @@ func (s *Store) Insert(mailbox rpc.Mailbox, msg *protocol.Message) (errcode int3
 	return share.ERR_REPLY_SUCCEED, protocol.ReplyMessage(protocol.TINY, tag, affected, id)
 }
 
-func (s *Store) Update(mailbox rpc.Mailbox, msg *protocol.Message) (errcode int32, reply *protocol.Message) {
+func (s *Store) Update(sender, _ rpc.Mailbox, msg *protocol.Message) (errcode int32, reply *protocol.Message) {
 	m := protocol.NewMessageReader(msg)
 	tag, _ := m.ReadString()
 	typ, _ := m.ReadString()
@@ -175,7 +175,7 @@ func (s *Store) Update(mailbox rpc.Mailbox, msg *protocol.Message) (errcode int3
 	return share.ERR_REPLY_SUCCEED, protocol.ReplyMessage(protocol.TINY, tag, affected)
 }
 
-func (s *Store) Delete(mailbox rpc.Mailbox, msg *protocol.Message) (errcode int32, reply *protocol.Message) {
+func (s *Store) Delete(sender, _ rpc.Mailbox, msg *protocol.Message) (errcode int32, reply *protocol.Message) {
 	m := protocol.NewMessageReader(msg)
 	tag, _ := m.ReadString()
 	typ, _ := m.ReadString()
@@ -195,7 +195,7 @@ func (s *Store) Delete(mailbox rpc.Mailbox, msg *protocol.Message) (errcode int3
 	return share.ERR_REPLY_SUCCEED, protocol.ReplyMessage(protocol.TINY, tag, affected)
 }
 
-func (s *Store) Query(mailbox rpc.Mailbox, msg *protocol.Message) (errcode int32, reply *protocol.Message) {
+func (s *Store) Query(sender, _ rpc.Mailbox, msg *protocol.Message) (errcode int32, reply *protocol.Message) {
 	m := protocol.NewMessageReader(msg)
 	tag, _ := m.ReadString()
 	sql, _ := m.ReadString()
@@ -216,7 +216,7 @@ func (s *Store) Query(mailbox rpc.Mailbox, msg *protocol.Message) (errcode int32
 	return share.ERR_REPLY_SUCCEED, protocol.ReplyMessage(protocol.DEF, tag, result)
 }
 
-func (s *Store) Exec(mailbox rpc.Mailbox, msg *protocol.Message) (errcode int32, reply *protocol.Message) {
+func (s *Store) Exec(sender, _ rpc.Mailbox, msg *protocol.Message) (errcode int32, reply *protocol.Message) {
 	m := protocol.NewMessageReader(msg)
 	tag, _ := m.ReadString()
 	sql, _ := m.ReadString()

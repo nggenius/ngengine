@@ -29,44 +29,29 @@ func (m Mailbox) ServiceId() share.ServiceId {
 	return share.ServiceId((m & 0xFFFF000000000000) >> 48)
 }
 
+// 获取标志位
 func (m Mailbox) Flag() int8 {
 	return int8((m >> 47) & 0x1)
 }
 
+// 获取id
 func (m Mailbox) Id() uint64 {
 	return uint64(m & ID_MAX)
 }
 
+// 获取uid
 func (m Mailbox) Uid() uint64 {
 	return uint64(m)
+}
+
+// 是否是一个客户端地址
+func (m Mailbox) IsClient() bool {
+	return m.Flag() == share.MB_FLAG_CLIENT
 }
 
 // create uid
 func generate(appid share.ServiceId, flag int8, id uint64) Mailbox {
 	return Mailbox(((uint64(appid) << 48) & 0xFFFF000000000000) | ((uint64(flag) & 1) << 47) | (id & ID_MAX))
-}
-
-// 是否是一个客户端地址
-func (m *Mailbox) IsClient() bool {
-	return m.Flag() == share.MB_FLAG_CLIENT
-}
-
-// get object type
-func (m Mailbox) ObjectType() int {
-	return int((m >> 40) & 0x7F)
-}
-
-// get object index
-func (m Mailbox) ObjectIndex() int {
-	return int(m & 0xFFFFFFFF)
-}
-
-// 生成一个新的object id
-func (m Mailbox) NewObjectId(otype, serial, index int) Mailbox {
-	id := uint64((otype&0x7F)<<40) | uint64(serial&0xFF)<<32 | uint64(index&0xFFFFFFFF)
-	m &= Mailbox(^uint64(ID_MAX))
-	m |= Mailbox(id)
-	return m
 }
 
 // 通过字符串生成mailbox
@@ -93,8 +78,7 @@ func NewMailboxFromStr(mb string) (Mailbox, error) {
 
 // 通过uid生成mailbox
 func NewMailboxFromUid(val uint64) Mailbox {
-	mbox := Mailbox(val)
-	return mbox
+	return Mailbox(val)
 }
 
 // 通过服务编号获取mailbox
@@ -122,4 +106,20 @@ func NewMailbox(appid share.ServiceId, flag int8, id uint64) Mailbox {
 	}
 	m := generate(appid, flag, id)
 	return m
+}
+
+// get object type
+func (m Mailbox) ObjectType() int {
+	return int((m >> 40) & 0x7F)
+}
+
+// get object index
+func (m Mailbox) ObjectIndex() int {
+	return int(m & 0xFFFFFFFF)
+}
+
+// 生成一个新的object id
+func (m Mailbox) NewObjectId(otype, serial, index int) Mailbox {
+	id := uint64((otype&0x7F)<<40) | uint64(serial&0xFF)<<32 | uint64(index&0xFFFFFFFF)
+	return generate(m.ServiceId(), 0, id)
 }

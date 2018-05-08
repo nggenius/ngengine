@@ -26,7 +26,7 @@ func NewS2CHelper(core *Core) *S2CHelper {
 }
 
 //处理服务器向客户端的调用，对消息进行封装转成客户端的协议
-func (s *S2CHelper) Call(src rpc.Mailbox, msg *protocol.Message) (errcode int32, reply *protocol.Message) {
+func (s *S2CHelper) Call(sender, _ rpc.Mailbox, msg *protocol.Message) (errcode int32, reply *protocol.Message) {
 	request := &protocol.S2CMsg{}
 	reader := protocol.NewMessageReader(msg)
 	if err := reader.ReadObject(request); err != nil {
@@ -40,7 +40,7 @@ func (s *S2CHelper) Call(src rpc.Mailbox, msg *protocol.Message) (errcode int32,
 		return 0, nil
 	}
 
-	err = s.call(src, request.To, request.Method, out)
+	err = s.call(sender, request.To, request.Method, out)
 	if err != nil {
 		s.owner.LogErr(err)
 	}
@@ -48,7 +48,7 @@ func (s *S2CHelper) Call(src rpc.Mailbox, msg *protocol.Message) (errcode int32,
 	return 0, nil
 }
 
-func (s *S2CHelper) call(src rpc.Mailbox, session uint64, method string, out []byte) error {
+func (s *S2CHelper) call(sender rpc.Mailbox, session uint64, method string, out []byte) error {
 	client := s.owner.clientDB.FindClient(session)
 	if client == nil {
 		return ErrClientNotFound
@@ -65,7 +65,7 @@ func (s *S2CHelper) call(src rpc.Mailbox, session uint64, method string, out []b
 }
 
 //处理服务器向客户端的广播
-func (s *S2CHelper) Broadcast(src rpc.Mailbox, msg *protocol.Message) (errcode int32, reply *protocol.Message) {
+func (s *S2CHelper) Broadcast(sender rpc.Mailbox, msg *protocol.Message) (errcode int32, reply *protocol.Message) {
 	request := &protocol.S2CBrocast{}
 	reader := protocol.NewMessageReader(msg)
 	if err := reader.ReadObject(request); err != nil {
@@ -80,7 +80,7 @@ func (s *S2CHelper) Broadcast(src rpc.Mailbox, msg *protocol.Message) (errcode i
 	}
 
 	for _, to := range request.To {
-		if err = s.call(src, to, request.Method, out); err != nil {
+		if err = s.call(sender, to, request.Method, out); err != nil {
 			s.owner.LogErr(to, err)
 		}
 	}

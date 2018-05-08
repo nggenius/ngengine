@@ -66,7 +66,7 @@ func (s *Srv) Process() {
 }
 
 // 远程调用
-func (s *Srv) Call(src rpc.Mailbox, method string, args ...interface{}) error {
+func (s *Srv) Call(src, dest rpc.Mailbox, method string, args ...interface{}) error {
 	if !s.connected {
 		if err := s.Connect(); err != nil {
 			return err
@@ -74,7 +74,7 @@ func (s *Srv) Call(src rpc.Mailbox, method string, args ...interface{}) error {
 	}
 
 	s.l.LogInfo("call ", src, "/", method)
-	err := s.client.Call(rpc.GetServiceMethod(method), src, args...)
+	err := s.client.Call(rpc.GetServiceMethod(method), src, dest, args...)
 	if err != nil {
 		s.Close()
 	}
@@ -83,7 +83,7 @@ func (s *Srv) Call(src rpc.Mailbox, method string, args ...interface{}) error {
 }
 
 // 带返回函数的调用
-func (s *Srv) Callback(src rpc.Mailbox, method string, cb rpc.ReplyCB, args ...interface{}) error {
+func (s *Srv) Callback(src, dest rpc.Mailbox, method string, cb rpc.ReplyCB, args ...interface{}) error {
 	if !s.connected {
 		if err := s.Connect(); err != nil {
 			return err
@@ -92,7 +92,7 @@ func (s *Srv) Callback(src rpc.Mailbox, method string, cb rpc.ReplyCB, args ...i
 
 	s.l.LogInfo("call ", src, "/", method)
 
-	err := s.client.CallBack(rpc.GetServiceMethod(method), src, cb, args...)
+	err := s.client.CallBack(rpc.GetServiceMethod(method), src, dest, cb, args...)
 	if err != nil {
 		s.Close()
 	}
@@ -108,7 +108,7 @@ func (s *Srv) Handle(src rpc.Mailbox, method string, args ...interface{}) error 
 	}
 
 	s.l.LogInfo("client call ", src, "/", method)
-	err := s.client.Call(rpc.GetHandleMethod(method), src, args...)
+	err := s.client.Call(rpc.GetHandleMethod(method), src, rpc.NullMailbox, args...)
 	if err != nil {
 		s.Close()
 	}

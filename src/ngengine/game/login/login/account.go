@@ -20,20 +20,20 @@ func (a *Account) RegisterCallback(s rpc.Servicer) {
 }
 
 // client:登录
-func (a *Account) Login(mailbox rpc.Mailbox, msg *protocol.Message) (errcode int32, reply *protocol.Message) {
+func (a *Account) Login(sender, _ rpc.Mailbox, msg *protocol.Message) (errcode int32, reply *protocol.Message) {
 	login := &c2s.Login{}
 	if err := a.ctx.core.ParseProto(msg, login); err != nil {
 		a.ctx.core.LogErr("login parse error,", err)
 		return 0, nil
 	}
 
-	session := a.ctx.FindSession(mailbox.Id())
+	session := a.ctx.FindSession(sender.Id())
 	if session == nil {
-		a.ctx.core.LogErr("session not found", mailbox.Id())
+		a.ctx.core.LogErr("session not found", sender.Id())
 		return 0, nil
 	}
 
-	session.SetMailbox(&mailbox)
+	session.SetMailbox(&sender)
 	session.SetAccount(login.Name)
 	session.Dispatch(LOGIN, login)
 	return 0, nil

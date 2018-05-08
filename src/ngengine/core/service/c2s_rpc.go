@@ -23,7 +23,7 @@ func (t *C2SHelper) RegisterCallback(s rpc.Servicer) {
 }
 
 //处理客户端的调用
-func (ch *C2SHelper) Call(sender rpc.Mailbox, msg *protocol.Message) (errcode int32, reply *protocol.Message) {
+func (ch *C2SHelper) Call(sender, _ rpc.Mailbox, msg *protocol.Message) (errcode int32, reply *protocol.Message) {
 	node, sm, data, err := ch.owner.Proto.DecodeRpcMessage(msg)
 	if err != nil {
 		ch.owner.LogErr(err)
@@ -31,7 +31,7 @@ func (ch *C2SHelper) Call(sender rpc.Mailbox, msg *protocol.Message) (errcode in
 	}
 
 	if node == "." {
-		err = ch.owner.rpcSvr.Call(rpc.GetHandleMethod(sm), sender, data)
+		err = ch.owner.rpcSvr.Call(rpc.GetHandleMethod(sm), sender, rpc.NullMailbox, data)
 	} else {
 		srv := ch.owner.dns.LookupByName(node)
 		if srv == nil {
