@@ -169,7 +169,7 @@ func (c *Core) Mailto(src *rpc.Mailbox, dest *rpc.Mailbox, method string, args .
 	}
 
 	if !dest.IsClient() { // 判断是否是客户端的消息
-		if dest.Sid == c.mailbox.Sid { // 本地调用
+		if dest.ServiceId() == c.mailbox.ServiceId() { // 本地调用
 			return c.rpcSvr.Call(rpc.GetServiceMethod(method), *src, args...)
 		}
 		srv := c.dns.LookupByMailbox(*dest)
@@ -200,7 +200,7 @@ func (c *Core) MailtoAndCallback(src *rpc.Mailbox, dest *rpc.Mailbox, method str
 		return fmt.Errorf("client not support callback")
 	}
 
-	if dest.Sid == c.mailbox.Sid { // 本地调用
+	if dest.ServiceId() == c.mailbox.ServiceId() { // 本地调用
 		return c.rpcSvr.CallBack(rpc.GetServiceMethod(method), *src, cb, args...)
 	}
 
@@ -218,7 +218,7 @@ func (c *Core) ClientCall(src *rpc.Mailbox, dest *rpc.Mailbox, method string, ar
 	var err error
 	var pb protocol.S2CMsg
 	pb.Sender = c.opts.ServName
-	pb.To = dest.Id
+	pb.To = dest.Id()
 	pb.Method = method
 
 	if pb.Data, err = c.Proto.CreateRpcMessage(c.opts.ServName, method, args); err != nil {
@@ -230,7 +230,7 @@ func (c *Core) ClientCall(src *rpc.Mailbox, dest *rpc.Mailbox, method string, ar
 		src = &c.mailbox
 	}
 
-	if dest.Sid == c.mailbox.Sid {
+	if dest.ServiceId() == c.mailbox.ServiceId() {
 		msg := protocol.NewProtoMessage()
 		msg.Put(pb)
 		msg.Flush()

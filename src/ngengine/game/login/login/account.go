@@ -27,9 +27,9 @@ func (a *Account) Login(mailbox rpc.Mailbox, msg *protocol.Message) (errcode int
 		return 0, nil
 	}
 
-	session := a.ctx.FindSession(mailbox.Id)
+	session := a.ctx.FindSession(mailbox.Id())
 	if session == nil {
-		a.ctx.core.LogErr("session not found", mailbox.Id)
+		a.ctx.core.LogErr("session not found", mailbox.Id())
 		return 0, nil
 	}
 
@@ -75,9 +75,9 @@ func (a *Account) OnLoginResult(reply *protocol.Message) {
 		return
 	}
 
-	session := a.ctx.FindSession(mailbox.Id)
+	session := a.ctx.FindSession(mailbox.Id())
 	if session == nil {
-		a.ctx.core.LogErr("session not found", mailbox.Id)
+		a.ctx.core.LogErr("session not found", mailbox.Id())
 		return
 	}
 

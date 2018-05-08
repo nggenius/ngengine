@@ -203,7 +203,7 @@ func (server *Server) getCall(servicemethod string, src Mailbox, cb ReplyCB, arg
 	call.header = NewHeader()
 	call.message = msg
 	call.header.Seq = 0
-	call.header.Mb = src.Uid
+	call.header.Mb = uint64(src)
 	call.header.ServiceMethod = servicemethod
 	call.cb = cb
 	dot := strings.LastIndex(call.header.ServiceMethod, ".")

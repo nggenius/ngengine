@@ -257,7 +257,7 @@ func (s *SrvDNS) LookupRandByType(typ string) *Srv {
 
 // 通过Mailbox获取服务
 func (s *SrvDNS) LookupByMailbox(mb rpc.Mailbox) *Srv {
-	id := ServiceId(mb.Sid)
+	id := ServiceId(mb.ServiceId())
 	return s.Lookup(id)
 }
 

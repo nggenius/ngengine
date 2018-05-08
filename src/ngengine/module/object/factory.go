@@ -92,8 +92,8 @@ func (f *Factory) ClearDelete() {
 
 // 查找对象
 func (f *Factory) FindObject(mb rpc.Mailbox) (interface{}, error) {
-	if f.owner.core.Mailbox().Sid != mb.Sid ||
-		mb.Flag != 0 ||
+	if f.owner.core.Mailbox().ServiceId() != mb.ServiceId() ||
+		mb.Flag() != 0 ||
 		mb.ObjectType() != f.objType {
 		return nil, fmt.Errorf("mailbox %s error", mb)
 	}

@@ -68,7 +68,7 @@ func (t *Thread) WaitDone() {
 }
 
 func (t *Thread) NewJob(r *RpcCall) bool {
-	t.Queue[int(r.GetSrc().Id)%t.Pools] <- r
+	t.Queue[int(r.GetSrc().Id())%t.Pools] <- r
 	return true
 }
 

@@ -62,9 +62,9 @@ func (a *Account) OnRoleInfo(msg *protocol.Message) {
 		return
 	}
 
-	session := a.ctx.FindSession(mailbox.Id)
+	session := a.ctx.FindSession(mailbox.Id())
 	if session == nil {
-		a.ctx.core.LogErr("session not found", mailbox.Id)
+		a.ctx.core.LogErr("session not found", mailbox.Id())
 		return
 	}
 

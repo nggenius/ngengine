@@ -1,7 +1,6 @@
 package rpc
 
 import (
-	"encoding/gob"
 	"errors"
 	"fmt"
 	"ngengine/share"
@@ -13,61 +12,61 @@ const (
 	ID_MAX = 0x7FFFFFFFFFFF // id最大值
 )
 
-type Mailbox struct {
-	Sid  share.ServiceId // 所在service的id
-	Flag int8            // 见share.MB_FLAG_XXXX
-	Id   uint64          // flag=share.MB_FLAG_CLIENT时，表示客户端的session.
-	Uid  uint64          // 唯一id,由以上三个字段生成。主要用来传送
-}
+type Mailbox uint64
 
 func (m Mailbox) String() string {
-	return fmt.Sprintf("mailbox://%x", m.Uid)
+	return fmt.Sprintf("mailbox://%x", uint64(m))
 }
 
 // 是否为空
 func (m Mailbox) IsNil() bool {
-	if m.Sid == 0 && m.Flag == 0 && m.Id == 0 {
-		return true
-	}
-	return false
+	return m == 0
 }
 
 // 获取服务编号
-func (m *Mailbox) ServiceId() share.ServiceId {
-	return share.ServiceId(m.Sid)
+func (m Mailbox) ServiceId() share.ServiceId {
+	return share.ServiceId((m & 0xFFFF000000000000) >> 48)
+}
+
+func (m Mailbox) Flag() int8 {
+	return int8((m >> 47) & 0x1)
+}
+
+func (m Mailbox) Id() uint64 {
+	return uint64(m & ID_MAX)
+}
+
+// create uid
+func generate(appid share.ServiceId, flag int8, id uint64) Mailbox {
+	return Mailbox(((uint64(appid) << 48) & 0xFFFF000000000000) | ((uint64(flag) & 1) << 47) | (id & ID_MAX))
 }
 
 // 是否是一个客户端地址
 func (m *Mailbox) IsClient() bool {
-	return m.Flag == share.MB_FLAG_CLIENT
-}
-
-// create uid
-func (m *Mailbox) Generate() {
-	m.Uid = ((uint64(m.Sid) << 48) & 0xFFFF000000000000) | ((uint64(m.Flag) & 1) << 47) | (m.Id & ID_MAX)
+	return m.Flag() == share.MB_FLAG_CLIENT
 }
 
 // get object type
 func (m Mailbox) ObjectType() int {
-	return int((m.Id >> 40) & 0x7F)
+	return int((m >> 40) & 0x7F)
 }
 
 // get object index
 func (m Mailbox) ObjectIndex() int {
-	return int(m.Id & 0xFFFFFFFF)
+	return int(m & 0xFFFFFFFF)
 }
 
 // 生成一个新的object id
 func (m Mailbox) NewObjectId(otype, serial, index int) Mailbox {
 	id := uint64((otype&0x7F)<<40) | uint64(serial&0xFF)<<32 | uint64(index&0xFFFFFFFF)
-	mb := Mailbox{m.Sid, 0, id, 0}
-	mb.Generate()
-	return mb
+	m &= Mailbox(^uint64(ID_MAX))
+	m |= Mailbox(id)
+	return m
 }
 
 // 通过字符串生成mailbox
 func NewMailboxFromStr(mb string) (Mailbox, error) {
-	mbox := Mailbox{}
+	mbox := Mailbox(0)
 	if !strings.HasPrefix(mb, "mailbox://") {
 		return mbox, errors.New("mailbox string error")
 	}
@@ -83,20 +82,13 @@ func NewMailboxFromStr(mb string) (Mailbox, error) {
 	if err != nil {
 		return mbox, err
 	}
-	mbox.Uid = val
-	mbox.Id = mbox.Uid & ID_MAX
-	mbox.Flag = int8((mbox.Uid >> 47) & 1)
-	mbox.Sid = share.ServiceId((mbox.Uid >> 48) & 0xFFFF)
+	mbox = Mailbox(val)
 	return mbox, nil
 }
 
 // 通过uid生成mailbox
 func NewMailboxFromUid(val uint64) Mailbox {
-	mbox := Mailbox{}
-	mbox.Uid = val
-	mbox.Id = mbox.Uid & ID_MAX
-	mbox.Flag = int8((mbox.Uid >> 47) & 1)
-	mbox.Sid = share.ServiceId((mbox.Uid >> 48) & 0xFFFF)
+	mbox := Mailbox(val)
 	return mbox
 }
 
@@ -105,11 +97,7 @@ func GetServiceMailbox(appid share.ServiceId) Mailbox {
 	if appid > 0xFFFF {
 		panic("id is wrong")
 	}
-	m := Mailbox{}
-	m.Sid = appid
-	m.Flag = share.MB_FLAG_APP
-	m.Id = 0
-	m.Generate()
+	m := generate(appid, 0, 0)
 	return m
 }
 
@@ -118,11 +106,7 @@ func NewSessionMailbox(appid share.ServiceId, id uint64) Mailbox {
 	if id > ID_MAX || appid > share.SID_MAX {
 		panic("id is wrong")
 	}
-	m := Mailbox{}
-	m.Sid = appid
-	m.Flag = share.MB_FLAG_CLIENT
-	m.Id = id
-	m.Generate()
+	m := generate(appid, share.MB_FLAG_CLIENT, id)
 	return m
 }
 
@@ -131,15 +115,6 @@ func NewMailbox(appid share.ServiceId, flag int8, id uint64) Mailbox {
 	if id > ID_MAX || appid > share.SID_MAX {
 		panic("id is wrong")
 	}
-	m := Mailbox{}
-	m.Sid = appid
-	m.Flag = flag
-	m.Id = id
-	m.Generate()
+	m := generate(appid, flag, id)
 	return m
-}
-
-func init() {
-	gob.Register([]Mailbox{})
-	gob.Register(Mailbox{})
 }

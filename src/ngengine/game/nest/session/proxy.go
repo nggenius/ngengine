@@ -29,7 +29,7 @@ func (p *proxy) Login(mailbox rpc.Mailbox, msg *protocol.Message) (errcode int32
 		return 0, nil
 	}
 
-	session := p.ctx.FindSession(mailbox.Id)
+	session := p.ctx.FindSession(mailbox.Id())
 	if session == nil {
 		p.ctx.core.LogErr("session not found")
 		return 0, nil
