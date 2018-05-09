@@ -86,6 +86,7 @@ func (o *ObjectWitness) Witness(obj Object) {
 	o.attrobserver = make(map[string]attrObserver)
 	o.tableobserver = make(map[string]tableObserver)
 	o.LockerQueue = list.New()
+	o.LockCb = make(map[uint32]LockCallBack)
 }
 
 // AddAttrObserver 增加属性观察者,这里的name是观察者的标识符，不是属性名称

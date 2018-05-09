@@ -104,7 +104,7 @@ func (o *ObjectWitness) RemoteLockObj(lockID uint32) {
 		o.factory.owner.core.LogErr("original is nil")
 		return
 	}
-	o.factory.owner.core.Mailto(&o.objid, o.original, "LockObj", lockID)
+	o.factory.owner.core.Mailto(&o.objid, o.original, "object.LockObj", o.original, lockID)
 }
 
 // RemoteUnLockObj 远程解锁
@@ -113,23 +113,23 @@ func (o *ObjectWitness) RemoteUnLockObj(lockID uint32) {
 		o.factory.owner.core.LogErr("original is nil")
 		return
 	}
-	o.factory.owner.core.Mailto(&o.objid, o.original, "UnLockObj", lockID)
+	o.factory.owner.core.Mailto(&o.objid, o.original, "object.UnLockObj", o.original, lockID)
 }
 
 // RemoteLockObjSuccess 远程上锁成功通知
 func (o *ObjectWitness) RemoteLockObjSuccess(lockID uint32) {
-	if o.original == nil {
-		o.factory.owner.core.LogErr("original is nil")
+	if o.locker == nil {
+		o.factory.owner.core.LogErr("locker is nil")
 		return
 	}
-	o.factory.owner.core.Mailto(&o.objid, o.original, "LockObjSuccess", lockID)
+	o.factory.owner.core.Mailto(&o.objid, &o.locker.Locker, "object.LockObjSuccess", o.locker.Locker, lockID)
 }
 
 // RemoteUnLockObjSuccess 远程解锁成功通知
 func (o *ObjectWitness) RemoteUnLockObjSuccess() {
-	if o.original == nil {
-		o.factory.owner.core.LogErr("original is nil")
+	if o.locker == nil {
+		o.factory.owner.core.LogErr("locker is nil")
 		return
 	}
-	o.factory.owner.core.Mailto(&o.objid, o.original, "UnLockObjSuccess")
+	o.factory.owner.core.Mailto(&o.objid, &o.locker.Locker, "object.UnLockObjSuccess", o.locker.Locker)
 }
