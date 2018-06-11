@@ -13,6 +13,7 @@
 # Project-local glide cache, RE: https://github.com/Masterminds/glide/issues/736
 .glide/
 
+.svn
 .vscode
 pkg
 env.bat
@@ -21,4 +22,3 @@ bin
 src/ngengine/apps/test/debug
 Testbin
 debug
-src/ngengine/module/dbmodule/dbtable/nx_base/nx_base.go
