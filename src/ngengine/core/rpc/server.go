@@ -22,7 +22,7 @@ var (
 	responseCache = make(chan *Response, 32)
 )
 
-type CB func(Mailbox, Mailbox, *protocol.Message) (int32, *protocol.Message)
+type CB func(src Mailbox, dest Mailbox, msg *protocol.Message) (int32, *protocol.Message)
 
 type RpcRegister interface {
 	RegisterCallback(Servicer)
