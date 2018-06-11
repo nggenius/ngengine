@@ -21,7 +21,7 @@
 			"importpath": "github.com/go-sql-driver/mysql",
 			"repository": "https://github.com/go-sql-driver/mysql",
 			"vcs": "git",
-			"revision": "bc14601d1bd56421dd60f561e6052c9ed77f9daf",
+			"revision": "d523deb1b23d913de5bdada721a6071e71283618",
 			"branch": "master",
 			"notests": true
 		},
