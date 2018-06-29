@@ -4,6 +4,7 @@ import (
 	"ngengine/core"
 	"ngengine/game/login"
 	"ngengine/game/nest"
+	"ngengine/game/store"
 
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/mysll/toolkit"
@@ -25,9 +26,25 @@ var startnest = `{
 	"Args": {}
 }`
 
+var startlogin = `{
+	"ServId":3,
+	"ServType": "login",
+	"AdminAddr":"127.0.0.1",
+	"AdminPort":12500,
+	"ServName": "login_1",
+	"ServAddr": "127.0.0.1",
+	"ServPort": 0,
+	"Expose": true,
+	"OuterAddr":"192.168.1.12",
+	"HostAddr": "0.0.0.0",
+	"HostPort": 2002,
+	"LogFile":"login.log",
+	"Args": {}
+}`
+
 func main() {
 	// 捕获异常
-	core.RegisterService("database", &Database{})
+	core.RegisterService("store", &store.Store{})
 	core.RegisterService("login", &login.Login{})
 	core.RegisterService("nest", &nest.Nest{})
 
@@ -41,7 +58,7 @@ func main() {
 		panic(err)
 	}
 
-	_, err = core.CreateService("database", dbargs)
+	_, err = core.CreateService("store", dbargs)
 	if err != nil {
 		panic(err)
 	}

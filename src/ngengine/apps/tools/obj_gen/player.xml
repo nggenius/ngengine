@@ -16,4 +16,8 @@
             </table>
         </property>
     </propertys>
+    <containers>
+        <container name="Tools" save="true" desc="道具容器" />
+        <container name="Weapons" save="false" desc="物品容器" />
+    </containers>
 </object>

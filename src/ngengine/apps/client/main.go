@@ -92,9 +92,11 @@ func (c *Client) ParseRpcMsg(data []byte) {
 	}
 
 	switch rpc.Servicemethod {
-	case "login.Nest":
+	case "Login.Nest":
 		c.OnNestInfo(rpc.Data)
-	case "login.Error":
+	case "Account.Roles":
+		c.OnRoleInfo(rpc.Data)
+	case "system.Error":
 		c.OnError(rpc.Data)
 	}
 }
@@ -113,6 +115,22 @@ func (c *Client) OnNestInfo(data []byte) {
 	login.Token = nest.Token
 	c.SendMessage("Self.Login", &login)
 	c.RecvMessage()
+}
+
+func (c *Client) OnRoleInfo(data []byte) {
+	var role s2c.RoleInfo
+	if err := json.Unmarshal(data, &role); err != nil {
+		log.Println(err)
+	}
+
+	log.Println(role)
+	if len(role.Roles) == 0 {
+		create := c2s.CreateRole{}
+		create.Index = 1
+		create.Name = "test"
+		c.SendMessage("Self.CreateRole", &create)
+		c.RecvMessage()
+	}
 }
 
 func (c *Client) OnError(data []byte) {

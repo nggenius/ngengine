@@ -10,6 +10,10 @@ import (
 	"time"
 )
 
+var (
+	magic_time, _ = time.Parse("2006-01-02 15:04:05", "2018-01-01 00:00:00")
+)
+
 type SrvInfo struct {
 	Id        share.ServiceId // 服务ID
 	Name      string          // 服务名称
@@ -94,6 +98,8 @@ type CoreAPI interface {
 	Load() int32
 	// 断开client连接
 	Break(session uint64)
+	// 生成GUID
+	GenerateGUID() int64
 }
 
 // 获取当前服务的goroutine id
@@ -183,7 +189,12 @@ func (c *Core) Mailto(src *rpc.Mailbox, dest *rpc.Mailbox, method string, args .
 		return errors.New("args is zero")
 	}
 
-	return c.ClientCall(src, dest, method, args[0])
+	if err := c.ClientCall(src, dest, method, args[0]); err != nil {
+		c.LogErr(err)
+		return err
+	}
+
+	return nil
 }
 
 // 发起远程调用并调用回调函数
@@ -209,7 +220,12 @@ func (c *Core) MailtoAndCallback(src *rpc.Mailbox, dest *rpc.Mailbox, method str
 		return errors.New("service not found")
 	}
 
-	return srv.Callback(*src, *dest, method, cb, args...)
+	if err := srv.Callback(*src, *dest, method, cb, args...); err != nil {
+		c.LogErr(err)
+		return err
+	}
+
+	return nil
 }
 
 // 向客记端发送消息
@@ -247,6 +263,7 @@ func (c *Core) ClientCall(src *rpc.Mailbox, dest *rpc.Mailbox, method string, ar
 	err = srv.Call(*src, rpc.NullMailbox, "S2CHelper.Call", pb)
 	if err == rpc.ErrShutdown {
 		srv.Close()
+		c.LogErr(err)
 	}
 
 	return err
@@ -335,4 +352,20 @@ func (c *Core) Load() int32 {
 // 断开client连接
 func (c *Core) Break(session uint64) {
 	c.clientDB.BreakClient(session)
+}
+
+// 生成GUID
+// |64 49|48 17|16       5|4   1|
+// |sid  |time |id(0~FFF) |ms   |
+func (c *Core) GenerateGUID() int64 {
+	c.uuid++
+	dur := time.Now().Sub(magic_time).Seconds()
+	ms := int64(dur*10) - int64(dur)*10
+	if ms == 0 {
+		ms = 1
+	}
+	return (int64(c.Id)&0xFFFF)<<48 |
+		(int64(dur)&0xFFFFFFFF)<<16 |
+		(int64(c.uuid%0xFFF)&0xFFF)<<4 |
+		int64(0xF/ms)&0xF
 }

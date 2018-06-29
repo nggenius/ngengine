@@ -2,10 +2,13 @@ package session
 
 import (
 	"ngengine/core/rpc"
+	"ngengine/game/gameobject/entity"
 	"ngengine/game/gameobject/entity/inner"
 	"ngengine/module/store"
 	"ngengine/protocol"
+	"ngengine/protocol/proto/c2s"
 	"ngengine/share"
+	"time"
 )
 
 type Account struct {
@@ -35,7 +38,7 @@ func (a *Account) Logged(sender, _ rpc.Mailbox, msg *protocol.Message) (errcode 
 
 // 请求玩家信息
 func (a *Account) requestRoleInfo(session *Session) error {
-	if err := a.ctx.requestRoleInfo.Find(
+	if err := a.ctx.store.Find(
 		session.Mailbox.String(),
 		"inner.Role",
 		map[string]interface{}{
@@ -69,4 +72,57 @@ func (a *Account) OnRoleInfo(msg *protocol.Message) {
 	}
 
 	session.Dispatch(ROLE_INFO, [2]interface{}{errcode, roles})
+}
+
+func (a *Account) CreateRole(session *Session, args c2s.CreateRole) error {
+
+	player := entity.NewPlayer()
+	player.SetName(args.Name)
+	player.Archive().SetId(a.ctx.core.GenerateGUID())
+
+	role := inner.Role{}
+	role.Account = session.Account
+	role.CreateTime = time.Now()
+	role.Index = int8(args.Index)
+	role.RoleName = args.Name
+	role.RoleId = player.Archive().DBId()
+
+	if err := a.ctx.store.MultiInsert(
+		session.Mailbox.String(),
+		a.OnCreateRole,
+		[]string{
+			"entity.Player",
+			"inner.Role",
+		},
+		[]interface{}{
+			player.Archive(),
+			&role,
+		},
+	); err != nil {
+		session.Error(share.S2C_ERR_SERVICE_INVALID)
+		return err
+	}
+	return nil
+}
+
+func (a *Account) OnCreateRole(msg *protocol.Message) {
+	errcode, err, tag := store.ParseMultiInsertReply(msg)
+	if err != nil {
+		a.ctx.core.LogErr(err)
+		return
+	}
+
+	mailbox, err1 := rpc.NewMailboxFromStr(tag)
+	if err1 != nil {
+		a.ctx.core.LogErr(err1)
+		return
+	}
+
+	session := a.ctx.FindSession(mailbox.Id())
+	if session == nil {
+		a.ctx.core.LogErr("session not found", mailbox.Id())
+		return
+	}
+
+	session.Dispatch(CREATED, errcode)
 }

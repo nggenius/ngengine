@@ -115,7 +115,7 @@ func (l *LoginModule) FindSession(id uint64) *Session {
 
 // 服务变动回调
 func (l *LoginModule) OnDatabaseReady(evt string, args ...interface{}) {
-	srv := l.core.LookupOneServiceByType("database")
+	srv := l.core.LookupOneServiceByType("store")
 	if srv == nil {
 		l.db = nil
 		return

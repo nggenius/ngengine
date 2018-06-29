@@ -36,7 +36,7 @@ func (l *Login) Init(opt *service.CoreOption) error {
 }
 
 func (l *Login) Start() error {
-	l.CoreAPI.Watch("all")
+	l.BaseService.Start()
 	return nil
 }
 

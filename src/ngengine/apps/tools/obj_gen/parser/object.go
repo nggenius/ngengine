@@ -41,13 +41,20 @@ type Property struct {
 	Table  Table     `xml:"table"`
 }
 
+type Container struct {
+	Name string `xml:"name,attr"`
+	Save string `xml:"save,attr"`
+	Desc string `xml:"desc,attr"`
+}
+
 type Object struct {
-	Package  string     `xml:"package"`
-	Name     string     `xml:"name"`
-	Type     string     `xml:"type"`
-	Include  []string   `xml:"include"`
-	Archive  string     `xml:"archive"`
-	Property []Property `xml:"propertys>property"`
+	Package   string      `xml:"package"`
+	Name      string      `xml:"name"`
+	Type      string      `xml:"type"`
+	Include   []string    `xml:"include"`
+	Archive   string      `xml:"archive"`
+	Property  []Property  `xml:"propertys>property"`
+	Container []Container `xml:"containers>container"`
 }
 
 func (o *Object) HasProperty(name string) bool {

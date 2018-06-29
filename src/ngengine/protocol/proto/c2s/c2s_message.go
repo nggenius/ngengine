@@ -15,3 +15,8 @@ type LoginNest struct {
 	Account string
 	Token   string
 }
+
+type CreateRole struct {
+	Index int
+	Name  string // 角色名
+}

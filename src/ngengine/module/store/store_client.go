@@ -19,7 +19,7 @@ func NewStoreClient(ctx *StoreModule) *StoreClient {
 }
 
 func (s *StoreClient) OnDatabaseReady(evt string, args ...interface{}) {
-	srv := s.ctx.core.LookupOneServiceByType("database")
+	srv := s.ctx.core.LookupOneServiceByType("store")
 	if srv == nil {
 		s.db = nil
 		return
@@ -56,7 +56,7 @@ func ParseGetReply(reply *protocol.Message, object interface{}) (errcode int32, 
 // 查询单条记录，tag为返回的标识符,typ查询的数据类型，condition为条件{column:value}
 func (s *StoreClient) Get(tag string, typ string, condition map[string]interface{}, reply rpc.ReplyCB) error {
 	if s.db == nil {
-		return fmt.Errorf("database not connected")
+		return fmt.Errorf("store not connected")
 	}
 	if reply == nil {
 		return s.ctx.core.Mailto(nil, s.db, "Store.Get", tag, typ, condition)
@@ -90,7 +90,7 @@ func ParseFindReply(reply *protocol.Message, object interface{}) (errcode int32,
 // 查找多条记录，tag为返回的标识符,typ查询的数据类型，condition为条件{column:value}，
 func (s *StoreClient) Find(tag string, typ string, condition map[string]interface{}, limit int, start int, reply rpc.ReplyCB) error {
 	if s.db == nil {
-		return fmt.Errorf("database not connected")
+		return fmt.Errorf("store not connected")
 	}
 	if reply == nil {
 		return s.ctx.core.Mailto(nil, s.db, "Store.Find", tag, typ, condition, limit, start)
@@ -125,12 +125,53 @@ func ParseInsertReply(reply *protocol.Message) (errcode int32, err error, tag st
 // 查找一条记录，tag为返回的标识符,typ查询的数据类型，object待插入的数据
 func (s *StoreClient) Insert(tag string, typ string, object interface{}, reply rpc.ReplyCB) error {
 	if s.db == nil {
-		return fmt.Errorf("database not connected")
+		return fmt.Errorf("store not connected")
 	}
 	if reply == nil {
 		return s.ctx.core.Mailto(nil, s.db, "Store.Insert", tag, typ, object)
 	}
 	return s.ctx.core.MailtoAndCallback(nil, s.db, "Store.Insert", reply, tag, typ, object)
+}
+
+func ParseMultiInsertReply(reply *protocol.Message) (errcode int32, err error, tag string) {
+	errcode, ar := protocol.ParseReply(reply)
+	tag, err = ar.ReadString()
+	if err != nil {
+		return
+	}
+	if int(errcode) == share.ERR_TIME_OUT {
+		err = rpc.ErrTimeout
+		return
+	}
+	if errcode != 0 {
+		errstr, _ := ar.ReadString()
+		err = errors.New(errstr)
+		return
+	}
+
+	return
+}
+
+func (s *StoreClient) MultiInsert(tag string, reply rpc.ReplyCB, typ []string, object []interface{}) error {
+	if s.db == nil {
+		return fmt.Errorf("store not connected")
+	}
+
+	if len(typ) != len(object) {
+		return fmt.Errorf("typ and object count not equal")
+	}
+
+	var params []interface{}
+	params = append(params, tag)
+	params = append(params, typ)
+	for k := range object {
+		params = append(params, object[k])
+	}
+	if reply == nil {
+		return s.ctx.core.Mailto(nil, s.db, "Store.MultiInsert", params...)
+	}
+
+	return s.ctx.core.MailtoAndCallback(nil, s.db, "Store.MultiInsert", reply, params...)
 }
 
 func ParseUpdateReply(reply *protocol.Message) (errcode int32, err error, tag string, affected int64) {
@@ -155,7 +196,7 @@ func ParseUpdateReply(reply *protocol.Message) (errcode int32, err error, tag st
 // 更新一条记录，tag为返回的标识符,typ查询的数据类型，cols更新的列，condition为条件{column:value}，object待插入的数据
 func (s *StoreClient) Update(tag string, typ string, cols []string, condition map[string]interface{}, object interface{}, reply rpc.ReplyCB) error {
 	if s.db == nil {
-		return fmt.Errorf("database not connected")
+		return fmt.Errorf("store not connected")
 	}
 	if reply == nil {
 		return s.ctx.core.Mailto(nil, s.db, "Store.Update", tag, typ, cols, condition, object)
@@ -185,7 +226,7 @@ func ParseDeleteReply(reply *protocol.Message) (errcode int32, err error, tag st
 // 删除一条记录，tag为返回的标识符,typ查询的数据类型，object待删除的数据(非零值为条件)
 func (s *StoreClient) Delete(tag string, typ string, object interface{}, reply rpc.ReplyCB) error {
 	if s.db == nil {
-		return fmt.Errorf("database not connected")
+		return fmt.Errorf("store not connected")
 	}
 	if reply == nil {
 		return s.ctx.core.Mailto(nil, s.db, "Store.Delete", tag, typ, object)
@@ -216,7 +257,7 @@ func ParseQueryReply(reply *protocol.Message) (errcode int32, err error, tag str
 // 原生sql查询，tag为返回的标识符，sql为查询语句，args是参数
 func (s *StoreClient) Query(tag string, sql string, args []interface{}, reply rpc.ReplyCB) error {
 	if s.db == nil {
-		return fmt.Errorf("database not connected")
+		return fmt.Errorf("store not connected")
 	}
 	if reply == nil {
 		return s.ctx.core.Mailto(nil, s.db, "Store.Query", tag, sql, args)
@@ -246,7 +287,7 @@ func ParseExecReply(reply *protocol.Message) (errcode int32, err error, tag stri
 // 执行原生sql语句，tag为返回的标识符，sql为执行语句，args是参数
 func (s *StoreClient) Exec(tag string, sql string, args []interface{}, reply rpc.ReplyCB) error {
 	if s.db == nil {
-		return fmt.Errorf("database not connected")
+		return fmt.Errorf("store not connected")
 	}
 	if reply == nil {
 		return s.ctx.core.Mailto(nil, s.db, "Store.Exec", tag, sql, args)

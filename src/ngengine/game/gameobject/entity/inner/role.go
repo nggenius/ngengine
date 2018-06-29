@@ -6,6 +6,7 @@ import (
 
 type Role struct {
 	Id          int64
+	RoleId      int64
 	Index       int8
 	Account     string `xorm:"varchar(128) index"`
 	RoleName    string `xorm:"varchar(128) unique"`

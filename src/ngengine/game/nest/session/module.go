@@ -17,14 +17,14 @@ import (
 //		存储客户端对应的entity数据
 type SessionModule struct {
 	service.Module
-	core            service.CoreAPI
-	requestRoleInfo *store.StoreClient
-	account         *Account
-	proxy           *proxy
-	sessions        SessionDB  // session管理器
-	deleted         *list.List // 标志为删除的session
-	lastTime        time.Time  // 最后一次更新时间
-	cache           cache      // 缓存的口令
+	core     service.CoreAPI
+	store    *store.StoreClient
+	account  *Account
+	proxy    *proxy
+	sessions SessionDB  // session管理器
+	deleted  *list.List // 标志为删除的session
+	lastTime time.Time  // 最后一次更新时间
+	cache    cache      // 缓存的口令
 }
 
 func New() *SessionModule {
@@ -48,7 +48,7 @@ func (s *SessionModule) Init(core service.CoreAPI) bool {
 		return false
 	}
 	s.core = core
-	s.requestRoleInfo = store.Client()
+	s.store = store.Client()
 	s.core.RegisterRemote("Account", s.account)
 	s.core.RegisterHandler("Self", s.proxy)
 	s.core.Service().AddListener(share.EVENT_USER_CONNECT, s.OnConnected)

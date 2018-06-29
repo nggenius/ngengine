@@ -172,7 +172,7 @@ func (c *Session) NestResult(errcode int32, token string) bool {
 	nest.Port = int32(srv.OuterPort)
 	nest.Token = token
 
-	if err := c.ctx.core.Mailto(nil, c.Mailbox, "login.Nest", nest); err != nil {
+	if err := c.ctx.core.Mailto(nil, c.Mailbox, "Login.Nest", nest); err != nil {
 		return false
 	}
 
@@ -186,5 +186,5 @@ func (c *Session) Break() {
 func (c *Session) Error(err int32) {
 	result := s2c.Error{}
 	result.ErrCode = err
-	c.ctx.core.Mailto(nil, c.Mailbox, "login.Error", result)
+	c.ctx.core.Mailto(nil, c.Mailbox, "system.Error", result)
 }

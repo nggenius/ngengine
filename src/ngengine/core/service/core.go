@@ -48,6 +48,7 @@ type Core struct {
 	s2chelper  *S2CHelper          // 客户端调用工具
 	modules    *modules            // 模块管理
 	load       int32               // 负载
+	uuid       int                 // 唯一id序列号
 }
 
 // 创建一个服务
@@ -62,6 +63,8 @@ func CreateService(s Service) *Core {
 		Proto:      &proto.JsonProto{},
 		modules:    NewModules(),
 	}
+
+	toolkit.RandSeed()
 
 	sc.s2chelper = NewS2CHelper(sc)
 

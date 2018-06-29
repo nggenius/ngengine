@@ -35,6 +35,7 @@ func (s *Store) RegisterCallback(svr rpc.Servicer) {
 	svr.RegisterCallback("Get", s.Get)
 	svr.RegisterCallback("Find", s.Find)
 	svr.RegisterCallback("Insert", s.Insert)
+	svr.RegisterCallback("MultiInsert", s.MultiInsert)
 	svr.RegisterCallback("Update", s.Update)
 	svr.RegisterCallback("Delete", s.Delete)
 	svr.RegisterCallback("Query", s.Query)
@@ -139,6 +140,39 @@ func (s *Store) Insert(sender, _ rpc.Mailbox, msg *protocol.Message) (errcode in
 	return share.ERR_REPLY_SUCCEED, protocol.ReplyMessage(protocol.TINY, tag, affected, id)
 }
 
+func (s *Store) MultiInsert(sender, _ rpc.Mailbox, msg *protocol.Message) (errcode int32, reply *protocol.Message) {
+	m := protocol.NewMessageReader(msg)
+	tag, _ := m.ReadString()
+	var typ []string
+	if err := m.Read(&typ); err != nil {
+		return share.ERR_ARGS_ERROR, protocol.ReplyMessage(protocol.TINY, tag, err.Error())
+	}
+
+	var object []interface{}
+	for k := range typ {
+		obj := s.ctx.register.Create(typ[k])
+		if err := m.ReadObject(obj); err != nil {
+			return share.ERR_ARGS_ERROR, protocol.ReplyMessage(protocol.TINY, tag, err.Error())
+		}
+		object = append(object, obj)
+	}
+
+	session := s.ctx.sql.orm.NewSession()
+	session.Begin()
+
+	for k := range object {
+		_, err := session.Insert(object[k])
+		if err != nil {
+			session.Rollback()
+			return share.ERR_STORE_SQL, protocol.ReplyMessage(protocol.TINY, tag, err.Error())
+		}
+	}
+
+	session.Commit()
+
+	return share.ERR_REPLY_SUCCEED, protocol.ReplyMessage(protocol.TINY, tag)
+}
+
 func (s *Store) Update(sender, _ rpc.Mailbox, msg *protocol.Message) (errcode int32, reply *protocol.Message) {
 	m := protocol.NewMessageReader(msg)
 	tag, _ := m.ReadString()
@@ -173,6 +207,13 @@ func (s *Store) Update(sender, _ rpc.Mailbox, msg *protocol.Message) (errcode in
 		return share.ERR_STORE_SQL, protocol.ReplyMessage(protocol.TINY, tag, err.Error())
 	}
 	return share.ERR_REPLY_SUCCEED, protocol.ReplyMessage(protocol.TINY, tag, affected)
+}
+
+func (s *Store) MultiUpdate(sender, _ rpc.Mailbox, msg *protocol.Message) (errcode int32, reply *protocol.Message) {
+	m := protocol.NewMessageReader(msg)
+	tag, _ := m.ReadString()
+
+	return share.ERR_REPLY_SUCCEED, protocol.ReplyMessage(protocol.TINY, tag)
 }
 
 func (s *Store) Delete(sender, _ rpc.Mailbox, msg *protocol.Message) (errcode int32, reply *protocol.Message) {

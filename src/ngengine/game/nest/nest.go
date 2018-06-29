@@ -33,6 +33,6 @@ func (n *Nest) Init(opt *service.CoreOption) error {
 }
 
 func (n *Nest) Start() error {
-	n.CoreAPI.Watch("all")
+	n.BaseService.Start()
 	return nil
 }
