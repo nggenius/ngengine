@@ -20,3 +20,7 @@ type CreateRole struct {
 	Index int
 	Name  string // 角色名
 }
+
+type ChooseRole struct {
+	RoleID int64
+}

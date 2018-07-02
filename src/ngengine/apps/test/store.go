@@ -14,6 +14,7 @@ var dbargs = `{
 	"LogFile":"db.log",
 	"Args": {
 		"db":"mysql",
-		"datasource":"sa:abc@tcp(192.168.1.52:3306)/ngengine?charset=utf8"
+		"datasource":"sa:abc@tcp(192.168.1.52:3306)/ngengine?charset=utf8",
+		"showsql":true
 	}
 }`

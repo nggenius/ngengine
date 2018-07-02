@@ -7,6 +7,7 @@ const (
 	ERR_SYSTEM_ERROR          // 系统错误
 	ERR_REPLY_FAILED          // 失败
 	ERR_CREATE_TIMEOUT        // 创建角色超时
+	ERR_CHOOSE_ROLE           // 选择角色出错
 )
 
 // 存储错误码

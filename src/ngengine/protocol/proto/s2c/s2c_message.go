@@ -17,8 +17,9 @@ type NestInfo struct {
 }
 
 type Role struct {
-	Index int8
-	Name  string
+	RoleId int64
+	Index  int8
+	Name   string
 }
 
 type RoleInfo struct {

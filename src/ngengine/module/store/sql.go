@@ -17,16 +17,22 @@ func newSql() *Sql {
 }
 
 func (s *Sql) Init(core service.CoreAPI) (err error) {
-	var db, ds string
-	var has bool
 	opt := core.Option()
-	if db, has = opt.Args["db"]; !has {
+
+	if !opt.Args.Has("db") {
 		return fmt.Errorf("db not define")
 	}
-	if ds, has = opt.Args["datasource"]; !has {
+	db := opt.Args.String("db")
+
+	if !opt.Args.Has("datasource") {
 		return fmt.Errorf("datasource not define")
 	}
+
+	ds := opt.Args.String("datasource")
 	s.orm, err = xorm.NewEngine(db, ds)
+
+	s.orm.ShowSQL(opt.Args.Bool("showsql"))
+
 	return err
 }
 

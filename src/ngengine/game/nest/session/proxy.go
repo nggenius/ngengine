@@ -20,6 +20,7 @@ func NewProxy(ctx *SessionModule) *proxy {
 func (p *proxy) RegisterCallback(s rpc.Servicer) {
 	s.RegisterCallback("Login", p.Login)
 	s.RegisterCallback("CreateRole", p.CreateRole)
+	s.RegisterCallback("ChooseRole", p.ChooseRole)
 }
 
 // token 登录
@@ -63,6 +64,20 @@ func (p *proxy) CreateRole(sender, _ rpc.Mailbox, msg *protocol.Message) (errcod
 
 // 选择角色
 func (p *proxy) ChooseRole(sender, _ rpc.Mailbox, msg *protocol.Message) (errcode int32, reply *protocol.Message) {
+	var choose c2s.ChooseRole
+	if err := p.ctx.core.ParseProto(msg, &choose); err != nil {
+		p.ctx.core.LogErr("choose parse error,", err)
+		return 0, nil
+	}
+
+	session := p.ctx.FindSession(sender.Id())
+	if session == nil {
+		p.ctx.core.LogErr("session not found")
+		return 0, nil
+	}
+
+	session.Dispatch(CHOOSE, choose)
+
 	return 0, nil
 }
 

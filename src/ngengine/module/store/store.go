@@ -20,8 +20,9 @@ type Store struct {
 	ctx *StoreModule
 }
 
-type getid interface {
+type getsetid interface {
 	DBId() int64
+	SetId(val int64)
 }
 
 func NewStore(ctx *StoreModule) *Store {
@@ -37,7 +38,9 @@ func (s *Store) RegisterCallback(svr rpc.Servicer) {
 	svr.RegisterCallback("Insert", s.Insert)
 	svr.RegisterCallback("MultiInsert", s.MultiInsert)
 	svr.RegisterCallback("Update", s.Update)
+	svr.RegisterCallback("MultiUpdate", s.Update)
 	svr.RegisterCallback("Delete", s.Delete)
+	svr.RegisterCallback("Delete2", s.Delete2)
 	svr.RegisterCallback("Query", s.Query)
 	svr.RegisterCallback("Exec", s.Exec)
 }
@@ -134,7 +137,7 @@ func (s *Store) Insert(sender, _ rpc.Mailbox, msg *protocol.Message) (errcode in
 	}
 
 	var id int64
-	if get, ok := obj.(getid); ok {
+	if get, ok := obj.(getsetid); ok {
 		id = get.DBId()
 	}
 	return share.ERR_REPLY_SUCCEED, protocol.ReplyMessage(protocol.TINY, tag, affected, id)
@@ -213,10 +216,63 @@ func (s *Store) MultiUpdate(sender, _ rpc.Mailbox, msg *protocol.Message) (errco
 	m := protocol.NewMessageReader(msg)
 	tag, _ := m.ReadString()
 
-	return share.ERR_REPLY_SUCCEED, protocol.ReplyMessage(protocol.TINY, tag)
+	var typ []string
+	if err := m.Read(&typ); err != nil {
+		return share.ERR_ARGS_ERROR, protocol.ReplyMessage(protocol.TINY, tag, err.Error())
+	}
+
+	var object []interface{}
+	for k := range typ {
+		obj := s.ctx.register.Create(typ[k])
+		if err := m.ReadObject(obj); err != nil {
+			return share.ERR_ARGS_ERROR, protocol.ReplyMessage(protocol.TINY, tag, err.Error())
+		}
+		object = append(object, obj)
+	}
+
+	session := s.ctx.sql.orm.NewSession()
+	session.Begin()
+
+	var affected int64
+	for k := range object {
+		aff, err := session.Update(object[k])
+		if err != nil {
+			session.Rollback()
+			return share.ERR_STORE_SQL, protocol.ReplyMessage(protocol.TINY, tag, err.Error())
+		}
+		affected += aff
+	}
+
+	session.Commit()
+
+	return share.ERR_REPLY_SUCCEED, protocol.ReplyMessage(protocol.TINY, tag, affected)
 }
 
 func (s *Store) Delete(sender, _ rpc.Mailbox, msg *protocol.Message) (errcode int32, reply *protocol.Message) {
+	m := protocol.NewMessageReader(msg)
+	tag, _ := m.ReadString()
+	typ, _ := m.ReadString()
+	obj := s.ctx.register.Create(typ)
+	if obj == nil {
+		return share.ERR_ARGS_ERROR, protocol.ReplyMessage(protocol.TINY, tag, ErrObject.Error())
+	}
+
+	id, err := m.ReadInt64()
+	if err != nil {
+		return share.ERR_ARGS_ERROR, protocol.ReplyMessage(protocol.TINY, tag, err.Error())
+	}
+
+	if set, ok := obj.(getsetid); ok {
+		set.SetId(id)
+	}
+	affected, err := s.ctx.sql.orm.Delete(obj)
+	if err != nil {
+		return share.ERR_STORE_SQL, protocol.ReplyMessage(protocol.TINY, tag, err.Error())
+	}
+	return share.ERR_REPLY_SUCCEED, protocol.ReplyMessage(protocol.TINY, tag, affected)
+}
+
+func (s *Store) Delete2(sender, _ rpc.Mailbox, msg *protocol.Message) (errcode int32, reply *protocol.Message) {
 	m := protocol.NewMessageReader(msg)
 	tag, _ := m.ReadString()
 	typ, _ := m.ReadString()
@@ -233,6 +289,45 @@ func (s *Store) Delete(sender, _ rpc.Mailbox, msg *protocol.Message) (errcode in
 	if err != nil {
 		return share.ERR_STORE_SQL, protocol.ReplyMessage(protocol.TINY, tag, err.Error())
 	}
+	return share.ERR_REPLY_SUCCEED, protocol.ReplyMessage(protocol.TINY, tag, affected)
+}
+
+func (s *Store) Delete3(sender, _ rpc.Mailbox, msg *protocol.Message) (errcode int32, reply *protocol.Message) {
+	m := protocol.NewMessageReader(msg)
+	tag, _ := m.ReadString()
+
+	var typ []string
+	if err := m.Read(&typ); err != nil {
+		return share.ERR_ARGS_ERROR, protocol.ReplyMessage(protocol.TINY, tag, err.Error())
+	}
+
+	var ids []int64
+	if err := m.Read(&ids); err != nil {
+		return share.ERR_ARGS_ERROR, protocol.ReplyMessage(protocol.TINY, tag, err.Error())
+	}
+
+	session := s.ctx.sql.orm.NewSession()
+	session.Begin()
+
+	affected := int64(0)
+	for k := range typ {
+		obj := s.ctx.register.Create(typ[k])
+		if obj == nil {
+			return share.ERR_ARGS_ERROR, protocol.ReplyMessage(protocol.TINY, tag, ErrObject.Error())
+		}
+		if set, ok := obj.(getsetid); ok {
+			set.SetId(ids[k])
+		}
+		aff, err := session.Delete(obj)
+		if err != nil {
+			session.Rollback()
+			return share.ERR_STORE_SQL, protocol.ReplyMessage(protocol.TINY, tag, err.Error())
+		}
+		affected += aff
+	}
+
+	session.Commit()
+
 	return share.ERR_REPLY_SUCCEED, protocol.ReplyMessage(protocol.TINY, tag, affected)
 }
 

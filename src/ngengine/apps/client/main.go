@@ -130,7 +130,14 @@ func (c *Client) OnRoleInfo(data []byte) {
 		create.Name = "test"
 		c.SendMessage("Self.CreateRole", &create)
 		c.RecvMessage()
+		return
 	}
+
+	choose := c2s.ChooseRole{}
+	choose.RoleID = role.Roles[0].RoleId
+
+	c.SendMessage("Self.ChooseRole", &choose)
+	c.RecvMessage()
 }
 
 func (c *Client) OnError(data []byte) {

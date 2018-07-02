@@ -152,6 +152,7 @@ func ParseMultiInsertReply(reply *protocol.Message) (errcode int32, err error, t
 	return
 }
 
+// 批量插入，tag为返回的标识符,typ查询的object数据类型集合,object待插入的数据集合
 func (s *StoreClient) MultiInsert(tag string, reply rpc.ReplyCB, typ []string, object []interface{}) error {
 	if s.db == nil {
 		return fmt.Errorf("store not connected")
@@ -204,6 +205,25 @@ func (s *StoreClient) Update(tag string, typ string, cols []string, condition ma
 	return s.ctx.core.MailtoAndCallback(nil, s.db, "Store.Update", reply, tag, typ, cols, condition, object)
 }
 
+// 批量更新，tag为返回的标识符,typ查询的object数据类型集合,object待插入的数据集合
+func (s *StoreClient) MultiUpdate(tag string, typ []string, object []interface{}, reply rpc.ReplyCB) error {
+	if s.db == nil {
+		return fmt.Errorf("store not connected")
+	}
+
+	var params []interface{}
+	params = append(params, tag)
+	params = append(params, typ)
+	for k := range object {
+		params = append(params, object[k])
+	}
+
+	if reply == nil {
+		return s.ctx.core.Mailto(nil, s.db, "Store.MultiUpdate", params...)
+	}
+	return s.ctx.core.MailtoAndCallback(nil, s.db, "Store.MultiUpdate", reply, params...)
+}
+
 func ParseDeleteReply(reply *protocol.Message) (errcode int32, err error, tag string, affected int64) {
 	errcode, ar := protocol.ParseReply(reply)
 	tag, err = ar.ReadString()
@@ -223,15 +243,38 @@ func ParseDeleteReply(reply *protocol.Message) (errcode int32, err error, tag st
 	return
 }
 
-// 删除一条记录，tag为返回的标识符,typ查询的数据类型，object待删除的数据(非零值为条件)
-func (s *StoreClient) Delete(tag string, typ string, object interface{}, reply rpc.ReplyCB) error {
+// 删除一条记录，tag为返回的标识符,typ查询的数据类型，待删除对象的id
+func (s *StoreClient) Delete(tag string, typ string, id int64, reply rpc.ReplyCB) error {
 	if s.db == nil {
 		return fmt.Errorf("store not connected")
 	}
 	if reply == nil {
-		return s.ctx.core.Mailto(nil, s.db, "Store.Delete", tag, typ, object)
+		return s.ctx.core.Mailto(nil, s.db, "Store.Delete", tag, typ, id)
 	}
-	return s.ctx.core.MailtoAndCallback(nil, s.db, "Store.Delete", reply, tag, typ, object)
+	return s.ctx.core.MailtoAndCallback(nil, s.db, "Store.Delete", reply, tag, typ, id)
+}
+
+// 删除一条记录，tag为返回的标识符,typ查询的数据类型，object待删除的数据(非零值为条件)
+func (s *StoreClient) DeleteByObject(tag string, typ string, object interface{}, reply rpc.ReplyCB) error {
+	if s.db == nil {
+		return fmt.Errorf("store not connected")
+	}
+	if reply == nil {
+		return s.ctx.core.Mailto(nil, s.db, "Store.Delete2", tag, typ, object)
+	}
+	return s.ctx.core.MailtoAndCallback(nil, s.db, "Store.Delete2", reply, tag, typ, object)
+}
+
+// 删除一条记录，tag为返回的标识符,typ查询的数据类型，待删除对象的id
+func (s *StoreClient) MultiDelete(tag string, typ []string, id []int64, reply rpc.ReplyCB) error {
+	if s.db == nil {
+		return fmt.Errorf("store not connected")
+	}
+
+	if reply == nil {
+		return s.ctx.core.Mailto(nil, s.db, "Store.Delete3", tag, typ, id)
+	}
+	return s.ctx.core.MailtoAndCallback(nil, s.db, "Store.Delete3", reply, tag, typ, id)
 }
 
 func ParseQueryReply(reply *protocol.Message) (errcode int32, err error, tag string, result []map[string][]byte) {

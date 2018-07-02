@@ -2,6 +2,7 @@ package session
 
 import (
 	"ngengine/common/fsm"
+	"ngengine/game/gameobject/entity"
 	"ngengine/game/gameobject/entity/inner"
 	"ngengine/protocol/proto/c2s"
 	"ngengine/share"
@@ -15,6 +16,8 @@ const (
 	ROLE_INFO // 角色列表
 	CREATE    // 创建角色
 	CREATED   // 创建完成
+	CHOOSE    // 选择角色
+	CHOOSED   // 选择角色成功
 )
 
 type idlestate struct {
@@ -82,8 +85,18 @@ func (s *logged) Handle(event int, param interface{}) string {
 		s.Idle = 0
 	case CREATE:
 		args := param.(c2s.CreateRole)
-		s.owner.CreateRole(args)
+		if err := s.owner.CreateRole(args); err != nil {
+			s.owner.Error(share.ERR_SYSTEM_ERROR)
+			return ""
+		}
 		return "createrole"
+	case CHOOSE:
+		args := param.(c2s.ChooseRole)
+		if err := s.owner.ChooseRole(args); err != nil {
+			s.owner.Error(share.ERR_SYSTEM_ERROR)
+			return ""
+		}
+		return "chooserole"
 	default:
 		s.owner.ctx.core.LogWarnf("logged state receive error event(%d)", event)
 	}
@@ -114,8 +127,56 @@ func (c *createrole) Handle(event int, param interface{}) string {
 			c.owner.Error(share.ERR_CREATE_TIMEOUT)
 			return "logged"
 		}
+	case BREAK:
+		c.owner.DestroySelf()
+		return fsm.STOP
 	default:
 		c.owner.ctx.core.LogWarnf("create role state receive error event(%d)", event)
+	}
+	return ""
+}
+
+type chooserole struct {
+	fsm.Default
+	owner *Session
+	Idle  int32
+}
+
+func (c *chooserole) Handle(event int, param interface{}) string {
+	switch event {
+	case CHOOSED:
+		args := param.([2]interface{})
+		errcode := args[0].(int32)
+		if errcode != 0 {
+			c.owner.Error(errcode)
+			return "logged"
+		}
+		player := args[1].(*entity.Player)
+		if player == nil {
+			c.owner.Error(share.ERR_CHOOSE_ROLE)
+			return "logged"
+		}
+
+		c.owner.ctx.core.LogDebug("enter game")
+		return "online"
+	case BREAK:
+		c.owner.DestroySelf()
+		return fsm.STOP
+	}
+	return ""
+}
+
+type online struct {
+	fsm.Default
+	owner *Session
+	Idle  int32
+}
+
+func (o *online) Handle(event int, param interface{}) string {
+	switch event {
+	case BREAK:
+		o.owner.DestroySelf()
+		return fsm.STOP
 	}
 	return ""
 }

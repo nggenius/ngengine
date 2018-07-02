@@ -151,7 +151,7 @@ func (o *Object) LoadAllBack(reply *protocol.Message) {
 		o.CoreAPI.LogInfo("load result: ", k, v)
 	}
 
-	o.store.Client().Delete("object", "Player", load[len(load)-1], o.DeleteBack)
+	o.store.Client().DeleteByObject("object", "Player", load[len(load)-1], o.DeleteBack)
 
 }
 

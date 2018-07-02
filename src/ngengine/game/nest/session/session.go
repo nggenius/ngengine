@@ -27,6 +27,8 @@ func NewSession(id uint64, ctx *SessionModule) *Session {
 	s.FSM.Register("idle", &idlestate{owner: s})
 	s.FSM.Register("logged", &logged{owner: s})
 	s.FSM.Register("createrole", &createrole{owner: s})
+	s.FSM.Register("chooserole", &chooserole{owner: s})
+	s.FSM.Register("online", &online{owner: s})
 	s.FSM.Start("idle")
 	return s
 }
@@ -60,6 +62,7 @@ func (s *Session) OnRoleInfo(role []*inner.Role) {
 	roles.Roles = make([]s2c.Role, 0, len(role))
 	for k := range role {
 		r := s2c.Role{}
+		r.RoleId = role[k].RoleId
 		r.Index = role[k].Index
 		r.Name = role[k].Account
 		roles.Roles = append(roles.Roles, r)
@@ -70,6 +73,10 @@ func (s *Session) OnRoleInfo(role []*inner.Role) {
 
 func (s *Session) CreateRole(info c2s.CreateRole) error {
 	return s.ctx.account.CreateRole(s, info)
+}
+
+func (s *Session) ChooseRole(info c2s.ChooseRole) error {
+	return s.ctx.account.ChooseRole(s, info)
 }
 
 func (s *Session) Error(errcode int32) {

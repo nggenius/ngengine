@@ -126,3 +126,42 @@ func (a *Account) OnCreateRole(msg *protocol.Message) {
 
 	session.Dispatch(CREATED, errcode)
 }
+
+func (a *Account) ChooseRole(session *Session, args c2s.ChooseRole) error {
+
+	if err := a.ctx.store.Get(
+		session.Mailbox.String(),
+		"entity.Player",
+		map[string]interface{}{
+			"id=?": args.RoleID,
+		},
+		a.OnChooseRole); err != nil {
+		session.Error(share.S2C_ERR_SERVICE_INVALID)
+		return err
+	}
+
+	return nil
+}
+
+func (a *Account) OnChooseRole(msg *protocol.Message) {
+	player := entity.NewPlayer()
+	errcode, err, tag := store.ParseGetReply(msg, player.Archive())
+	if err != nil {
+		a.ctx.core.LogErr(err)
+		return
+	}
+
+	mailbox, err1 := rpc.NewMailboxFromStr(tag)
+	if err1 != nil {
+		a.ctx.core.LogErr(err1)
+		return
+	}
+
+	session := a.ctx.FindSession(mailbox.Id())
+	if session == nil {
+		a.ctx.core.LogErr("session not found", mailbox.Id())
+		return
+	}
+
+	session.Dispatch(CHOOSED, [2]interface{}{errcode, player})
+}
