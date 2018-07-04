@@ -35,6 +35,13 @@ func (s *logged) Handle(event int, param interface{}) string {
 
 		s.owner.SendRoleInfo(roles)
 		s.Idle = 0
+	case EDELETE:
+		args := param.(c2s.DeleteRole)
+		if err := s.owner.DeleteRole(args); err != nil {
+			s.owner.Error(share.ERR_SYSTEM_ERROR)
+			return ""
+		}
+		return SDELETE
 	case ECREATE:
 		args := param.(c2s.CreateRole)
 		if err := s.owner.CreateRole(args); err != nil {

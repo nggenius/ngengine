@@ -1,6 +1,9 @@
 package session
 
-import "ngengine/common/fsm"
+import (
+	"ngengine/common/fsm"
+	"ngengine/share"
+)
 
 type idlestate struct {
 	fsm.Default
@@ -13,8 +16,9 @@ func (s *idlestate) Handle(event int, param interface{}) string {
 	case ELOGIN:
 		token := param.(string)
 		if s.owner.ValidToken(token) {
+			// TODO: 这里要进行排队检查
 			if !s.owner.QueryRoleInfo() {
-				s.owner.Error(-1)
+				s.owner.Error(share.ERR_SYSTEM_ERROR)
 				return ""
 			}
 			return SLOGGED

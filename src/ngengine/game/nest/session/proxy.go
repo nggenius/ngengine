@@ -21,6 +21,7 @@ func (p *proxy) RegisterCallback(s rpc.Servicer) {
 	s.RegisterCallback("Login", p.Login)
 	s.RegisterCallback("CreateRole", p.CreateRole)
 	s.RegisterCallback("ChooseRole", p.ChooseRole)
+	s.RegisterCallback("DeleteRole", p.DeleteRole)
 }
 
 // token 登录
@@ -83,5 +84,18 @@ func (p *proxy) ChooseRole(sender, _ rpc.Mailbox, msg *protocol.Message) (errcod
 
 // 删除角色
 func (p *proxy) DeleteRole(sender, _ rpc.Mailbox, msg *protocol.Message) (errcode int32, reply *protocol.Message) {
+	var d c2s.DeleteRole
+	if err := p.ctx.core.ParseProto(msg, &d); err != nil {
+		p.ctx.core.LogErr("delete parse error, ", err)
+		return 0, nil
+	}
+
+	session := p.ctx.FindSession(sender.Id())
+	if session == nil {
+		p.ctx.core.LogErr("session not found")
+		return 0, nil
+	}
+
+	session.Dispatch(EDELETE, d)
 	return 0, nil
 }

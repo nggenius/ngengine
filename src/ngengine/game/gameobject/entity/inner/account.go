@@ -6,6 +6,16 @@ type Account struct {
 	Password string `xorm:"varchar(128)"`
 }
 
+// set id
+func (a *Account) SetId(val int64) {
+	a.Id = val
+}
+
+// db id
+func (a *Account) DBId() int64 {
+	return a.Id
+}
+
 type AccountCreater struct {
 }
 

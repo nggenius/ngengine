@@ -24,3 +24,7 @@ type CreateRole struct {
 type ChooseRole struct {
 	RoleID int64
 }
+
+type DeleteRole struct {
+	RoleId int64
+}

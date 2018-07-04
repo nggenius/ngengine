@@ -86,7 +86,7 @@ func (a *Account) CreateRole(session *Session, args c2s.CreateRole) error {
 	role.CreateTime = time.Now()
 	role.Index = int8(args.Index)
 	role.RoleName = args.Name
-	role.RoleId = player.DBId()
+	role.Id = player.DBId()
 
 	if err := a.ctx.store.MultiInsert(
 		session.Mailbox.String(),
@@ -187,4 +187,42 @@ func (a *Account) OnChooseRole(msg *protocol.Message) {
 	}
 
 	session.Dispatch(ECHOOSED, [2]interface{}{errcode, gameobject})
+}
+
+func (a *Account) DeleteRole(session *Session, args c2s.DeleteRole) error {
+
+	err := a.ctx.store.MultiDelete(
+		session.Mailbox.String(),
+		[]string{"inner.Role", "entity.Player"},
+		[]int64{args.RoleId, args.RoleId},
+		a.OnDeleteRole,
+	)
+
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (a *Account) OnDeleteRole(msg *protocol.Message) {
+	errcode, err, tag, aff := store.ParseDeleteReply(msg)
+	if err != nil {
+		a.ctx.core.LogErr(err)
+		return
+	}
+
+	mailbox, err1 := rpc.NewMailboxFromStr(tag)
+	if err1 != nil {
+		a.ctx.core.LogErr(err1)
+		return
+	}
+
+	session := a.ctx.FindSession(mailbox.Id())
+	if session == nil {
+		a.ctx.core.LogErr("session not found", mailbox.Id())
+		return
+	}
+
+	session.Dispatch(EDELETED, [2]interface{}{errcode, aff})
 }

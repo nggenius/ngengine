@@ -11,6 +11,7 @@ type FactoryObject interface {
 	Index() int
 	SetIndex(int)
 	SetObjId(mb rpc.Mailbox)
+	ObjId() rpc.Mailbox
 	Factory() *Factory
 	SetFactory(f *Factory)
 	Prepare()
@@ -58,6 +59,7 @@ func (f *Factory) Create(typ string) (interface{}, error) {
 			o.SetDelegate(f.owner.entitydelegate[typ])
 			o.Prepare()
 			o.Create()
+			f.owner.core.LogDebug("create object ", o.ObjId())
 			return inst, nil
 		}
 
@@ -87,6 +89,7 @@ func (f *Factory) ClearDelete() {
 		e := ele
 		ele = ele.Next()
 		f.delete.Remove(e)
+		f.owner.core.LogDebug("delete object ", fo.ObjId())
 	}
 }
 

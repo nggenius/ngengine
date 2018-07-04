@@ -9,6 +9,7 @@ import (
 	"ngengine/protocol/proto/c2s"
 	"ngengine/protocol/proto/s2c"
 
+	"github.com/davecgh/go-spew/spew"
 	"github.com/mysll/toolkit"
 )
 
@@ -123,21 +124,71 @@ func (c *Client) OnRoleInfo(data []byte) {
 		log.Println(err)
 	}
 
-	log.Println(role)
-	if len(role.Roles) == 0 {
-		create := c2s.CreateRole{}
-		create.Index = 1
-		create.Name = "test"
-		c.SendMessage("Self.CreateRole", &create)
-		c.RecvMessage()
-		return
+	fmt.Println(spew.Sdump(role))
+
+re:
+	fmt.Println("please input command(create/delete/choose):")
+	var cmd string
+	fmt.Scanln(&cmd)
+L:
+	for {
+		switch cmd {
+		case "create":
+			fmt.Println("please input index name")
+			var index int
+			var name string
+			fmt.Scanln(&index, &name)
+			create := c2s.CreateRole{}
+			create.Index = index
+			create.Name = name
+			c.SendMessage("Self.CreateRole", &create)
+			c.RecvMessage()
+			break L
+		case "delete":
+			fmt.Println("please input delete index")
+			var index int
+			fmt.Scanln(&index)
+			d := c2s.DeleteRole{}
+			for k := range role.Roles {
+				if role.Roles[k].Index == int8(index) {
+					d.RoleId = role.Roles[k].RoleId
+					break
+				}
+			}
+			if d.RoleId == 0 {
+				fmt.Println("index error, please retry")
+				continue L
+			}
+
+			c.SendMessage("Self.DeleteRole", &d)
+			c.RecvMessage()
+			break L
+
+		case "choose":
+			fmt.Println("please input choose index")
+			var index int
+			fmt.Scanln(&index)
+			choose := c2s.ChooseRole{}
+			for k := range role.Roles {
+				if role.Roles[k].Index == int8(index) {
+					choose.RoleID = role.Roles[k].RoleId
+					break
+				}
+			}
+			if choose.RoleID == 0 {
+				fmt.Println("index error, please retry")
+				continue L
+			}
+
+			c.SendMessage("Self.ChooseRole", &choose)
+			c.RecvMessage()
+
+			break L
+		default:
+			fmt.Println("command error")
+			goto re
+		}
 	}
-
-	choose := c2s.ChooseRole{}
-	choose.RoleID = role.Roles[0].RoleId
-
-	c.SendMessage("Self.ChooseRole", &choose)
-	c.RecvMessage()
 }
 
 func (c *Client) OnError(data []byte) {

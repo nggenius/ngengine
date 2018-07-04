@@ -41,6 +41,7 @@ func (s *Store) RegisterCallback(svr rpc.Servicer) {
 	svr.RegisterCallback("MultiUpdate", s.Update)
 	svr.RegisterCallback("Delete", s.Delete)
 	svr.RegisterCallback("Delete2", s.Delete2)
+	svr.RegisterCallback("Delete3", s.Delete3)
 	svr.RegisterCallback("Query", s.Query)
 	svr.RegisterCallback("Exec", s.Exec)
 }

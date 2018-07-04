@@ -83,9 +83,9 @@ func (s *Session) SendRoleInfo(role []*inner.Role) {
 	roles.Roles = make([]s2c.Role, 0, len(role))
 	for k := range role {
 		r := s2c.Role{}
-		r.RoleId = role[k].RoleId
+		r.RoleId = role[k].Id
 		r.Index = role[k].Index
-		r.Name = role[k].Account
+		r.Name = role[k].RoleName
 		roles.Roles = append(roles.Roles, r)
 	}
 
@@ -102,6 +102,9 @@ func (s *Session) ChooseRole(info c2s.ChooseRole) error {
 	return s.ctx.account.ChooseRole(s, info)
 }
 
+func (s *Session) DeleteRole(info c2s.DeleteRole) error {
+	return s.ctx.account.DeleteRole(s, info)
+}
 func (s *Session) Error(errcode int32) {
 	err := s2c.Error{}
 	err.ErrCode = errcode

@@ -387,6 +387,16 @@ func (a *PlayerArchive) TableName() string {
 	return "player"
 }
 
+// set id
+func (a *PlayerArchive) SetId(val int64) {
+	a.Id = val
+}
+
+// db id
+func (a *PlayerArchive) DBId() int64 {
+	return a.Id
+}
+
 // archive creater
 type PlayerArchiveCreater struct {
 }
@@ -454,12 +464,12 @@ func (o *Player) Load() {
 
 // set id
 func (o *Player) SetId(val int64) {
-	o.archive.Id = val
+	o.archive.SetId(val)
 }
 
 // db id
 func (o *Player) DBId() int64 {
-	return o.archive.Id
+	return o.archive.DBId()
 }
 
 // get archive

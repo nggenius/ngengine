@@ -14,6 +14,8 @@ const (
 	ECREATED  // 创建完成
 	ECHOOSE   // 选择角色
 	ECHOOSED  // 选择角色成功
+	EDELETE   // 删除角色
+	EDELETED  // 删除成功
 )
 
 const (
@@ -21,6 +23,7 @@ const (
 	SLOGGED = "logged"
 	SCREATE = "create"
 	SCHOOSE = "choose"
+	SDELETE = "delete"
 	SONLINE = "online"
 )
 
@@ -30,6 +33,7 @@ func initState(s *Session) *fsm.FSM {
 	fsm.Register(SLOGGED, &logged{owner: s})
 	fsm.Register(SCREATE, &createrole{owner: s})
 	fsm.Register(SCHOOSE, &chooserole{owner: s})
+	fsm.Register(SDELETE, &deleting{owner: s})
 	fsm.Register(SONLINE, &online{owner: s})
 	fsm.Start(SIDLE)
 	return fsm

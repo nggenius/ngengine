@@ -358,6 +358,16 @@ func (a *{{.Name}}Archive) TableName() string {
     return "{{.Archive}}"
 }
 
+// set id
+func (a *{{.Name}}Archive) SetId(val int64) {
+	a.Id = val
+}
+
+// db id
+func (a *{{.Name}}Archive) DBId() int64 {
+    return a.Id
+}
+
 // archive creater
 type {{.Name}}ArchiveCreater struct{
 }
@@ -427,12 +437,12 @@ func (o *{{.Name}}) Load() {
 
 // set id
 func (o *{{.Name}}) SetId(val int64) {
-	o.archive.Id = val
+	o.archive.SetId(val)
 }
 
 // db id
 func (o *{{.Name}}) DBId() int64 {
-    return o.archive.Id
+    return o.archive.DBId()
 }
 
 // get archive
