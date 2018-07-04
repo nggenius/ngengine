@@ -8,6 +8,7 @@ const (
 	ERR_REPLY_FAILED          // 失败
 	ERR_CREATE_TIMEOUT        // 创建角色超时
 	ERR_CHOOSE_ROLE           // 选择角色出错
+	ERR_CHOOSE_TIMEOUT        // 选择角色超时
 )
 
 // 存储错误码

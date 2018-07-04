@@ -18,8 +18,16 @@ const (
 
 type GameObject interface {
 	Spirit() object.Object
-	AddComponent(name string, com Component) error
+	// 设置连接
+	SetTransport(t *Transport)
+	// 获取连接
+	Transport() *Transport
+	// 增加组件
+	AddComponent(name string, com Component, update bool) error
+	// 移除组件
 	RemoveComponent(name string)
+	// 获取组件
+	GetComponent(name string) Component
 }
 
 type ComponentInfo struct {
@@ -29,6 +37,7 @@ type ComponentInfo struct {
 }
 
 type BaseObject struct {
+	object.Container
 	object.CacheData
 	typ       int
 	delete    bool
@@ -38,6 +47,17 @@ type BaseObject struct {
 	spirit    object.Object
 	delegate  object.Delegate
 	component map[string]ComponentInfo
+	transport *Transport
+}
+
+// 设置传输对象
+func (b *BaseObject) SetTransport(t *Transport) {
+	b.transport = t
+}
+
+// 获取连接
+func (b *BaseObject) Transport() *Transport {
+	return b.transport
 }
 
 // 预处理

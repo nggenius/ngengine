@@ -23,7 +23,9 @@ var startnest = `{
 	"HostAddr": "0.0.0.0",
 	"HostPort": 0,
 	"LogFile":"nest.log",
-	"Args": {}
+	"Args": {
+		"MainEntity":"entity.Player"
+	}
 }`
 
 var startlogin = `{

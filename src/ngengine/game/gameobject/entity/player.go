@@ -371,16 +371,6 @@ type PlayerArchive struct {
 	Tools *object.Container `xorm:"json"` // 道具容器
 }
 
-// set id
-func (a *PlayerArchive) SetId(val int64) {
-	a.Id = val
-}
-
-// db id
-func (a *PlayerArchive) DBId() int64 {
-	return a.Id
-}
-
 // Player archive construct
 func NewPlayerArchive(root object.Object) *PlayerArchive {
 	archive := &PlayerArchive{root: root}
@@ -462,13 +452,23 @@ func (o *Player) Entity() string {
 func (o *Player) Load() {
 }
 
+// set id
+func (o *Player) SetId(val int64) {
+	o.archive.Id = val
+}
+
+// db id
+func (o *Player) DBId() int64 {
+	return o.archive.Id
+}
+
 // get archive
-func (o *Player) Archive() *PlayerArchive {
+func (o *Player) Archive() interface{} {
 	return o.archive
 }
 
 // get attr
-func (o *Player) Attr() *PlayerAttr {
+func (o *Player) Attr() interface{} {
 	return o.attr
 }
 
@@ -814,4 +814,5 @@ func init() {
 	gob.Register(&PlayerArchive{})
 	gob.Register([]*Player{})
 	gob.Register([]*PlayerArchive{})
+	registObject("entity.Player", func() object.Object { return NewPlayer() })
 }

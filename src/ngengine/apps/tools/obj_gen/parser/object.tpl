@@ -343,16 +343,6 @@ type {{.Name}}Archive struct {
 	{{.Name}} *object.Container `xorm:"json"` // {{.Desc}} {{end}}{{end}}
 }
 
-// set id
-func (a *{{.Name}}Archive) SetId(val int64) {
-	a.Id = val
-}
-
-// db id
-func (a *{{.Name}}Archive) DBId() int64 {
-    return a.Id
-}
-
 // {{.Name}} archive construct
 func New{{.Name}}Archive(root object.Object) *{{.Name}}Archive {
     archive := &{{.Name}}Archive{root:root}
@@ -435,13 +425,23 @@ func (o *{{.Name}}) Entity() string {
 func (o *{{.Name}}) Load() {
 }
 
+// set id
+func (o *{{.Name}}) SetId(val int64) {
+	o.archive.Id = val
+}
+
+// db id
+func (o *{{.Name}}) DBId() int64 {
+    return o.archive.Id
+}
+
 // get archive
-func (o *{{.Name}}) Archive() *{{.Name}}Archive {
+func (o *{{.Name}}) Archive() interface{} {
     return o.archive
 }
 
 // get attr
-func (o *{{.Name}}) Attr() *{{.Name}}Attr {
+func (o *{{.Name}}) Attr() interface{} {
     return o.attr
 }
 
@@ -613,4 +613,5 @@ func init() {
 	gob.Register(&{{.Name}}Archive{})
 	gob.Register([]*{{.Name}}{})
 	gob.Register([]*{{.Name}}Archive{})
+	registObject("{{.Package}}.{{.Name}}", func() object.Object{return New{{.Name}}() })
 }

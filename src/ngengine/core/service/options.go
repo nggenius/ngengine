@@ -2,6 +2,7 @@ package service
 
 import (
 	"encoding/json"
+	"fmt"
 	"ngengine/share"
 )
 
@@ -19,7 +20,17 @@ func (a Args) Int(arg string) int {
 		}
 	}
 
-	return 0
+	panic(fmt.Sprintf("get %s int failed ", arg))
+}
+
+func (a Args) MustInt(arg string, def int) int {
+	if a, ok := a[arg]; ok {
+		if val, ok := a.(int); ok {
+			return val
+		}
+	}
+
+	return def
 }
 
 func (a Args) Bool(arg string) bool {
@@ -29,7 +40,17 @@ func (a Args) Bool(arg string) bool {
 		}
 	}
 
-	return false
+	panic(fmt.Sprintf("get %s bool failed ", arg))
+}
+
+func (a Args) MustBool(arg string, def bool) bool {
+	if a, ok := a[arg]; ok {
+		if val, ok := a.(bool); ok {
+			return val
+		}
+	}
+
+	return def
 }
 
 func (a Args) String(arg string) string {
@@ -39,7 +60,17 @@ func (a Args) String(arg string) string {
 		}
 	}
 
-	return ""
+	panic(fmt.Sprintf("get %s string failed ", arg))
+}
+
+func (a Args) MustString(arg string, def string) string {
+	if a, ok := a[arg]; ok {
+		if val, ok := a.(string); ok {
+			return val
+		}
+	}
+
+	return def
 }
 
 func (a Args) Float64(arg string) float64 {

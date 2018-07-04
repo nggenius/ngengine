@@ -31,6 +31,12 @@ type Cacher interface {
 }
 
 type Object interface {
+	// set id
+	SetId(val int64)
+	// db id
+	DBId() int64
+	// 存档对象
+	Archive() interface{}
 	// 沉默状态
 	Silence() bool
 	// 设置沉默状态

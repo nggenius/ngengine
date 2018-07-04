@@ -2,6 +2,7 @@ package session
 
 import (
 	"ngengine/core/rpc"
+	"ngengine/game/gameobject"
 	"ngengine/game/gameobject/entity"
 	"ngengine/game/gameobject/entity/inner"
 	"ngengine/module/store"
@@ -76,22 +77,22 @@ func (a *Account) OnRoleInfo(msg *protocol.Message) {
 
 func (a *Account) CreateRole(session *Session, args c2s.CreateRole) error {
 
-	player := entity.NewPlayer()
-	player.SetName(args.Name)
-	player.Archive().SetId(a.ctx.core.GenerateGUID())
+	player := entity.Create(a.ctx.mainEntity)
+	player.SetAttr("Name", args.Name)
+	player.SetId(a.ctx.core.GenerateGUID())
 
 	role := inner.Role{}
 	role.Account = session.Account
 	role.CreateTime = time.Now()
 	role.Index = int8(args.Index)
 	role.RoleName = args.Name
-	role.RoleId = player.Archive().DBId()
+	role.RoleId = player.DBId()
 
 	if err := a.ctx.store.MultiInsert(
 		session.Mailbox.String(),
 		a.OnCreateRole,
 		[]string{
-			"entity.Player",
+			a.ctx.mainEntity,
 			"inner.Role",
 		},
 		[]interface{}{
@@ -131,7 +132,7 @@ func (a *Account) ChooseRole(session *Session, args c2s.ChooseRole) error {
 
 	if err := a.ctx.store.Get(
 		session.Mailbox.String(),
-		"entity.Player",
+		a.ctx.mainEntity,
 		map[string]interface{}{
 			"id=?": args.RoleID,
 		},
@@ -144,24 +145,46 @@ func (a *Account) ChooseRole(session *Session, args c2s.ChooseRole) error {
 }
 
 func (a *Account) OnChooseRole(msg *protocol.Message) {
-	player := entity.NewPlayer()
+	inst, err := a.ctx.factory.Create(a.ctx.mainEntity)
+	if err != nil {
+		a.ctx.core.LogFatal("entity create failed")
+		return
+	}
+
+	gameobject, ok := inst.(gameobject.GameObject)
+	if !ok {
+		a.ctx.factory.Destroy(inst)
+		a.ctx.core.LogFatal("entity is not gameobject")
+		return
+	}
+
+	player := gameobject.Spirit()
+	if player == nil {
+		a.ctx.factory.Destroy(inst)
+		a.ctx.core.LogFatal("spirit is nil")
+		return
+	}
+
 	errcode, err, tag := store.ParseGetReply(msg, player.Archive())
 	if err != nil {
+		a.ctx.factory.Destroy(inst)
 		a.ctx.core.LogErr(err)
 		return
 	}
 
 	mailbox, err1 := rpc.NewMailboxFromStr(tag)
 	if err1 != nil {
+		a.ctx.factory.Destroy(inst)
 		a.ctx.core.LogErr(err1)
 		return
 	}
 
 	session := a.ctx.FindSession(mailbox.Id())
 	if session == nil {
+		a.ctx.factory.Destroy(inst)
 		a.ctx.core.LogErr("session not found", mailbox.Id())
 		return
 	}
 
-	session.Dispatch(CHOOSED, [2]interface{}{errcode, player})
+	session.Dispatch(CHOOSED, [2]interface{}{errcode, gameobject})
 }

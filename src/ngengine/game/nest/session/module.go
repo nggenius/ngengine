@@ -4,6 +4,7 @@ import (
 	"container/list"
 	"ngengine/common/event"
 	"ngengine/core/service"
+	"ngengine/module/object"
 	"ngengine/module/store"
 	"ngengine/share"
 	"time"
@@ -17,14 +18,16 @@ import (
 //		存储客户端对应的entity数据
 type SessionModule struct {
 	service.Module
-	core     service.CoreAPI
-	store    *store.StoreClient
-	account  *Account
-	proxy    *proxy
-	sessions SessionDB  // session管理器
-	deleted  *list.List // 标志为删除的session
-	lastTime time.Time  // 最后一次更新时间
-	cache    cache      // 缓存的口令
+	core       service.CoreAPI
+	store      *store.StoreClient
+	factory    *object.ObjectModule
+	account    *Account
+	proxy      *proxy
+	sessions   SessionDB  // session管理器
+	deleted    *list.List // 标志为删除的session
+	lastTime   time.Time  // 最后一次更新时间
+	cache      cache      // 缓存的口令
+	mainEntity string     // 主实体
 }
 
 func New() *SessionModule {
@@ -42,12 +45,22 @@ func (s *SessionModule) Name() string {
 }
 
 func (s *SessionModule) Init(core service.CoreAPI) bool {
+
+	opt := core.Option()
+	s.mainEntity = opt.Args.String("MainEntity")
+
 	store := core.Module("Store").(*store.StoreModule)
 	if store == nil {
 		core.LogFatal("need Store module")
 		return false
 	}
 	s.core = core
+	factory := core.Module("Object").(*object.ObjectModule)
+	if factory == nil {
+		core.LogFatal("need object module")
+		return false
+	}
+	s.factory = factory
 	s.store = store.Client()
 	s.core.RegisterRemote("Account", s.account)
 	s.core.RegisterHandler("Self", s.proxy)

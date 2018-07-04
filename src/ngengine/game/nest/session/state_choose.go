@@ -1,0 +1,55 @@
+package session
+
+import (
+	"ngengine/common/fsm"
+	"ngengine/game/gameobject"
+	"ngengine/share"
+	"os"
+
+	"github.com/davecgh/go-spew/spew"
+)
+
+type chooserole struct {
+	fsm.Default
+	owner *Session
+	Idle  int32
+}
+
+func (c *chooserole) Handle(event int, param interface{}) string {
+	switch event {
+	case CHOOSED:
+		args := param.([2]interface{})
+		errcode := args[0].(int32)
+		if errcode != 0 {
+			c.owner.Error(errcode)
+			return SLOGGED
+		}
+		player := args[1].(gameobject.GameObject)
+		if player == nil {
+			c.owner.Error(share.ERR_CHOOSE_ROLE)
+			return SLOGGED
+		}
+
+		f, err := os.OpenFile("dump.txt", os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0644)
+		if err == nil {
+			spew.Fdump(f, player)
+			f.Close()
+		}
+
+		c.owner.ctx.core.LogDebug("enter game")
+		c.owner.SetGameObject(player)
+		return SONLINE
+	case BREAK:
+		c.owner.DestroySelf()
+		return fsm.STOP
+	case TIMER:
+		c.Idle++
+		if c.Idle > 60 {
+			c.owner.Error(share.ERR_CHOOSE_TIMEOUT)
+			return SLOGGED
+		}
+	default:
+		c.owner.ctx.core.LogWarnf("choose role state receive error event(%d)", event)
+	}
+	return ""
+}

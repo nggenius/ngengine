@@ -5,6 +5,7 @@ import (
 )
 
 type Component interface {
+	GameObject()
 	Create()
 	Start()
 	Update(delta time.Duration)
@@ -16,6 +17,10 @@ type Component interface {
 type GameComponent struct {
 	gameObject GameObject
 	enable     bool
+}
+
+func (g *GameComponent) GameObject() GameObject {
+	return g.gameObject
 }
 
 func (g *GameComponent) Enable() bool {
