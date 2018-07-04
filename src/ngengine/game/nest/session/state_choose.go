@@ -17,7 +17,7 @@ type chooserole struct {
 
 func (c *chooserole) Handle(event int, param interface{}) string {
 	switch event {
-	case CHOOSED:
+	case ECHOOSED:
 		args := param.([2]interface{})
 		errcode := args[0].(int32)
 		if errcode != 0 {
@@ -39,10 +39,10 @@ func (c *chooserole) Handle(event int, param interface{}) string {
 		c.owner.ctx.core.LogDebug("enter game")
 		c.owner.SetGameObject(player)
 		return SONLINE
-	case BREAK:
+	case EBREAK:
 		c.owner.DestroySelf()
 		return fsm.STOP
-	case TIMER:
+	case ETIMER:
 		c.Idle++
 		if c.Idle > 60 {
 			c.owner.Error(share.ERR_CHOOSE_TIMEOUT)

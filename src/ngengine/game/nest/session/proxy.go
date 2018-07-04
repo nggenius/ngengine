@@ -39,7 +39,7 @@ func (p *proxy) Login(sender, _ rpc.Mailbox, msg *protocol.Message) (errcode int
 
 	session.Account = login.Account
 	session.Mailbox = &sender
-	session.Dispatch(LOGIN, login.Token)
+	session.Dispatch(ELOGIN, login.Token)
 	return 0, nil
 }
 
@@ -57,7 +57,7 @@ func (p *proxy) CreateRole(sender, _ rpc.Mailbox, msg *protocol.Message) (errcod
 		return 0, nil
 	}
 
-	session.Dispatch(CREATE, create)
+	session.Dispatch(ECREATE, create)
 
 	return 0, nil
 }
@@ -76,7 +76,7 @@ func (p *proxy) ChooseRole(sender, _ rpc.Mailbox, msg *protocol.Message) (errcod
 		return 0, nil
 	}
 
-	session.Dispatch(CHOOSE, choose)
+	session.Dispatch(ECHOOSE, choose)
 
 	return 0, nil
 }

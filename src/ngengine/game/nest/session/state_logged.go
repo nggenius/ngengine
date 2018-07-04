@@ -15,16 +15,16 @@ type logged struct {
 
 func (s *logged) Handle(event int, param interface{}) string {
 	switch event {
-	case TIMER:
+	case ETIMER:
 		s.Idle++
 		if s.Idle > 60 {
 			s.owner.Break()
 			return ""
 		}
-	case BREAK:
+	case EBREAK:
 		s.owner.DestroySelf()
 		return fsm.STOP
-	case ROLE_INFO:
+	case EROLEINFO:
 		args := param.([2]interface{})
 		errcode := args[0].(int32)
 		roles := args[1].([]*inner.Role)
@@ -35,14 +35,14 @@ func (s *logged) Handle(event int, param interface{}) string {
 
 		s.owner.SendRoleInfo(roles)
 		s.Idle = 0
-	case CREATE:
+	case ECREATE:
 		args := param.(c2s.CreateRole)
 		if err := s.owner.CreateRole(args); err != nil {
 			s.owner.Error(share.ERR_SYSTEM_ERROR)
 			return ""
 		}
 		return SCREATE
-	case CHOOSE:
+	case ECHOOSE:
 		args := param.(c2s.ChooseRole)
 		if err := s.owner.ChooseRole(args); err != nil {
 			s.owner.Error(share.ERR_SYSTEM_ERROR)

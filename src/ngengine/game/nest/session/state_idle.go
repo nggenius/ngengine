@@ -10,7 +10,7 @@ type idlestate struct {
 
 func (s *idlestate) Handle(event int, param interface{}) string {
 	switch event {
-	case LOGIN:
+	case ELOGIN:
 		token := param.(string)
 		if s.owner.ValidToken(token) {
 			if !s.owner.QueryRoleInfo() {
@@ -22,13 +22,13 @@ func (s *idlestate) Handle(event int, param interface{}) string {
 		// 验证失败直接踢下线
 		s.owner.Break()
 		return ""
-	case TIMER:
+	case ETIMER:
 		s.Idle++
 		if s.Idle > 60 {
 			s.owner.Break()
 			return ""
 		}
-	case BREAK:
+	case EBREAK:
 		s.owner.DestroySelf()
 		return fsm.STOP
 	default:

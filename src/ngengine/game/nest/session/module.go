@@ -82,7 +82,7 @@ func (s *SessionModule) OnUpdate(t *service.Time) {
 		s.cache.Check()
 		for _, s := range s.sessions {
 			if !s.delete {
-				s.Dispatch(TIMER, nil)
+				s.Dispatch(ETIMER, nil)
 			}
 		}
 	}
@@ -113,7 +113,7 @@ func (s *SessionModule) OnDisconnected(evt string, args ...interface{}) {
 	arg := args[0].(event.EventArgs)
 	id := arg["id"].(uint64)
 	if s, ok := s.sessions[id]; ok {
-		s.Dispatch(BREAK, nil)
+		s.Dispatch(EBREAK, nil)
 	}
 }
 

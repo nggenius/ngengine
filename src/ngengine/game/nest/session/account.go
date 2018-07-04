@@ -72,7 +72,7 @@ func (a *Account) OnRoleInfo(msg *protocol.Message) {
 		return
 	}
 
-	session.Dispatch(ROLE_INFO, [2]interface{}{errcode, roles})
+	session.Dispatch(EROLEINFO, [2]interface{}{errcode, roles})
 }
 
 func (a *Account) CreateRole(session *Session, args c2s.CreateRole) error {
@@ -125,7 +125,7 @@ func (a *Account) OnCreateRole(msg *protocol.Message) {
 		return
 	}
 
-	session.Dispatch(CREATED, errcode)
+	session.Dispatch(ECREATED, errcode)
 }
 
 func (a *Account) ChooseRole(session *Session, args c2s.ChooseRole) error {
@@ -186,5 +186,5 @@ func (a *Account) OnChooseRole(msg *protocol.Message) {
 		return
 	}
 
-	session.Dispatch(CHOOSED, [2]interface{}{errcode, gameobject})
+	session.Dispatch(ECHOOSED, [2]interface{}{errcode, gameobject})
 }

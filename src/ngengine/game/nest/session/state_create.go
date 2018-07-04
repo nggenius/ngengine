@@ -13,7 +13,7 @@ type createrole struct {
 
 func (c *createrole) Handle(event int, param interface{}) string {
 	switch event {
-	case CREATED:
+	case ECREATED:
 		errcode := param.(int32)
 		if errcode != 0 {
 			c.owner.Error(errcode)
@@ -23,13 +23,13 @@ func (c *createrole) Handle(event int, param interface{}) string {
 			c.owner.Error(-1)
 		}
 		return SLOGGED
-	case TIMER:
+	case ETIMER:
 		c.Idle++
 		if c.Idle > 60 {
 			c.owner.Error(share.ERR_CREATE_TIMEOUT)
 			return SLOGGED
 		}
-	case BREAK:
+	case EBREAK:
 		c.owner.DestroySelf()
 		return fsm.STOP
 	default:

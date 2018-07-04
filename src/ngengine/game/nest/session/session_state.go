@@ -6,14 +6,14 @@ import (
 
 const (
 	NONE      = iota
-	TIMER     // 1秒钟的定时器
-	BREAK     // 客户端断开连接
-	LOGIN     // 客户端登录
-	ROLE_INFO // 角色列表
-	CREATE    // 创建角色
-	CREATED   // 创建完成
-	CHOOSE    // 选择角色
-	CHOOSED   // 选择角色成功
+	ETIMER    // 1秒钟的定时器
+	EBREAK    // 客户端断开连接
+	ELOGIN    // 客户端登录
+	EROLEINFO // 角色列表
+	ECREATE   // 创建角色
+	ECREATED  // 创建完成
+	ECHOOSE   // 选择角色
+	ECHOOSED  // 选择角色成功
 )
 
 const (

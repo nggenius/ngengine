@@ -355,7 +355,7 @@ func (c *Core) Break(session uint64) {
 }
 
 // 生成GUID
-// |64 49|48 17|16       5|4   1|
+// |63 48|47 16|15       4|3   0|
 // |sid  |time |id(0~FFF) |ms   |
 func (c *Core) GenerateGUID() int64 {
 	c.uuid++

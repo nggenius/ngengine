@@ -10,10 +10,10 @@ type online struct {
 
 func (o *online) Handle(event int, param interface{}) string {
 	switch event {
-	case BREAK:
+	case EBREAK:
 		o.owner.DestroySelf()
 		return fsm.STOP
-	case TIMER:
+	case ETIMER:
 	default:
 		o.owner.ctx.core.LogWarnf("online state receive error event(%d)", event)
 	}
