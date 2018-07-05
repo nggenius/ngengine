@@ -8,6 +8,7 @@ import (
 )
 
 type FactoryObject interface {
+	Init(interface{})
 	Index() int
 	SetIndex(int)
 	SetObjId(mb rpc.Mailbox)
@@ -52,6 +53,7 @@ func (f *Factory) Create(typ string) (interface{}, error) {
 			if err != nil {
 				return nil, err
 			}
+			o.Init(inst)
 			o.SetIndex(index)
 			f.serial = (f.serial + 1) % 0xFF
 			o.SetObjId(f.owner.core.Mailbox().NewObjectId(f.objType, f.serial, index))

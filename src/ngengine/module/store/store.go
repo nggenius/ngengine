@@ -5,8 +5,6 @@ import (
 	"ngengine/core/rpc"
 	"ngengine/protocol"
 	"ngengine/share"
-
-	"github.com/go-xorm/xorm"
 )
 
 var (
@@ -17,7 +15,8 @@ var (
 
 type Store struct {
 	*rpc.Thread
-	ctx *StoreModule
+	ctx       *StoreModule
+	extension map[string]Extension
 }
 
 type getsetid interface {
@@ -25,11 +24,20 @@ type getsetid interface {
 	SetId(val int64)
 }
 
+type Extension interface {
+	RegisterCallback(svr rpc.Servicer)
+}
+
 func NewStore(ctx *StoreModule) *Store {
 	s := &Store{}
 	s.ctx = ctx
 	s.Thread = rpc.NewThread("store", 4, 10)
+	s.extension = make(map[string]Extension)
 	return s
+}
+
+func (s *Store) AddExtension(name string, ext Extension) {
+	s.extension[name] = ext
 }
 
 func (s *Store) RegisterCallback(svr rpc.Servicer) {
@@ -44,6 +52,10 @@ func (s *Store) RegisterCallback(svr rpc.Servicer) {
 	svr.RegisterCallback("Delete3", s.Delete3)
 	svr.RegisterCallback("Query", s.Query)
 	svr.RegisterCallback("Exec", s.Exec)
+	for k, v := range s.extension {
+		v.RegisterCallback(svr)
+		s.ctx.core.LogInfo("register extension", k)
+	}
 }
 
 func (s *Store) Get(sender, _ rpc.Mailbox, msg *protocol.Message) (errcode int32, reply *protocol.Message) {
@@ -59,15 +71,18 @@ func (s *Store) Get(sender, _ rpc.Mailbox, msg *protocol.Message) (errcode int32
 		return share.ERR_ARGS_ERROR, protocol.ReplyMessage(protocol.TINY, tag, ErrObject.Error())
 	}
 
-	var session *xorm.Session
+	session := s.ctx.sql.Session()
+	defer session.Close()
+	first := true
 	for k, v := range condition {
-		if session == nil {
-			session = s.ctx.sql.orm.Where(k, v)
+		if first {
+			session.Where(k, v)
+			first = false
 			continue
 		}
-		session = session.And(k, v)
+		session.And(k, v)
 	}
-	if session == nil {
+	if first {
 		return share.ERR_ARGS_ERROR, protocol.ReplyMessage(protocol.TINY, tag, ErrNoCondition.Error())
 	}
 
@@ -99,21 +114,19 @@ func (s *Store) Find(sender, _ rpc.Mailbox, msg *protocol.Message) (errcode int3
 		return share.ERR_ARGS_ERROR, protocol.ReplyMessage(protocol.TINY, tag, ErrObject.Error())
 	}
 
-	var session *xorm.Session
+	session := s.ctx.sql.Session()
+	defer session.Close()
+	first := true
 	for k, v := range condition {
-		if session == nil {
-			session = s.ctx.sql.orm.Where(k, v)
+		if first {
+			session.Where(k, v)
 			continue
 		}
-		session = session.And(k, v)
-	}
-
-	if session == nil {
-		session = s.ctx.sql.orm.NewSession()
+		session.And(k, v)
 	}
 
 	if limit != 0 || start != 0 {
-		session = session.Limit(limit, start)
+		session.Limit(limit, start)
 	}
 
 	if err := session.Find(obj); err != nil {
@@ -161,7 +174,8 @@ func (s *Store) MultiInsert(sender, _ rpc.Mailbox, msg *protocol.Message) (errco
 		object = append(object, obj)
 	}
 
-	session := s.ctx.sql.orm.NewSession()
+	session := s.ctx.sql.Session()
+	defer session.Close()
 	session.Begin()
 
 	for k := range object {
@@ -194,9 +208,10 @@ func (s *Store) Update(sender, _ rpc.Mailbox, msg *protocol.Message) (errcode in
 		return share.ERR_ARGS_ERROR, protocol.ReplyMessage(protocol.TINY, tag, err.Error())
 	}
 
-	session := s.ctx.sql.orm.NewSession()
+	session := s.ctx.sql.Session()
+	defer session.Close()
 	if len(cols) > 0 {
-		session = session.Cols(cols...)
+		session.Cols(cols...)
 	}
 
 	var affected int64
@@ -231,7 +246,8 @@ func (s *Store) MultiUpdate(sender, _ rpc.Mailbox, msg *protocol.Message) (errco
 		object = append(object, obj)
 	}
 
-	session := s.ctx.sql.orm.NewSession()
+	session := s.ctx.sql.Session()
+	defer session.Close()
 	session.Begin()
 
 	var affected int64
@@ -307,7 +323,8 @@ func (s *Store) Delete3(sender, _ rpc.Mailbox, msg *protocol.Message) (errcode i
 		return share.ERR_ARGS_ERROR, protocol.ReplyMessage(protocol.TINY, tag, err.Error())
 	}
 
-	session := s.ctx.sql.orm.NewSession()
+	session := s.ctx.sql.Session()
+	defer session.Close()
 	session.Begin()
 
 	affected := int64(0)

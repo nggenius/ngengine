@@ -69,7 +69,7 @@ func (c *Client) RecvMessage() {
 		panic(err)
 	}
 
-	fmt.Println(id, string(data))
+	log.Println("recv message:", id)
 	switch id {
 	case protocol.S2C_RPC:
 		c.ParseRpcMsg(data)
@@ -127,66 +127,76 @@ func (c *Client) OnRoleInfo(data []byte) {
 	fmt.Println(spew.Sdump(role))
 
 re:
-	fmt.Println("please input command(create/delete/choose):")
-	var cmd string
-	fmt.Scanln(&cmd)
-L:
 	for {
-		switch cmd {
-		case "create":
-			fmt.Println("please input index name")
-			var index int
-			var name string
-			fmt.Scanln(&index, &name)
-			create := c2s.CreateRole{}
-			create.Index = index
-			create.Name = name
-			c.SendMessage("Self.CreateRole", &create)
-			c.RecvMessage()
-			break L
-		case "delete":
-			fmt.Println("please input delete index")
-			var index int
-			fmt.Scanln(&index)
-			d := c2s.DeleteRole{}
-			for k := range role.Roles {
-				if role.Roles[k].Index == int8(index) {
-					d.RoleId = role.Roles[k].RoleId
-					break
+		fmt.Println("please input command(create/delete/choose):")
+		var cmd string
+		fmt.Scanln(&cmd)
+	L:
+		for {
+			switch cmd {
+			case "create":
+				fmt.Println("please input index name")
+				var index int
+				var name string
+				fmt.Scanln(&index, &name)
+				create := c2s.CreateRole{}
+				create.Index = index
+				create.Name = name
+				c.SendMessage("Self.CreateRole", &create)
+				c.RecvMessage()
+				break re
+			case "delete":
+				if len(role.Roles) == 0 {
+					fmt.Println("no roles")
+					continue re
 				}
-			}
-			if d.RoleId == 0 {
-				fmt.Println("index error, please retry")
-				continue L
-			}
-
-			c.SendMessage("Self.DeleteRole", &d)
-			c.RecvMessage()
-			break L
-
-		case "choose":
-			fmt.Println("please input choose index")
-			var index int
-			fmt.Scanln(&index)
-			choose := c2s.ChooseRole{}
-			for k := range role.Roles {
-				if role.Roles[k].Index == int8(index) {
-					choose.RoleID = role.Roles[k].RoleId
-					break
+				fmt.Println("please input delete index")
+				var index int
+				fmt.Scanln(&index)
+				d := c2s.DeleteRole{}
+				for k := range role.Roles {
+					if role.Roles[k].Index == int8(index) {
+						d.RoleId = role.Roles[k].RoleId
+						break
+					}
 				}
-			}
-			if choose.RoleID == 0 {
-				fmt.Println("index error, please retry")
-				continue L
-			}
+				if d.RoleId == 0 {
+					fmt.Println("index error, please retry")
+					continue L
+				}
 
-			c.SendMessage("Self.ChooseRole", &choose)
-			c.RecvMessage()
+				c.SendMessage("Self.DeleteRole", &d)
+				c.RecvMessage()
+				break re
 
-			break L
-		default:
-			fmt.Println("command error")
-			goto re
+			case "choose":
+				if len(role.Roles) == 0 {
+					fmt.Println("no roles")
+					continue re
+				}
+				fmt.Println("please input choose index")
+				var index int
+				fmt.Scanln(&index)
+				choose := c2s.ChooseRole{}
+				for k := range role.Roles {
+					if role.Roles[k].Index == int8(index) {
+						choose.RoleID = role.Roles[k].RoleId
+						break
+					}
+				}
+				if choose.RoleID == 0 {
+					fmt.Println("index error, please retry")
+					continue L
+				}
+
+				c.SendMessage("Self.ChooseRole", &choose)
+				c.RecvMessage()
+
+				break re
+			default:
+				fmt.Println("command error")
+				continue re
+			}
 		}
 	}
 }
@@ -198,7 +208,7 @@ func (c *Client) OnError(data []byte) {
 		return
 	}
 
-	log.Println(errcode)
+	log.Println("error:", errcode)
 }
 func (c *Client) Login(name, pass string) {
 	l := c2s.Login{}

@@ -17,6 +17,9 @@ const (
 )
 
 type GameObject interface {
+	// 初始化
+	Init(object interface{})
+	// 获取Object对象
 	Spirit() object.Object
 	// 设置连接
 	SetTransport(t *Transport)
@@ -28,6 +31,8 @@ type GameObject interface {
 	RemoveComponent(name string)
 	// 获取组件
 	GetComponent(name string) Component
+	// 获取gameobject
+	GameObject() interface{}
 }
 
 type ComponentInfo struct {
@@ -39,15 +44,26 @@ type ComponentInfo struct {
 type BaseObject struct {
 	object.Container
 	object.CacheData
-	typ       int
-	delete    bool
-	index     int
-	objid     rpc.Mailbox
-	client    rpc.Mailbox
-	spirit    object.Object
-	delegate  object.Delegate
-	component map[string]ComponentInfo
-	transport *Transport
+	typ        int
+	delete     bool
+	index      int
+	objid      rpc.Mailbox
+	client     rpc.Mailbox
+	spirit     object.Object
+	delegate   object.Delegate
+	component  map[string]ComponentInfo
+	transport  *Transport
+	gameObject interface{}
+}
+
+// 初始化
+func (b *BaseObject) Init(object interface{}) {
+	b.gameObject = object
+}
+
+// 获取gameobject
+func (b *BaseObject) GameObject() interface{} {
+	return b.gameObject
 }
 
 // 设置传输对象
@@ -73,6 +89,7 @@ func (b *BaseObject) Create() {
 	}
 }
 
+// 获取对象类型
 func (b *BaseObject) ObjectType() int {
 	return b.typ
 }
@@ -176,6 +193,7 @@ func (b *BaseObject) AddComponent(name string, com Component, update bool) error
 		useUpdate: update,
 	}
 
+	com.SetGameObject(b.gameObject)
 	com.SetEnable(true)
 	// 调用初始化函数
 	com.Create()

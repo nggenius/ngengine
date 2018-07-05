@@ -34,6 +34,7 @@ func ParseGetReply(reply *protocol.Message, object interface{}) (errcode int32, 
 	errcode, ar := protocol.ParseReply(reply)
 	tag, err = ar.ReadString()
 	if err != nil {
+		errcode = share.ERR_ARGS_ERROR
 		return
 	}
 	if int(errcode) == share.ERR_TIME_OUT {
@@ -47,6 +48,7 @@ func ParseGetReply(reply *protocol.Message, object interface{}) (errcode int32, 
 	}
 
 	if err = ar.Read(object); err != nil {
+		errcode = share.ERR_ARGS_ERROR
 		return
 	}
 
@@ -68,6 +70,7 @@ func ParseFindReply(reply *protocol.Message, object interface{}) (errcode int32,
 	errcode, ar := protocol.ParseReply(reply)
 	tag, err = ar.ReadString()
 	if err != nil {
+		errcode = share.ERR_ARGS_ERROR
 		return
 	}
 	if int(errcode) == share.ERR_TIME_OUT {
@@ -81,6 +84,7 @@ func ParseFindReply(reply *protocol.Message, object interface{}) (errcode int32,
 	}
 
 	if err = ar.Read(object); err != nil {
+		errcode = share.ERR_ARGS_ERROR
 		return
 	}
 
@@ -102,6 +106,7 @@ func ParseInsertReply(reply *protocol.Message) (errcode int32, err error, tag st
 	errcode, ar := protocol.ParseReply(reply)
 	tag, err = ar.ReadString()
 	if err != nil {
+		errcode = share.ERR_ARGS_ERROR
 		return
 	}
 	if int(errcode) == share.ERR_TIME_OUT {
@@ -116,9 +121,13 @@ func ParseInsertReply(reply *protocol.Message) (errcode int32, err error, tag st
 
 	affected, err = ar.ReadInt64()
 	if err != nil {
+		errcode = share.ERR_ARGS_ERROR
 		return
 	}
 	id, err = ar.ReadInt64()
+	if err != nil {
+		errcode = share.ERR_ARGS_ERROR
+	}
 	return
 }
 
@@ -137,6 +146,7 @@ func ParseMultiInsertReply(reply *protocol.Message) (errcode int32, err error, t
 	errcode, ar := protocol.ParseReply(reply)
 	tag, err = ar.ReadString()
 	if err != nil {
+		errcode = share.ERR_ARGS_ERROR
 		return
 	}
 	if int(errcode) == share.ERR_TIME_OUT {
@@ -179,6 +189,7 @@ func ParseUpdateReply(reply *protocol.Message) (errcode int32, err error, tag st
 	errcode, ar := protocol.ParseReply(reply)
 	tag, err = ar.ReadString()
 	if err != nil {
+		errcode = share.ERR_ARGS_ERROR
 		return
 	}
 	if int(errcode) == share.ERR_TIME_OUT {
@@ -191,6 +202,9 @@ func ParseUpdateReply(reply *protocol.Message) (errcode int32, err error, tag st
 		return
 	}
 	affected, err = ar.ReadInt64()
+	if err != nil {
+		errcode = share.ERR_ARGS_ERROR
+	}
 	return
 }
 
@@ -228,6 +242,7 @@ func ParseDeleteReply(reply *protocol.Message) (errcode int32, err error, tag st
 	errcode, ar := protocol.ParseReply(reply)
 	tag, err = ar.ReadString()
 	if err != nil {
+		errcode = share.ERR_ARGS_ERROR
 		return
 	}
 	if int(errcode) == share.ERR_TIME_OUT {
@@ -240,6 +255,9 @@ func ParseDeleteReply(reply *protocol.Message) (errcode int32, err error, tag st
 		return
 	}
 	affected, err = ar.ReadInt64()
+	if err != nil {
+		errcode = share.ERR_ARGS_ERROR
+	}
 	return
 }
 
@@ -281,6 +299,7 @@ func ParseQueryReply(reply *protocol.Message) (errcode int32, err error, tag str
 	errcode, ar := protocol.ParseReply(reply)
 	tag, err = ar.ReadString()
 	if err != nil {
+		errcode = share.ERR_ARGS_ERROR
 		return
 	}
 	if int(errcode) == share.ERR_TIME_OUT {
@@ -312,6 +331,7 @@ func ParseExecReply(reply *protocol.Message) (errcode int32, err error, tag stri
 	errcode, ar := protocol.ParseReply(reply)
 	tag, err = ar.ReadString()
 	if err != nil {
+		errcode = share.ERR_ARGS_ERROR
 		return
 	}
 	if int(errcode) == share.ERR_TIME_OUT {
@@ -324,6 +344,9 @@ func ParseExecReply(reply *protocol.Message) (errcode int32, err error, tag stri
 		return
 	}
 	affected, err = ar.ReadInt64()
+	if err != nil {
+		errcode = share.ERR_ARGS_ERROR
+	}
 	return
 }
 
@@ -336,4 +359,20 @@ func (s *StoreClient) Exec(tag string, sql string, args []interface{}, reply rpc
 		return s.ctx.core.Mailto(nil, s.db, "Store.Exec", tag, sql, args)
 	}
 	return s.ctx.core.MailtoAndCallback(nil, s.db, "Store.Exec", reply, tag, sql, args)
+}
+
+// 批量插入，tag为返回的标识符,typ查询的object数据类型集合,object待插入的数据集合
+func (s *StoreClient) Custom(tag string, reply rpc.ReplyCB, method string, args ...interface{}) error {
+	if s.db == nil {
+		return fmt.Errorf("store not connected")
+	}
+
+	var params []interface{}
+	params = append(params, tag)
+	params = append(params, args...)
+	if reply == nil {
+		return s.ctx.core.Mailto(nil, s.db, method, params...)
+	}
+
+	return s.ctx.core.MailtoAndCallback(nil, s.db, method, reply, params...)
 }

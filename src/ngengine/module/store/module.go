@@ -31,6 +31,10 @@ func (m *StoreModule) Name() string {
 	return "Store"
 }
 
+func (m *StoreModule) Sql() *Sql {
+	return m.sql
+}
+
 // SetMode 设置工作模式
 func (m *StoreModule) SetMode(mode int) {
 	switch mode {
@@ -43,6 +47,16 @@ func (m *StoreModule) SetMode(mode int) {
 	}
 
 	m.mode = mode
+}
+
+// 扩充接口
+func (m *StoreModule) Extend(name string, ext Extension) {
+	if m.store != nil {
+		m.store.AddExtension(name, ext)
+		return
+	}
+
+	m.core.LogErr("add extension failed")
 }
 
 func (m *StoreModule) Init(core service.CoreAPI) bool {

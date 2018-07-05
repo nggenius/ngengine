@@ -96,12 +96,12 @@ func (l *Log) LogDebugf(format string, v ...interface{}) {
 		return
 	}
 	if l.logger == nil {
-		log.SetPrefix("[D]")
+		log.SetPrefix("[D] ")
 		log.Output(2, fmt.Sprintf(format, v...))
 		return
 	}
 
-	l.logger.SetPrefix("[D]")
+	l.logger.SetPrefix("[D] ")
 	l.logger.Output(2, fmt.Sprintf(format, v...))
 }
 
@@ -110,12 +110,12 @@ func (l *Log) LogInfof(format string, v ...interface{}) {
 		return
 	}
 	if l.logger == nil {
-		log.SetPrefix("[I]")
+		log.SetPrefix("[I] ")
 		log.Output(2, fmt.Sprintf(format, v...))
 		return
 	}
 
-	l.logger.SetPrefix("[I]")
+	l.logger.SetPrefix("[I] ")
 	l.logger.Output(2, fmt.Sprintf(format, v...))
 }
 
@@ -124,12 +124,12 @@ func (l *Log) LogWarnf(format string, v ...interface{}) {
 		return
 	}
 	if l.logger == nil {
-		log.SetPrefix("[W]")
+		log.SetPrefix("[W] ")
 		log.Output(2, fmt.Sprintf(format, v...))
 		return
 	}
 
-	l.logger.SetPrefix("[W]")
+	l.logger.SetPrefix("[W] ")
 	l.logger.Output(2, fmt.Sprintf(format, v...))
 }
 
@@ -138,12 +138,12 @@ func (l *Log) LogErrf(format string, v ...interface{}) {
 		return
 	}
 	if l.logger == nil {
-		log.SetPrefix("[E]")
+		log.SetPrefix("[E] ")
 		log.Output(2, fmt.Sprintf(format, v...))
 		return
 	}
 
-	l.logger.SetPrefix("[E]")
+	l.logger.SetPrefix("[E] ")
 	l.logger.Output(2, fmt.Sprintf(format, v...))
 }
 
@@ -152,13 +152,13 @@ func (l *Log) LogFatalf(format string, v ...interface{}) {
 		return
 	}
 	if l.logger == nil {
-		log.SetPrefix("[F]")
+		log.SetPrefix("[F] ")
 		log.Output(2, fmt.Sprintf(format, v...))
 		os.Exit(1)
 		return
 	}
 
-	l.logger.SetPrefix("[F]")
+	l.logger.SetPrefix("[F] ")
 	l.logger.Output(2, fmt.Sprintf(format, v...))
 	os.Exit(1)
 }
@@ -168,12 +168,12 @@ func (l *Log) LogDebug(v ...interface{}) {
 		return
 	}
 	if l.logger == nil {
-		log.SetPrefix("[D]")
+		log.SetPrefix("[D] ")
 		log.Output(2, fmt.Sprint(v...))
 		return
 	}
 
-	l.logger.SetPrefix("[D]")
+	l.logger.SetPrefix("[D] ")
 	l.logger.Output(2, fmt.Sprint(v...))
 }
 
@@ -182,12 +182,12 @@ func (l *Log) LogInfo(v ...interface{}) {
 		return
 	}
 	if l.logger == nil {
-		log.SetPrefix("[I]")
+		log.SetPrefix("[I] ")
 		log.Output(2, fmt.Sprint(v...))
 		return
 	}
 
-	l.logger.SetPrefix("[I]")
+	l.logger.SetPrefix("[I] ")
 	l.logger.Output(2, fmt.Sprint(v...))
 }
 
@@ -196,12 +196,12 @@ func (l *Log) LogWarn(v ...interface{}) {
 		return
 	}
 	if l.logger == nil {
-		log.SetPrefix("[W]")
+		log.SetPrefix("[W] ")
 		log.Output(2, fmt.Sprint(v...))
 		return
 	}
 
-	l.logger.SetPrefix("[W]")
+	l.logger.SetPrefix("[W] ")
 	l.logger.Output(2, fmt.Sprint(v...))
 }
 
@@ -210,12 +210,12 @@ func (l *Log) LogErr(v ...interface{}) {
 		return
 	}
 	if l.logger == nil {
-		log.SetPrefix("[E]")
+		log.SetPrefix("[E] ")
 		log.Output(2, fmt.Sprint(v...))
 		return
 	}
 
-	l.logger.SetPrefix("[E]")
+	l.logger.SetPrefix("[E] ")
 	l.logger.Output(2, fmt.Sprint(v...))
 }
 
@@ -224,13 +224,13 @@ func (l *Log) LogFatal(v ...interface{}) {
 		return
 	}
 	if l.logger == nil {
-		log.SetPrefix("[F]")
+		log.SetPrefix("[F] ")
 		log.Output(2, fmt.Sprint(v...))
 		os.Exit(1)
 		return
 	}
 
-	l.logger.SetPrefix("[F]")
+	l.logger.SetPrefix("[F] ")
 	l.logger.Output(2, fmt.Sprint(v...))
 	os.Exit(1)
 }

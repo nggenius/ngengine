@@ -16,6 +16,10 @@ func newSql() *Sql {
 	return s
 }
 
+func (s *Sql) Session() *xorm.Session {
+	return s.orm.NewSession()
+}
+
 func (s *Sql) Init(core service.CoreAPI) (err error) {
 	opt := core.Option()
 

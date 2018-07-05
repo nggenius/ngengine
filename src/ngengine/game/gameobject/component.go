@@ -5,7 +5,8 @@ import (
 )
 
 type Component interface {
-	GameObject()
+	SetGameObject(interface{})
+	GameObject() interface{}
 	Create()
 	Start()
 	Update(delta time.Duration)
@@ -15,11 +16,15 @@ type Component interface {
 }
 
 type GameComponent struct {
-	gameObject GameObject
+	gameObject interface{}
 	enable     bool
 }
 
-func (g *GameComponent) GameObject() GameObject {
+func (g *GameComponent) SetGameObject(obj interface{}) {
+	g.gameObject = obj
+}
+
+func (g *GameComponent) GameObject() interface{} {
 	return g.gameObject
 }
 

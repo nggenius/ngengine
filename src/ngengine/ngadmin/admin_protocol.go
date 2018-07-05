@@ -132,7 +132,7 @@ func (p *AdminProtocol) Exec(srv *ServiceInfo, msgid uint16, msg *protocol.Messa
 			p.ctx.ngadmin.DB.Watch(srv.PeerInfo.ServId, watchs.WatchType)
 		}
 	case protocol.S2A_HEARTBEAT:
-		p.ctx.ngadmin.LogDebug("recv heartbeat")
+		//p.ctx.ngadmin.LogDebug("recv heartbeat")
 	case protocol.S2A_LOAD:
 		{
 			var load protocol.LoadInfo

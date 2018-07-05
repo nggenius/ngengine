@@ -5,6 +5,7 @@ import (
 	"ngengine/game/gameobject"
 	"ngengine/game/gameobject/entity"
 	"ngengine/game/gameobject/entity/inner"
+	"ngengine/game/store/extension"
 	"ngengine/module/store"
 	"ngengine/protocol"
 	"ngengine/protocol/proto/c2s"
@@ -56,7 +57,7 @@ func (a *Account) requestRoleInfo(session *Session) error {
 func (a *Account) OnRoleInfo(msg *protocol.Message) {
 	var roles []*inner.Role
 	errcode, err, tag := store.ParseGetReply(msg, &roles)
-	if err != nil {
+	if err != nil && errcode == share.ERR_ARGS_ERROR {
 		a.ctx.core.LogErr(err)
 		return
 	}
@@ -88,18 +89,12 @@ func (a *Account) CreateRole(session *Session, args c2s.CreateRole) error {
 	role.RoleName = args.Name
 	role.Id = player.DBId()
 
-	if err := a.ctx.store.MultiInsert(
+	if err := a.ctx.store.Custom(
 		session.Mailbox.String(),
 		a.OnCreateRole,
-		[]string{
-			a.ctx.mainEntity,
-			"inner.Role",
-		},
-		[]interface{}{
-			player.Archive(),
-			&role,
-		},
-	); err != nil {
+		"Store.CreateRole",
+		&role,
+		player.Archive()); err != nil {
 		session.Error(share.S2C_ERR_SERVICE_INVALID)
 		return err
 	}
@@ -107,8 +102,8 @@ func (a *Account) CreateRole(session *Session, args c2s.CreateRole) error {
 }
 
 func (a *Account) OnCreateRole(msg *protocol.Message) {
-	errcode, err, tag := store.ParseMultiInsertReply(msg)
-	if err != nil {
+	errcode, err, tag := extension.ParseCreateRole(msg)
+	if err != nil && errcode == share.ERR_ARGS_ERROR {
 		a.ctx.core.LogErr(err)
 		return
 	}
@@ -166,7 +161,8 @@ func (a *Account) OnChooseRole(msg *protocol.Message) {
 	}
 
 	errcode, err, tag := store.ParseGetReply(msg, player.Archive())
-	if err != nil {
+
+	if err != nil && errcode == share.ERR_ARGS_ERROR {
 		a.ctx.factory.Destroy(inst)
 		a.ctx.core.LogErr(err)
 		return
@@ -207,7 +203,7 @@ func (a *Account) DeleteRole(session *Session, args c2s.DeleteRole) error {
 
 func (a *Account) OnDeleteRole(msg *protocol.Message) {
 	errcode, err, tag, aff := store.ParseDeleteReply(msg)
-	if err != nil {
+	if err != nil && errcode == share.ERR_ARGS_ERROR {
 		a.ctx.core.LogErr(err)
 		return
 	}
