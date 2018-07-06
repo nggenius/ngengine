@@ -80,12 +80,10 @@ func (r *Role) CreateRole(sender, _ rpc.Mailbox, msg *protocol.Message) (errcode
 	session.Begin()
 	_, err = session.Insert(&role)
 	if err != nil {
-		session.Rollback()
 		return share.ERR_STORE_ERROR, protocol.ReplyMessage(protocol.TINY, tag, err.Error())
 	}
 	_, err = session.Insert(&player)
 	if err != nil {
-		session.Rollback()
 		return share.ERR_STORE_ERROR, protocol.ReplyMessage(protocol.TINY, tag, err.Error())
 	}
 
@@ -113,5 +111,52 @@ func ParseDeleteRole(reply *protocol.Message) (errcode int32, err error, tag str
 }
 
 func (r *Role) DeleteRole(sender, _ rpc.Mailbox, msg *protocol.Message) (errcode int32, reply *protocol.Message) {
-	return 0, nil
+	m := protocol.NewMessageReader(msg)
+	tag, err := m.ReadString()
+	if err != nil {
+		r.ctx.LogFatal("read tag failed, ", err)
+		return 0, nil
+	}
+	roleid, err := m.ReadInt64()
+	if err != nil {
+		r.ctx.LogFatal("read roleid failed, ", err)
+		return 0, nil
+	}
+
+	session := r.store.Sql().Session()
+	defer session.Close()
+
+	var role inner.Role
+	var player entity.PlayerArchive
+	role.Id = roleid
+	player.Id = roleid
+
+	count, err := session.Count(player)
+	if err != nil {
+		return share.ERR_STORE_ERROR, protocol.ReplyMessage(protocol.TINY, tag, err.Error())
+	}
+
+	if count == 0 {
+		return share.ERR_STORE_ROLE_NOT_FOUND, protocol.ReplyMessage(protocol.TINY, tag, "player not found")
+	}
+
+	session.Begin()
+
+	// 备份数据
+	_, err = session.Exec("insert into player_bak select * from player where id=?", roleid)
+	if err != nil {
+		return share.ERR_STORE_ERROR, protocol.ReplyMessage(protocol.TINY, tag, err.Error())
+	}
+	// 删除
+	_, err = session.Delete(&role)
+	if err != nil {
+		return share.ERR_STORE_ERROR, protocol.ReplyMessage(protocol.TINY, tag, err.Error())
+	}
+
+	_, err = session.Delete(&player)
+	if err != nil {
+		return share.ERR_STORE_ERROR, protocol.ReplyMessage(protocol.TINY, tag, err.Error())
+	}
+	session.Commit()
+	return share.ERR_REPLY_SUCCEED, protocol.ReplyMessage(protocol.TINY, tag)
 }

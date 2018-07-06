@@ -20,6 +20,11 @@ func (s *deleting) Handle(event int, param interface{}) string {
 			return SLOGGED
 		}
 	case EDELETED:
+		errcode := param.(int32)
+		if errcode != 0 {
+			s.owner.Error(errcode)
+			return SLOGGED
+		}
 		s.owner.QueryRoleInfo()
 		return SLOGGED
 	case EBREAK:

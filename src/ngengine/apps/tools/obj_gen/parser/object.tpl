@@ -354,7 +354,7 @@ func New{{.Name}}Archive(root object.Object) *{{.Name}}Archive {
 }
 
 // archive table name
-func (a *{{.Name}}Archive) TableName() string {
+func (a {{.Name}}Archive) TableName() string {
     return "{{.Archive}}"
 }
 
@@ -379,6 +379,43 @@ func (c *{{.Name}}ArchiveCreater) Create() interface{} {
 func (c *{{.Name}}ArchiveCreater) CreateSlice() interface{} {
 	return &[]*{{.Name}}Archive{}
 }
+
+// {{.Name}} archive
+type {{.Name}}ArchiveBak struct {
+    Id int64 {{range .Property}} {{if eq .Save "true"}}
+	{{.Name}} {{if eq .Type "tuple"}}*{{$.Name}}{{.Name}}_t `xorm:"json"`{{else if eq .Type "table"}}*{{$.Name}}{{.Name}}_r `xorm:"json"`{{else}}{{.Type}} {{if eq .Type "string"}}`xorm:"varchar({{strsize .}})"`{{end}}{{end}}  // {{.Desc}}{{end}} {{end}}
+
+	{{range .Container}}{{if eq .Save "true"}}
+	{{.Name}} *object.Container `xorm:"json"` // {{.Desc}} {{end}}{{end}}
+}
+
+// archive table name
+func (a {{.Name}}ArchiveBak) TableName() string {
+    return "{{.Archive}}_bak"
+}
+
+// set id
+func (a *{{.Name}}ArchiveBak) SetId(val int64) {
+	a.Id = val
+}
+
+// db id
+func (a *{{.Name}}ArchiveBak) DBId() int64 {
+    return a.Id
+}
+
+// archive bak creater
+type {{.Name}}ArchiveBakCreater struct{
+}
+
+func (c *{{.Name}}ArchiveBakCreater) Create() interface{} {
+	return &{{.Name}}ArchiveBak{}
+}
+
+func (c *{{.Name}}ArchiveBakCreater) CreateSlice() interface{} {
+	return &[]*{{.Name}}ArchiveBak{}
+}
+
 
 // {{.Name}} attr
 type {{.Name}}Attr struct{

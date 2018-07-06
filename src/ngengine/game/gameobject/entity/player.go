@@ -383,7 +383,7 @@ func NewPlayerArchive(root object.Object) *PlayerArchive {
 }
 
 // archive table name
-func (a *PlayerArchive) TableName() string {
+func (a PlayerArchive) TableName() string {
 	return "player"
 }
 
@@ -407,6 +407,44 @@ func (c *PlayerArchiveCreater) Create() interface{} {
 
 func (c *PlayerArchiveCreater) CreateSlice() interface{} {
 	return &[]*PlayerArchive{}
+}
+
+// Player archive
+type PlayerArchiveBak struct {
+	Id      int64
+	Name    string           `xorm:"varchar(128)"` // 玩家名
+	Toolbox *PlayerToolbox_r `xorm:"json"`         // 道具(表格测试)
+	Pos     *PlayerPos_t     `xorm:"json"`         // 位置
+	Orient  float32          // 朝向(弧度)
+
+	Tools *object.Container `xorm:"json"` // 道具容器
+}
+
+// archive table name
+func (a PlayerArchiveBak) TableName() string {
+	return "player_bak"
+}
+
+// set id
+func (a *PlayerArchiveBak) SetId(val int64) {
+	a.Id = val
+}
+
+// db id
+func (a *PlayerArchiveBak) DBId() int64 {
+	return a.Id
+}
+
+// archive bak creater
+type PlayerArchiveBakCreater struct {
+}
+
+func (c *PlayerArchiveBakCreater) Create() interface{} {
+	return &PlayerArchiveBak{}
+}
+
+func (c *PlayerArchiveBakCreater) CreateSlice() interface{} {
+	return &[]*PlayerArchiveBak{}
 }
 
 // Player attr

@@ -16,6 +16,7 @@ func RegisterToDB(r Register) {
 	r.Register("inner.Account", &inner.AccountCreater{})
 	r.Register("inner.Role", &inner.RoleCreater{})
 	r.Register("entity.Player", &PlayerArchiveCreater{})
+	r.Register("entity.PlayerBak", &PlayerArchiveBakCreater{})
 }
 
 func registObject(typ string, f func() object.Object) {

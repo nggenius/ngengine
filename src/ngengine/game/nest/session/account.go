@@ -187,12 +187,11 @@ func (a *Account) OnChooseRole(msg *protocol.Message) {
 
 func (a *Account) DeleteRole(session *Session, args c2s.DeleteRole) error {
 
-	err := a.ctx.store.MultiDelete(
+	err := a.ctx.store.Custom(
 		session.Mailbox.String(),
-		[]string{"inner.Role", "entity.Player"},
-		[]int64{args.RoleId, args.RoleId},
 		a.OnDeleteRole,
-	)
+		"Store.DeleteRole",
+		args.RoleId)
 
 	if err != nil {
 		return err
@@ -202,7 +201,7 @@ func (a *Account) DeleteRole(session *Session, args c2s.DeleteRole) error {
 }
 
 func (a *Account) OnDeleteRole(msg *protocol.Message) {
-	errcode, err, tag, aff := store.ParseDeleteReply(msg)
+	errcode, err, tag := extension.ParseDeleteRole(msg)
 	if err != nil && errcode == share.ERR_ARGS_ERROR {
 		a.ctx.core.LogErr(err)
 		return
@@ -220,5 +219,5 @@ func (a *Account) OnDeleteRole(msg *protocol.Message) {
 		return
 	}
 
-	session.Dispatch(EDELETED, [2]interface{}{errcode, aff})
+	session.Dispatch(EDELETED, errcode)
 }
