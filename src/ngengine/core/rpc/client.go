@@ -162,6 +162,8 @@ func (client *Client) send(call *Call) error {
 		client.mutex.Lock()
 		if client.shutdown || client.closing {
 			call.Error = ErrShutdown
+			call.done()
+			client.mutex.Unlock()
 			return ErrShutdown
 		}
 		client.seq++
@@ -305,7 +307,13 @@ func (c *byteClientCodec) GetAddress() string {
 func (c *byteClientCodec) WriteRequest(sending *sync.Mutex, seq uint64, call *Call) (err error) {
 	sending.Lock()
 	defer sending.Unlock()
-	msg := call.Args
+	var msg *protocol.Message
+	if call.Args != nil {
+		msg = call.Args.Dup()
+	} else {
+		msg = protocol.NewMessage(1)
+	}
+
 	msg.Header = msg.Header[:0]
 	w := utils.NewStoreArchiver(msg.Header)
 	w.Put(seq)
@@ -320,7 +328,7 @@ func (c *byteClientCodec) WriteRequest(sending *sync.Mutex, seq uint64, call *Ca
 	if len(msg.Body) > 0 {
 		c.encBuf.Write(msg.Body)
 	}
-	msg.Header = msg.Header[:0]
+	msg.Free()
 	return c.encBuf.Flush()
 }
 
@@ -356,7 +364,9 @@ func (client *Client) Close() error {
 func (client *Client) SyncCall(serviceMethod string, src, dest Mailbox, args *protocol.Message) error {
 	call := NewCall()
 	call.ServiceMethod = serviceMethod
-	call.Args = args.Dup()
+	if args != nil {
+		call.Args = args.Dup()
+	}
 	call.noreply = true
 	call.src = src
 	call.dest = dest
@@ -366,7 +376,9 @@ func (client *Client) SyncCall(serviceMethod string, src, dest Mailbox, args *pr
 func (client *Client) SyncCallBack(serviceMethod string, src, dest Mailbox, args *protocol.Message, reply ReplyCB) error {
 	call := NewCall()
 	call.ServiceMethod = serviceMethod
-	call.Args = args.Dup()
+	if args != nil {
+		call.Args = args.Dup()
+	}
 	call.CB = reply
 	call.noreply = false
 	call.src = src
@@ -377,7 +389,9 @@ func (client *Client) SyncCallBack(serviceMethod string, src, dest Mailbox, args
 func (client *Client) CallMessage(serviceMethod string, src, dest Mailbox, args *protocol.Message) error {
 	call := NewCall()
 	call.ServiceMethod = serviceMethod
-	call.Args = args.Dup()
+	if args != nil {
+		call.Args = args.Dup()
+	}
 	call.noreply = true
 	call.src = src
 	call.dest = dest
@@ -388,7 +402,9 @@ func (client *Client) CallMessage(serviceMethod string, src, dest Mailbox, args 
 func (client *Client) CallMessageBack(serviceMethod string, src, dest Mailbox, args *protocol.Message, reply ReplyCB) error {
 	call := NewCall()
 	call.ServiceMethod = serviceMethod
-	call.Args = args.Dup()
+	if args != nil {
+		call.Args = args.Dup()
+	}
 	call.CB = reply
 	call.noreply = false
 	call.src = src
