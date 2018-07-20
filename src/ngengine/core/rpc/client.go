@@ -26,7 +26,7 @@ var (
 	ErrTimeout  = errors.New("timeout")
 )
 
-type ReplyCB func(*protocol.Message)
+type ReplyCB func(*Error, *utils.LoadArchive)
 
 // ServerError represents an error that has been returned from
 // the remote side of the RPC connection.
@@ -262,7 +262,22 @@ func (client *Client) Process() {
 
 func (call *Call) done() {
 	if call.CB != nil && call.Reply != nil {
-		call.CB(call.Reply)
+		errcode, ar := protocol.ParseReply(call.Reply)
+		var err *Error
+		if errcode != 0 {
+			err = NewError(errcode, "")
+			if errcode == ERR_TIME_OUT {
+				err.Err = ErrTimeout.Error()
+			} else {
+				errstr, e := ar.ReadString()
+				if e != nil {
+					panic(e)
+				}
+				err.Err = errstr
+			}
+
+		}
+		call.CB(err, ar)
 	}
 
 	call.Free()
@@ -328,6 +343,7 @@ func (c *byteClientCodec) WriteRequest(sending *sync.Mutex, seq uint64, call *Ca
 	if len(msg.Body) > 0 {
 		c.encBuf.Write(msg.Body)
 	}
+	msg.Header = msg.Header[:0]
 	msg.Free()
 	return c.encBuf.Flush()
 }

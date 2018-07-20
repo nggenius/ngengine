@@ -13,7 +13,7 @@ func TestMailbox(t *testing.T) {
 		t.Fatalf("mailbox error, want: 1, 1, have:%d, %d", mb2.ServiceId(), mb2.Flag())
 	}
 
-	if mb2.ObjectType() != 2 || mb2.ObjectIndex() != 4 {
-		t.Fatalf("mailbox error, want: 2, 4, have:%d, %d", mb2.ObjectType(), mb2.ObjectIndex())
+	if mb2.Identity() != 2 || mb2.ObjectIndex() != 4 {
+		t.Fatalf("mailbox error, want: 2, 4, have:%d, %d", mb2.Identity(), mb2.ObjectIndex())
 	}
 }

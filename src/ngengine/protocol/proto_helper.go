@@ -45,6 +45,16 @@ func ParseReply(msg *Message) (int32, *utils.LoadArchive) {
 	return errcode, ar
 }
 
+func ParseErrMsg(msg *Message) (int32, *Message) {
+	if msg == nil {
+		return 0, nil
+	}
+
+	errcode := GetReplyError(msg)
+
+	return errcode, msg
+}
+
 func NewMessageWriter(msg *Message) *BodyWriter {
 	msg.Body = msg.Body[:0]
 	w := &BodyWriter{utils.NewStoreArchiver(msg.Body), msg}
@@ -175,7 +185,7 @@ const (
 )
 
 // rpc返回值, poolsize为使用的缓冲区大小，请根据实际大小进行预处理
-func ReplyMessage(poolsize int, args ...interface{}) *Message {
+func Reply(poolsize int, args ...interface{}) (int32, *Message) {
 	if poolsize == DEF {
 		poolsize = share.MAX_BUF_LEN
 	}
@@ -197,5 +207,35 @@ func ReplyMessage(poolsize int, args ...interface{}) *Message {
 		mw.Flush()
 	}
 
-	return msg
+	return 0, msg
+}
+
+// rpc返回值, poolsize为使用的缓冲区大小，请根据实际大小进行预处理
+func ReplyError(poolsize int, errcode int32, err string, args ...interface{}) (int32, *Message) {
+	if poolsize == DEF {
+		poolsize = share.MAX_BUF_LEN
+	}
+
+	if poolsize > share.MAX_BUF_LEN {
+		poolsize = share.MAX_BUF_LEN
+	}
+
+	msg := NewMessage(poolsize)
+	mw := NewMessageWriter(msg)
+	if err := mw.Put(err); err != nil {
+		msg.Free()
+		panic("write error failed, " + err.Error())
+	}
+	if len(args) > 0 {
+		for i := 0; i < len(args); i++ {
+			err := mw.Put(args[i])
+			if err != nil {
+				msg.Free()
+				panic("write args failed," + err.Error())
+			}
+		}
+		mw.Flush()
+	}
+
+	return errcode, msg
 }

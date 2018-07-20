@@ -341,7 +341,17 @@ func (server *Server) sendResponse(call *RpcCall) error {
 		w.Put(int8(1))
 		w.Put(call.errcode)
 		call.reply.Header = call.reply.Header[:w.Len()]
-		call.cb(call.reply)
+		errcode, ar := protocol.ParseReply(call.reply)
+		var err *Error
+		if errcode != 0 {
+			err = NewError(errcode, "")
+			errstr, e := ar.ReadString()
+			if e != nil {
+				panic(e)
+			}
+			err.Err = errstr
+		}
+		call.cb(err, ar)
 		return nil
 	}
 

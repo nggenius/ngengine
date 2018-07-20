@@ -108,18 +108,18 @@ func NewMailbox(appid share.ServiceId, flag int8, id uint64) Mailbox {
 	return m
 }
 
-// get object type
-func (m Mailbox) ObjectType() int {
-	return int((m >> 40) & 0x7F)
+// get object identity
+func (m Mailbox) Identity() int {
+	return int((m >> 32) & share.OBJECT_TYPE_MAX)
 }
 
 // get object index
 func (m Mailbox) ObjectIndex() int {
-	return int(m & 0xFFFFFFFF)
+	return int(m & share.OBJECT_MAX)
 }
 
 // 生成一个新的object id
-func (m Mailbox) NewObjectId(otype, serial, index int) Mailbox {
-	id := uint64((otype&0x7F)<<40) | uint64(serial&0xFF)<<32 | uint64(index&0xFFFFFFFF)
+func (m Mailbox) NewObjectId(identity, serial, index int) Mailbox {
+	id := uint64((identity&share.OBJECT_TYPE_MAX)<<32) | uint64(serial&0xFF)<<24 | uint64(index&share.OBJECT_MAX)
 	return generate(m.ServiceId(), 0, id)
 }
