@@ -4,7 +4,9 @@ import (
 	"ngengine/core"
 	"ngengine/game/login"
 	"ngengine/game/nest"
+	"ngengine/game/region"
 	"ngengine/game/store"
+	"ngengine/game/world"
 
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/mysll/toolkit"
@@ -44,12 +46,44 @@ var startlogin = `{
 	"Args": {}
 }`
 
+var startworld = `{
+	"ServId":5,
+	"ServType": "world",
+	"AdminAddr":"127.0.0.1",
+	"AdminPort":12500,
+	"ServName": "world_1",
+	"ServAddr": "127.0.0.1",
+	"ServPort": 0,
+	"Expose": false,
+	"LogFile":"world.log",
+	"ResRoot":"D:/home/work/github/ngengine/res/",
+	"Args": {
+		"Region":"region.json",
+		"MinRegions":1
+	}
+}`
+
+var startregion = `{
+	"ServId":6,
+	"ServType": "region",
+	"AdminAddr":"127.0.0.1",
+	"AdminPort":12500,
+	"ServName": "region_1",
+	"ServAddr": "127.0.0.1",
+	"ServPort": 0,
+	"Expose": false,
+	"LogFile":"region.log",
+	"ResRoot":"D:/home/work/github/ngengine/res/",
+	"Args": {}
+}`
+
 func main() {
 	// 捕获异常
-	core.RegisterService("store", &store.Store{})
-	core.RegisterService("login", &login.Login{})
-	core.RegisterService("nest", &nest.Nest{})
-
+	core.RegisterService("store", new(store.Store))
+	core.RegisterService("login", new(login.Login))
+	core.RegisterService("nest", new(nest.Nest))
+	core.RegisterService("world", new(world.World))
+	core.RegisterService("region", new(region.Region))
 	_, err := core.CreateService("login", startlogin)
 	if err != nil {
 		panic(err)
@@ -64,6 +98,17 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
+
+	_, err = core.CreateService("world", startworld)
+	if err != nil {
+		panic(err)
+	}
+
+	_, err = core.CreateService("region", startregion)
+	if err != nil {
+		panic(err)
+	}
+
 	core.RunAllService()
 
 	toolkit.WaitForQuit()

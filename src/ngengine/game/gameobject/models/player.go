@@ -6,7 +6,7 @@ import (
 )
 
 type GamePlayer struct {
-	gameobject.Role
+	gameobject.RoleObject
 	*entity.Player
 }
 

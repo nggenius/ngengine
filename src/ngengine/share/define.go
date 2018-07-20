@@ -9,7 +9,8 @@ const (
 	SID_MAX         = 0xFFFF         // service id 最大值
 	SESSION_MAX     = 0x7FFFFFFFFFFF // session最大值
 	OBJECT_ID_MAX   = 0xFFFFFFFFFF   // objectid最大值
-	OBJECT_TYPE_MAX = 0x7F           // object type最大值
+	OBJECT_TYPE_MAX = 0x7FFF         // object type最大值
+	OBJECT_MAX      = 0xFFFFFF       // 最大对象数量
 )
 
 // mailbox类型定义
@@ -41,4 +42,21 @@ const (
 // MessageBox 结构体消息包
 type MessageBox struct {
 	Message interface{}
+}
+
+type Border struct {
+	Left   float64
+	Top    float64
+	Width  float64
+	Height float64
+}
+
+type Region struct {
+	Id        int
+	MaxPlayer int
+	Border    Border
+	Dummy     bool // 是否是复制场景
+	Prototype int  // 原型
+	Diversion bool // 分流
+	Flexible  bool // 动态伸缩
 }

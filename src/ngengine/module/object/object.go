@@ -35,6 +35,10 @@ type Object interface {
 	SetId(val int64)
 	// db id
 	DBId() int64
+	// ObjId 唯一ID
+	ObjId() rpc.Mailbox
+	// SetObjId 设置唯一ID
+	SetObjId(id rpc.Mailbox)
 	// 存档对象
 	Archive() interface{}
 	// 沉默状态

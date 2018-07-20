@@ -10,6 +10,7 @@ import (
 	"ngengine/protocol"
 	"ngengine/protocol/proto/c2s"
 	"ngengine/share"
+	"ngengine/utils"
 	"time"
 )
 
@@ -35,7 +36,7 @@ func (a *Account) Logged(sender, _ rpc.Mailbox, msg *protocol.Message) (errcode 
 	m.Read(&id)
 	m.Read(&account)
 	token := a.ctx.cache.Put(account)
-	return 0, protocol.ReplyMessage(protocol.TINY, id, token)
+	return protocol.Reply(protocol.TINY, id, token)
 }
 
 // 请求玩家信息
@@ -54,10 +55,10 @@ func (a *Account) requestRoleInfo(session *Session) error {
 }
 
 // 收到玩家信息
-func (a *Account) OnRoleInfo(msg *protocol.Message) {
+func (a *Account) OnRoleInfo(e *rpc.Error, ar *utils.LoadArchive) {
 	var roles []*inner.Role
-	errcode, err, tag := store.ParseGetReply(msg, &roles)
-	if err != nil && errcode == share.ERR_ARGS_ERROR {
+	err, tag := store.ParseGetReply(e, ar, &roles)
+	if err != nil && err.ErrCode == share.ERR_ARGS_ERROR {
 		a.ctx.core.LogErr(err)
 		return
 	}
@@ -71,6 +72,11 @@ func (a *Account) OnRoleInfo(msg *protocol.Message) {
 	if session == nil {
 		a.ctx.core.LogErr("session not found", mailbox.Id())
 		return
+	}
+
+	var errcode int32
+	if err != nil {
+		errcode = err.ErrCode
 	}
 
 	session.Dispatch(EROLEINFO, [2]interface{}{errcode, roles})
@@ -101,9 +107,9 @@ func (a *Account) CreateRole(session *Session, args c2s.CreateRole) error {
 	return nil
 }
 
-func (a *Account) OnCreateRole(msg *protocol.Message) {
-	errcode, err, tag := extension.ParseCreateRole(msg)
-	if err != nil && errcode == share.ERR_ARGS_ERROR {
+func (a *Account) OnCreateRole(e *rpc.Error, ar *utils.LoadArchive) {
+	err, tag := extension.ParseCreateRole(e, ar)
+	if err != nil && e.ErrCode == share.ERR_ARGS_ERROR {
 		a.ctx.core.LogErr(err)
 		return
 	}
@@ -118,6 +124,11 @@ func (a *Account) OnCreateRole(msg *protocol.Message) {
 	if session == nil {
 		a.ctx.core.LogErr("session not found", mailbox.Id())
 		return
+	}
+
+	var errcode int32
+	if err != nil {
+		errcode = err.ErrCode
 	}
 
 	session.Dispatch(ECREATED, errcode)
@@ -139,7 +150,7 @@ func (a *Account) ChooseRole(session *Session, args c2s.ChooseRole) error {
 	return nil
 }
 
-func (a *Account) OnChooseRole(msg *protocol.Message) {
+func (a *Account) OnChooseRole(e *rpc.Error, ar *utils.LoadArchive) {
 	inst, err := a.ctx.factory.Create(a.ctx.mainEntity)
 	if err != nil {
 		a.ctx.core.LogFatal("entity create failed")
@@ -160,18 +171,18 @@ func (a *Account) OnChooseRole(msg *protocol.Message) {
 		return
 	}
 
-	errcode, err, tag := store.ParseGetReply(msg, player.Archive())
+	err1, tag := store.ParseGetReply(e, ar, player.Archive())
 
-	if err != nil && errcode == share.ERR_ARGS_ERROR {
+	if err1 != nil && err1.ErrCode == share.ERR_ARGS_ERROR {
 		a.ctx.factory.Destroy(inst)
-		a.ctx.core.LogErr(err)
+		a.ctx.core.LogErr(err1)
 		return
 	}
 
-	mailbox, err1 := rpc.NewMailboxFromStr(tag)
-	if err1 != nil {
+	mailbox, err2 := rpc.NewMailboxFromStr(tag)
+	if err2 != nil {
 		a.ctx.factory.Destroy(inst)
-		a.ctx.core.LogErr(err1)
+		a.ctx.core.LogErr(err2)
 		return
 	}
 
@@ -180,6 +191,11 @@ func (a *Account) OnChooseRole(msg *protocol.Message) {
 		a.ctx.factory.Destroy(inst)
 		a.ctx.core.LogErr("session not found", mailbox.Id())
 		return
+	}
+
+	var errcode int32
+	if err1 != nil {
+		errcode = err1.ErrCode
 	}
 
 	session.Dispatch(ECHOOSED, [2]interface{}{errcode, gameobject})
@@ -200,9 +216,9 @@ func (a *Account) DeleteRole(session *Session, args c2s.DeleteRole) error {
 	return nil
 }
 
-func (a *Account) OnDeleteRole(msg *protocol.Message) {
-	errcode, err, tag := extension.ParseDeleteRole(msg)
-	if err != nil && errcode == share.ERR_ARGS_ERROR {
+func (a *Account) OnDeleteRole(e *rpc.Error, ar *utils.LoadArchive) {
+	err, tag := extension.ParseDeleteRole(e, ar)
+	if err != nil && err.ErrCode == share.ERR_ARGS_ERROR {
 		a.ctx.core.LogErr(err)
 		return
 	}
@@ -219,5 +235,9 @@ func (a *Account) OnDeleteRole(msg *protocol.Message) {
 		return
 	}
 
+	var errcode int32
+	if err != nil {
+		errcode = err.ErrCode
+	}
 	session.Dispatch(EDELETED, errcode)
 }

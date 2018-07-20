@@ -35,8 +35,8 @@ func (s *Session) SetGameObject(g gameobject.GameObject) {
 		s.ctx.factory.Destroy(s.gameobject)
 	}
 	if s.Mailbox != nil {
-		tp := gameobject.NewTransport(s.ctx.core, *s.Mailbox)
-		g.SetTransport(tp)
+		tr := gameobject.NewTransport(s.ctx.core, *s.Mailbox)
+		g.SetTransport(tr)
 	}
 	s.gameobject = g
 }

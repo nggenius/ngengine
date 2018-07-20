@@ -1,11 +1,10 @@
 package store
 
 import (
-	"errors"
 	"fmt"
 	"ngengine/core/rpc"
-	"ngengine/protocol"
 	"ngengine/share"
+	"ngengine/utils"
 )
 
 type StoreClient struct {
@@ -30,29 +29,23 @@ func (s *StoreClient) OnDatabaseReady(evt string, args ...interface{}) {
 }
 
 // 解析查询回调的参数
-func ParseGetReply(reply *protocol.Message, object interface{}) (errcode int32, err error, tag string) {
-	errcode, ar := protocol.ParseReply(reply)
-	tag, err = ar.ReadString()
+func ParseGetReply(err *rpc.Error, ar *utils.LoadArchive, object interface{}) (*rpc.Error, string) {
+	tag, e := ar.ReadString()
+	if e != nil {
+		err.ErrCode = share.ERR_ARGS_ERROR
+		err.Err = err.Error()
+		return rpc.NewError(share.ERR_ARGS_ERROR, e.Error()), ""
+	}
+
 	if err != nil {
-		errcode = share.ERR_ARGS_ERROR
-		return
-	}
-	if int(errcode) == share.ERR_TIME_OUT {
-		err = rpc.ErrTimeout
-		return
-	}
-	if errcode != 0 {
-		errstr, _ := ar.ReadString()
-		err = errors.New(errstr)
-		return
+		return err, tag
 	}
 
-	if err = ar.Read(object); err != nil {
-		errcode = share.ERR_ARGS_ERROR
-		return
+	if e := ar.Read(object); e != nil {
+		return rpc.NewError(share.ERR_ARGS_ERROR, e.Error()), tag
 	}
 
-	return
+	return nil, tag
 }
 
 // 查询单条记录，tag为返回的标识符,typ查询的数据类型，condition为条件{column:value}
@@ -66,29 +59,20 @@ func (s *StoreClient) Get(tag string, typ string, condition map[string]interface
 	return s.ctx.core.MailtoAndCallback(nil, s.db, "Store.Get", reply, tag, typ, condition)
 }
 
-func ParseFindReply(reply *protocol.Message, object interface{}) (errcode int32, err error, tag string) {
-	errcode, ar := protocol.ParseReply(reply)
-	tag, err = ar.ReadString()
+func ParseFindReply(err *rpc.Error, ar *utils.LoadArchive, object interface{}) (*rpc.Error, string) {
+	tag, e := ar.ReadString()
+	if e != nil {
+		return rpc.NewError(share.ERR_ARGS_ERROR, e.Error()), ""
+	}
 	if err != nil {
-		errcode = share.ERR_ARGS_ERROR
-		return
-	}
-	if int(errcode) == share.ERR_TIME_OUT {
-		err = rpc.ErrTimeout
-		return
-	}
-	if errcode != 0 {
-		errstr, _ := ar.ReadString()
-		err = errors.New(errstr)
-		return
+		return err, tag
 	}
 
-	if err = ar.Read(object); err != nil {
-		errcode = share.ERR_ARGS_ERROR
-		return
+	if e = ar.Read(object); e != nil {
+		return rpc.NewError(share.ERR_ARGS_ERROR, e.Error()), tag
 	}
 
-	return
+	return nil, tag
 }
 
 // 查找多条记录，tag为返回的标识符,typ查询的数据类型，condition为条件{column:value}，
@@ -102,33 +86,25 @@ func (s *StoreClient) Find(tag string, typ string, condition map[string]interfac
 	return s.ctx.core.MailtoAndCallback(nil, s.db, "Store.Find", reply, tag, typ, condition, limit, start)
 }
 
-func ParseInsertReply(reply *protocol.Message) (errcode int32, err error, tag string, affected, id int64) {
-	errcode, ar := protocol.ParseReply(reply)
-	tag, err = ar.ReadString()
-	if err != nil {
-		errcode = share.ERR_ARGS_ERROR
-		return
-	}
-	if int(errcode) == share.ERR_TIME_OUT {
-		err = rpc.ErrTimeout
-		return
-	}
-	if errcode != 0 {
-		errstr, _ := ar.ReadString()
-		err = errors.New(errstr)
-		return
+// 返回值：err, tag, affected, id
+func ParseInsertReply(err *rpc.Error, ar *utils.LoadArchive) (*rpc.Error, string, int64, int64) {
+	tag, e := ar.ReadString()
+	if e != nil {
+		return rpc.NewError(share.ERR_ARGS_ERROR, e.Error()), "", 0, 0
 	}
 
-	affected, err = ar.ReadInt64()
 	if err != nil {
-		errcode = share.ERR_ARGS_ERROR
-		return
+		return err, "", 0, 0
 	}
-	id, err = ar.ReadInt64()
-	if err != nil {
-		errcode = share.ERR_ARGS_ERROR
+	affected, e := ar.ReadInt64()
+	if e != nil {
+		return rpc.NewError(share.ERR_ARGS_ERROR, e.Error()), tag, 0, 0
 	}
-	return
+	id, e := ar.ReadInt64()
+	if e != nil {
+		return rpc.NewError(share.ERR_ARGS_ERROR, e.Error()), tag, 0, 0
+	}
+	return nil, tag, affected, id
 }
 
 // 查找一条记录，tag为返回的标识符,typ查询的数据类型，object待插入的数据
@@ -142,24 +118,19 @@ func (s *StoreClient) Insert(tag string, typ string, object interface{}, reply r
 	return s.ctx.core.MailtoAndCallback(nil, s.db, "Store.Insert", reply, tag, typ, object)
 }
 
-func ParseMultiInsertReply(reply *protocol.Message) (errcode int32, err error, tag string) {
-	errcode, ar := protocol.ParseReply(reply)
-	tag, err = ar.ReadString()
-	if err != nil {
-		errcode = share.ERR_ARGS_ERROR
-		return
-	}
-	if int(errcode) == share.ERR_TIME_OUT {
-		err = rpc.ErrTimeout
-		return
-	}
-	if errcode != 0 {
-		errstr, _ := ar.ReadString()
-		err = errors.New(errstr)
-		return
+// 返回值：err, tag
+func ParseMultiInsertReply(err *rpc.Error, ar *utils.LoadArchive) (*rpc.Error, string) {
+
+	tag, e := ar.ReadString()
+	if e != nil {
+		return rpc.NewError(share.ERR_ARGS_ERROR, e.Error()), ""
 	}
 
-	return
+	if err != nil {
+		return err, tag
+	}
+
+	return nil, tag
 }
 
 // 批量插入，tag为返回的标识符,typ查询的object数据类型集合,object待插入的数据集合
@@ -185,27 +156,21 @@ func (s *StoreClient) MultiInsert(tag string, reply rpc.ReplyCB, typ []string, o
 	return s.ctx.core.MailtoAndCallback(nil, s.db, "Store.MultiInsert", reply, params...)
 }
 
-func ParseUpdateReply(reply *protocol.Message) (errcode int32, err error, tag string, affected int64) {
-	errcode, ar := protocol.ParseReply(reply)
-	tag, err = ar.ReadString()
+// 返回值:err *rpc.Error, tag string, affected int6
+func ParseUpdateReply(err *rpc.Error, ar *utils.LoadArchive) (*rpc.Error, string, int64) {
+	tag, e := ar.ReadString()
+	if e != nil {
+		return rpc.NewError(share.ERR_ARGS_ERROR, e.Error()), "", 0
+	}
+
 	if err != nil {
-		errcode = share.ERR_ARGS_ERROR
-		return
+		return err, tag, 0
 	}
-	if int(errcode) == share.ERR_TIME_OUT {
-		err = rpc.ErrTimeout
-		return
+	affected, e := ar.ReadInt64()
+	if e != nil {
+		return rpc.NewError(share.ERR_ARGS_ERROR, e.Error()), tag, 0
 	}
-	if errcode != 0 {
-		errstr, _ := ar.ReadString()
-		err = errors.New(errstr)
-		return
-	}
-	affected, err = ar.ReadInt64()
-	if err != nil {
-		errcode = share.ERR_ARGS_ERROR
-	}
-	return
+	return nil, tag, affected
 }
 
 // 更新一条记录，tag为返回的标识符,typ查询的数据类型，cols更新的列，condition为条件{column:value}，object待插入的数据
@@ -238,27 +203,22 @@ func (s *StoreClient) MultiUpdate(tag string, typ []string, object []interface{}
 	return s.ctx.core.MailtoAndCallback(nil, s.db, "Store.MultiUpdate", reply, params...)
 }
 
-func ParseDeleteReply(reply *protocol.Message) (errcode int32, err error, tag string, affected int64) {
-	errcode, ar := protocol.ParseReply(reply)
-	tag, err = ar.ReadString()
+//返回值:err *rpc.Error, tag string, affected int64
+func ParseDeleteReply(err *rpc.Error, ar *utils.LoadArchive) (*rpc.Error, string, int64) {
+
+	tag, e := ar.ReadString()
+	if e != nil {
+		return rpc.NewError(share.ERR_ARGS_ERROR, e.Error()), "", 0
+	}
+
 	if err != nil {
-		errcode = share.ERR_ARGS_ERROR
-		return
+		return err, tag, 0
 	}
-	if int(errcode) == share.ERR_TIME_OUT {
-		err = rpc.ErrTimeout
-		return
+	affected, e := ar.ReadInt64()
+	if e != nil {
+		return rpc.NewError(share.ERR_ARGS_ERROR, e.Error()), tag, 0
 	}
-	if errcode != 0 {
-		errstr, _ := ar.ReadString()
-		err = errors.New(errstr)
-		return
-	}
-	affected, err = ar.ReadInt64()
-	if err != nil {
-		errcode = share.ERR_ARGS_ERROR
-	}
-	return
+	return nil, tag, affected
 }
 
 // 删除一条记录，tag为返回的标识符,typ查询的数据类型，待删除对象的id
@@ -295,25 +255,22 @@ func (s *StoreClient) MultiDelete(tag string, typ []string, id []int64, reply rp
 	return s.ctx.core.MailtoAndCallback(nil, s.db, "Store.Delete3", reply, tag, typ, id)
 }
 
-func ParseQueryReply(reply *protocol.Message) (errcode int32, err error, tag string, result []map[string][]byte) {
-	errcode, ar := protocol.ParseReply(reply)
-	tag, err = ar.ReadString()
-	if err != nil {
-		errcode = share.ERR_ARGS_ERROR
-		return
-	}
-	if int(errcode) == share.ERR_TIME_OUT {
-		err = rpc.ErrTimeout
-		return
-	}
-	if errcode != 0 {
-		errstr, _ := ar.ReadString()
-		err = errors.New(errstr)
-		return
+// 返回值：err *rpc.Error, tag string, result []map[string][]byte
+func ParseQueryReply(err *rpc.Error, ar *utils.LoadArchive) (*rpc.Error, string, []map[string][]byte) {
+	tag, e := ar.ReadString()
+	if e != nil {
+		return rpc.NewError(share.ERR_ARGS_ERROR, e.Error()), "", nil
 	}
 
-	err = ar.Read(&result)
-	return
+	if err != nil {
+		return err, tag, nil
+	}
+
+	var result []map[string][]byte
+	if e := ar.Read(&result); e != nil {
+		return rpc.NewError(share.ERR_ARGS_ERROR, e.Error()), tag, nil
+	}
+	return nil, tag, result
 }
 
 // 原生sql查询，tag为返回的标识符，sql为查询语句，args是参数
@@ -327,27 +284,21 @@ func (s *StoreClient) Query(tag string, sql string, args []interface{}, reply rp
 	return s.ctx.core.MailtoAndCallback(nil, s.db, "Store.Query", reply, tag, sql, args)
 }
 
-func ParseExecReply(reply *protocol.Message) (errcode int32, err error, tag string, affected int64) {
-	errcode, ar := protocol.ParseReply(reply)
-	tag, err = ar.ReadString()
+//返回值：err *rpc.Error, tag string, affected int64
+func ParseExecReply(err *rpc.Error, ar *utils.LoadArchive) (*rpc.Error, string, int64) {
+	tag, e := ar.ReadString()
+	if e != nil {
+		return rpc.NewError(share.ERR_ARGS_ERROR, e.Error()), "", 0
+	}
+
 	if err != nil {
-		errcode = share.ERR_ARGS_ERROR
-		return
+		return rpc.NewError(share.ERR_ARGS_ERROR, e.Error()), tag, 0
 	}
-	if int(errcode) == share.ERR_TIME_OUT {
-		err = rpc.ErrTimeout
-		return
+	affected, e := ar.ReadInt64()
+	if e != nil {
+		return rpc.NewError(share.ERR_ARGS_ERROR, e.Error()), tag, 0
 	}
-	if errcode != 0 {
-		errstr, _ := ar.ReadString()
-		err = errors.New(errstr)
-		return
-	}
-	affected, err = ar.ReadInt64()
-	if err != nil {
-		errcode = share.ERR_ARGS_ERROR
-	}
-	return
+	return nil, tag, affected
 }
 
 // 执行原生sql语句，tag为返回的标识符，sql为执行语句，args是参数

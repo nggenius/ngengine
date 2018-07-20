@@ -6,4 +6,5 @@ import (
 
 func main() {
 	parser.ParseFromXml("player.xml", "object.tpl", "./parser/", "../../../game/gameobject/entity/player.go")
+	parser.ParseFromXml("scene.xml", "object.tpl", "./parser/", "../../../game/gameobject/entity/scene.go")
 }

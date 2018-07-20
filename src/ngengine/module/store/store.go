@@ -64,11 +64,11 @@ func (s *Store) Get(sender, _ rpc.Mailbox, msg *protocol.Message) (errcode int32
 	typ, _ := m.ReadString()
 	var condition map[string]interface{}
 	if err := m.Read(&condition); err != nil {
-		return share.ERR_ARGS_ERROR, protocol.ReplyMessage(protocol.TINY, tag, err.Error())
+		return protocol.ReplyError(protocol.TINY, share.ERR_ARGS_ERROR, err.Error(), tag)
 	}
 	obj := s.ctx.register.Create(typ)
 	if obj == nil {
-		return share.ERR_ARGS_ERROR, protocol.ReplyMessage(protocol.TINY, tag, ErrObject.Error())
+		return protocol.ReplyError(protocol.TINY, share.ERR_ARGS_ERROR, ErrObject.Error(), tag)
 	}
 
 	session := s.ctx.sql.Session()
@@ -83,19 +83,19 @@ func (s *Store) Get(sender, _ rpc.Mailbox, msg *protocol.Message) (errcode int32
 		session.And(k, v)
 	}
 	if first {
-		return share.ERR_ARGS_ERROR, protocol.ReplyMessage(protocol.TINY, tag, ErrNoCondition.Error())
+		return protocol.ReplyError(protocol.TINY, share.ERR_ARGS_ERROR, ErrNoCondition.Error(), tag)
 	}
 
 	has, err := session.Get(obj)
 	if err != nil {
-		return share.ERR_STORE_SQL, protocol.ReplyMessage(protocol.TINY, tag, err.Error())
+		return protocol.ReplyError(protocol.TINY, share.ERR_STORE_SQL, err.Error(), tag)
 	}
 
 	if !has {
-		return share.ERR_STORE_NOROW, protocol.ReplyMessage(protocol.DEF, tag, ErrNoRows.Error())
+		return protocol.ReplyError(protocol.DEF, share.ERR_STORE_NOROW, ErrNoRows.Error(), tag)
 	}
 
-	return share.ERR_REPLY_SUCCEED, protocol.ReplyMessage(protocol.DEF, tag, obj)
+	return protocol.Reply(protocol.DEF, tag, obj)
 }
 
 func (s *Store) Find(sender, _ rpc.Mailbox, msg *protocol.Message) (errcode int32, reply *protocol.Message) {
@@ -104,14 +104,14 @@ func (s *Store) Find(sender, _ rpc.Mailbox, msg *protocol.Message) (errcode int3
 	typ, _ := m.ReadString()
 	var condition map[string]interface{}
 	if err := m.Read(&condition); err != nil {
-		return share.ERR_ARGS_ERROR, protocol.ReplyMessage(protocol.TINY, tag, err.Error())
+		return protocol.ReplyError(protocol.TINY, share.ERR_ARGS_ERROR, err.Error(), tag)
 	}
 	var limit, start int
 	m.Read(&limit)
 	m.Read(&start)
 	obj := s.ctx.register.CreateSlice(typ)
 	if obj == nil {
-		return share.ERR_ARGS_ERROR, protocol.ReplyMessage(protocol.TINY, tag, ErrObject.Error())
+		return protocol.ReplyError(protocol.TINY, share.ERR_ARGS_ERROR, ErrObject.Error(), tag)
 	}
 
 	session := s.ctx.sql.Session()
@@ -130,10 +130,10 @@ func (s *Store) Find(sender, _ rpc.Mailbox, msg *protocol.Message) (errcode int3
 	}
 
 	if err := session.Find(obj); err != nil {
-		return share.ERR_STORE_SQL, protocol.ReplyMessage(protocol.TINY, tag, err.Error())
+		return protocol.ReplyError(protocol.TINY, share.ERR_STORE_SQL, err.Error(), tag)
 	}
 
-	return share.ERR_REPLY_SUCCEED, protocol.ReplyMessage(protocol.DEF, tag, obj)
+	return protocol.Reply(protocol.DEF, tag, obj)
 }
 
 func (s *Store) Insert(sender, _ rpc.Mailbox, msg *protocol.Message) (errcode int32, reply *protocol.Message) {
@@ -142,19 +142,19 @@ func (s *Store) Insert(sender, _ rpc.Mailbox, msg *protocol.Message) (errcode in
 	typ, _ := m.ReadString()
 	obj := s.ctx.register.Create(typ)
 	if err := m.ReadObject(obj); err != nil {
-		return share.ERR_ARGS_ERROR, protocol.ReplyMessage(protocol.TINY, tag, err.Error())
+		return protocol.ReplyError(protocol.TINY, share.ERR_ARGS_ERROR, err.Error(), tag)
 	}
 
 	affected, err := s.ctx.sql.orm.Insert(obj)
 	if err != nil {
-		return share.ERR_STORE_SQL, protocol.ReplyMessage(protocol.TINY, tag, err.Error())
+		return protocol.ReplyError(protocol.TINY, share.ERR_STORE_SQL, err.Error(), tag)
 	}
 
 	var id int64
 	if get, ok := obj.(getsetid); ok {
 		id = get.DBId()
 	}
-	return share.ERR_REPLY_SUCCEED, protocol.ReplyMessage(protocol.TINY, tag, affected, id)
+	return protocol.Reply(protocol.TINY, tag, affected, id)
 }
 
 func (s *Store) MultiInsert(sender, _ rpc.Mailbox, msg *protocol.Message) (errcode int32, reply *protocol.Message) {
@@ -162,14 +162,14 @@ func (s *Store) MultiInsert(sender, _ rpc.Mailbox, msg *protocol.Message) (errco
 	tag, _ := m.ReadString()
 	var typ []string
 	if err := m.Read(&typ); err != nil {
-		return share.ERR_ARGS_ERROR, protocol.ReplyMessage(protocol.TINY, tag, err.Error())
+		return protocol.ReplyError(protocol.TINY, share.ERR_ARGS_ERROR, err.Error(), tag)
 	}
 
 	var object []interface{}
 	for k := range typ {
 		obj := s.ctx.register.Create(typ[k])
 		if err := m.ReadObject(obj); err != nil {
-			return share.ERR_ARGS_ERROR, protocol.ReplyMessage(protocol.TINY, tag, err.Error())
+			return protocol.ReplyError(protocol.TINY, share.ERR_ARGS_ERROR, err.Error(), tag)
 		}
 		object = append(object, obj)
 	}
@@ -181,14 +181,13 @@ func (s *Store) MultiInsert(sender, _ rpc.Mailbox, msg *protocol.Message) (errco
 	for k := range object {
 		_, err := session.Insert(object[k])
 		if err != nil {
-			session.Rollback()
-			return share.ERR_STORE_SQL, protocol.ReplyMessage(protocol.TINY, tag, err.Error())
+			return protocol.ReplyError(protocol.TINY, share.ERR_STORE_SQL, err.Error(), tag)
 		}
 	}
 
 	session.Commit()
 
-	return share.ERR_REPLY_SUCCEED, protocol.ReplyMessage(protocol.TINY, tag)
+	return protocol.Reply(protocol.TINY, tag)
 }
 
 func (s *Store) Update(sender, _ rpc.Mailbox, msg *protocol.Message) (errcode int32, reply *protocol.Message) {
@@ -197,15 +196,15 @@ func (s *Store) Update(sender, _ rpc.Mailbox, msg *protocol.Message) (errcode in
 	typ, _ := m.ReadString()
 	var cols []string
 	if err := m.Read(&cols); err != nil {
-		return share.ERR_ARGS_ERROR, protocol.ReplyMessage(protocol.TINY, tag, err.Error())
+		return protocol.ReplyError(protocol.TINY, share.ERR_ARGS_ERROR, err.Error(), tag)
 	}
 	var condition map[string]interface{}
 	if err := m.Read(&condition); err != nil {
-		return share.ERR_ARGS_ERROR, protocol.ReplyMessage(protocol.TINY, tag, err.Error())
+		return protocol.ReplyError(protocol.TINY, share.ERR_ARGS_ERROR, err.Error(), tag)
 	}
 	obj := s.ctx.register.Create(typ)
 	if err := m.ReadObject(obj); err != nil {
-		return share.ERR_ARGS_ERROR, protocol.ReplyMessage(protocol.TINY, tag, err.Error())
+		return protocol.ReplyError(protocol.TINY, share.ERR_ARGS_ERROR, err.Error(), tag)
 	}
 
 	session := s.ctx.sql.Session()
@@ -223,9 +222,9 @@ func (s *Store) Update(sender, _ rpc.Mailbox, msg *protocol.Message) (errcode in
 	}
 
 	if err != nil {
-		return share.ERR_STORE_SQL, protocol.ReplyMessage(protocol.TINY, tag, err.Error())
+		return protocol.ReplyError(protocol.TINY, share.ERR_STORE_SQL, err.Error(), tag)
 	}
-	return share.ERR_REPLY_SUCCEED, protocol.ReplyMessage(protocol.TINY, tag, affected)
+	return protocol.Reply(protocol.TINY, tag, affected)
 }
 
 func (s *Store) MultiUpdate(sender, _ rpc.Mailbox, msg *protocol.Message) (errcode int32, reply *protocol.Message) {
@@ -234,14 +233,14 @@ func (s *Store) MultiUpdate(sender, _ rpc.Mailbox, msg *protocol.Message) (errco
 
 	var typ []string
 	if err := m.Read(&typ); err != nil {
-		return share.ERR_ARGS_ERROR, protocol.ReplyMessage(protocol.TINY, tag, err.Error())
+		return protocol.ReplyError(protocol.TINY, share.ERR_ARGS_ERROR, err.Error(), tag)
 	}
 
 	var object []interface{}
 	for k := range typ {
 		obj := s.ctx.register.Create(typ[k])
 		if err := m.ReadObject(obj); err != nil {
-			return share.ERR_ARGS_ERROR, protocol.ReplyMessage(protocol.TINY, tag, err.Error())
+			return protocol.ReplyError(protocol.TINY, share.ERR_ARGS_ERROR, err.Error(), tag)
 		}
 		object = append(object, obj)
 	}
@@ -254,15 +253,14 @@ func (s *Store) MultiUpdate(sender, _ rpc.Mailbox, msg *protocol.Message) (errco
 	for k := range object {
 		aff, err := session.Update(object[k])
 		if err != nil {
-			session.Rollback()
-			return share.ERR_STORE_SQL, protocol.ReplyMessage(protocol.TINY, tag, err.Error())
+			return protocol.ReplyError(protocol.TINY, share.ERR_STORE_SQL, err.Error(), tag)
 		}
 		affected += aff
 	}
 
 	session.Commit()
 
-	return share.ERR_REPLY_SUCCEED, protocol.ReplyMessage(protocol.TINY, tag, affected)
+	return protocol.Reply(protocol.TINY, tag, affected)
 }
 
 func (s *Store) Delete(sender, _ rpc.Mailbox, msg *protocol.Message) (errcode int32, reply *protocol.Message) {
@@ -271,12 +269,12 @@ func (s *Store) Delete(sender, _ rpc.Mailbox, msg *protocol.Message) (errcode in
 	typ, _ := m.ReadString()
 	obj := s.ctx.register.Create(typ)
 	if obj == nil {
-		return share.ERR_ARGS_ERROR, protocol.ReplyMessage(protocol.TINY, tag, ErrObject.Error())
+		return protocol.ReplyError(protocol.TINY, share.ERR_ARGS_ERROR, ErrObject.Error(), tag)
 	}
 
 	id, err := m.ReadInt64()
 	if err != nil {
-		return share.ERR_ARGS_ERROR, protocol.ReplyMessage(protocol.TINY, tag, err.Error())
+		return protocol.ReplyError(protocol.TINY, share.ERR_ARGS_ERROR, err.Error(), tag)
 	}
 
 	if set, ok := obj.(getsetid); ok {
@@ -284,9 +282,9 @@ func (s *Store) Delete(sender, _ rpc.Mailbox, msg *protocol.Message) (errcode in
 	}
 	affected, err := s.ctx.sql.orm.Delete(obj)
 	if err != nil {
-		return share.ERR_STORE_SQL, protocol.ReplyMessage(protocol.TINY, tag, err.Error())
+		return protocol.ReplyError(protocol.TINY, share.ERR_STORE_SQL, err.Error(), tag)
 	}
-	return share.ERR_REPLY_SUCCEED, protocol.ReplyMessage(protocol.TINY, tag, affected)
+	return protocol.Reply(protocol.TINY, tag, affected)
 }
 
 func (s *Store) Delete2(sender, _ rpc.Mailbox, msg *protocol.Message) (errcode int32, reply *protocol.Message) {
@@ -295,18 +293,18 @@ func (s *Store) Delete2(sender, _ rpc.Mailbox, msg *protocol.Message) (errcode i
 	typ, _ := m.ReadString()
 	obj := s.ctx.register.Create(typ)
 	if obj == nil {
-		return share.ERR_ARGS_ERROR, protocol.ReplyMessage(protocol.TINY, tag, ErrObject.Error())
+		return protocol.ReplyError(protocol.TINY, share.ERR_ARGS_ERROR, ErrObject.Error(), tag)
 	}
 
 	if err := m.ReadObject(obj); err != nil {
-		return share.ERR_ARGS_ERROR, protocol.ReplyMessage(protocol.TINY, tag, err.Error())
+		return protocol.ReplyError(protocol.TINY, share.ERR_ARGS_ERROR, err.Error(), tag)
 	}
 
 	affected, err := s.ctx.sql.orm.Delete(obj)
 	if err != nil {
-		return share.ERR_STORE_SQL, protocol.ReplyMessage(protocol.TINY, tag, err.Error())
+		return protocol.ReplyError(protocol.TINY, share.ERR_STORE_SQL, err.Error(), tag)
 	}
-	return share.ERR_REPLY_SUCCEED, protocol.ReplyMessage(protocol.TINY, tag, affected)
+	return protocol.Reply(protocol.TINY, tag, affected)
 }
 
 func (s *Store) Delete3(sender, _ rpc.Mailbox, msg *protocol.Message) (errcode int32, reply *protocol.Message) {
@@ -315,12 +313,12 @@ func (s *Store) Delete3(sender, _ rpc.Mailbox, msg *protocol.Message) (errcode i
 
 	var typ []string
 	if err := m.Read(&typ); err != nil {
-		return share.ERR_ARGS_ERROR, protocol.ReplyMessage(protocol.TINY, tag, err.Error())
+		return protocol.ReplyError(protocol.TINY, share.ERR_ARGS_ERROR, err.Error(), tag)
 	}
 
 	var ids []int64
 	if err := m.Read(&ids); err != nil {
-		return share.ERR_ARGS_ERROR, protocol.ReplyMessage(protocol.TINY, tag, err.Error())
+		return protocol.ReplyError(protocol.TINY, share.ERR_ARGS_ERROR, err.Error(), tag)
 	}
 
 	session := s.ctx.sql.Session()
@@ -331,22 +329,21 @@ func (s *Store) Delete3(sender, _ rpc.Mailbox, msg *protocol.Message) (errcode i
 	for k := range typ {
 		obj := s.ctx.register.Create(typ[k])
 		if obj == nil {
-			return share.ERR_ARGS_ERROR, protocol.ReplyMessage(protocol.TINY, tag, ErrObject.Error())
+			return protocol.ReplyError(protocol.TINY, share.ERR_ARGS_ERROR, ErrObject.Error(), tag)
 		}
 		if set, ok := obj.(getsetid); ok {
 			set.SetId(ids[k])
 		}
 		aff, err := session.Delete(obj)
 		if err != nil {
-			session.Rollback()
-			return share.ERR_STORE_SQL, protocol.ReplyMessage(protocol.TINY, tag, err.Error())
+			return protocol.ReplyError(protocol.TINY, share.ERR_STORE_SQL, err.Error(), tag)
 		}
 		affected += aff
 	}
 
 	session.Commit()
 
-	return share.ERR_REPLY_SUCCEED, protocol.ReplyMessage(protocol.TINY, tag, affected)
+	return protocol.Reply(protocol.TINY, tag, affected)
 }
 
 func (s *Store) Query(sender, _ rpc.Mailbox, msg *protocol.Message) (errcode int32, reply *protocol.Message) {
@@ -355,7 +352,7 @@ func (s *Store) Query(sender, _ rpc.Mailbox, msg *protocol.Message) (errcode int
 	sql, _ := m.ReadString()
 	var args []interface{}
 	if err := m.Read(&args); err != nil {
-		return share.ERR_ARGS_ERROR, protocol.ReplyMessage(protocol.TINY, tag, err.Error())
+		return protocol.ReplyError(protocol.TINY, share.ERR_ARGS_ERROR, err.Error(), tag)
 	}
 
 	sqlorargs := make([]interface{}, 0, 1+len(args))
@@ -365,9 +362,9 @@ func (s *Store) Query(sender, _ rpc.Mailbox, msg *protocol.Message) (errcode int
 	}
 	result, err := s.ctx.sql.orm.Query(sqlorargs...)
 	if err != nil {
-		return share.ERR_STORE_SQL, protocol.ReplyMessage(protocol.TINY, tag, err.Error())
+		return protocol.ReplyError(protocol.TINY, share.ERR_STORE_SQL, err.Error(), tag)
 	}
-	return share.ERR_REPLY_SUCCEED, protocol.ReplyMessage(protocol.DEF, tag, result)
+	return protocol.Reply(protocol.DEF, tag, result)
 }
 
 func (s *Store) Exec(sender, _ rpc.Mailbox, msg *protocol.Message) (errcode int32, reply *protocol.Message) {
@@ -376,15 +373,15 @@ func (s *Store) Exec(sender, _ rpc.Mailbox, msg *protocol.Message) (errcode int3
 	sql, _ := m.ReadString()
 	var args []interface{}
 	if err := m.Read(&args); err != nil {
-		return 1, protocol.ReplyMessage(protocol.TINY, tag, err.Error())
+		return protocol.ReplyError(protocol.TINY, share.ERR_ARGS_ERROR, err.Error(), tag)
 	}
 	res, err := s.ctx.sql.orm.Exec(sql, args...)
 	if err != nil {
-		return share.ERR_STORE_SQL, protocol.ReplyMessage(protocol.TINY, tag, err.Error())
+		return protocol.ReplyError(protocol.TINY, share.ERR_STORE_SQL, err.Error(), tag)
 	}
 	affected, err := res.RowsAffected()
 	if err != nil {
-		return share.ERR_STORE_ERROR, protocol.ReplyMessage(protocol.TINY, tag, err.Error())
+		return protocol.ReplyError(protocol.TINY, share.ERR_STORE_ERROR, err.Error(), tag)
 	}
-	return share.ERR_REPLY_SUCCEED, protocol.ReplyMessage(protocol.TINY, tag, affected)
+	return protocol.Reply(protocol.TINY, tag, affected)
 }

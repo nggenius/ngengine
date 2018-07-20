@@ -9,6 +9,7 @@ import (
 	"ngengine/protocol"
 	"ngengine/protocol/proto/c2s"
 	"ngengine/share"
+	"ngengine/utils"
 )
 
 type Account struct {
@@ -62,9 +63,9 @@ func (a *Account) sendLogin(s *Session, login *c2s.Login) error {
 }
 
 // 帐号信息回调
-func (a *Account) OnLoginResult(reply *protocol.Message) {
+func (a *Account) OnLoginResult(e *rpc.Error, ar *utils.LoadArchive) {
 	accinfo := &inner.Account{}
-	errcode, err, tag := store.ParseGetReply(reply, accinfo)
+	err, tag := store.ParseGetReply(e, ar, accinfo)
 	if err != nil {
 		a.ctx.core.LogErr(err)
 		return
@@ -81,6 +82,10 @@ func (a *Account) OnLoginResult(reply *protocol.Message) {
 		return
 	}
 
+	var errcode int32
+	if err != nil {
+		errcode = err.ErrCode
+	}
 	session.Dispatch(LOGIN_RESULT, [2]interface{}{errcode, accinfo})
 }
 
@@ -99,8 +104,7 @@ func (a *Account) findNest(s *Session) *service.Srv {
 	return srv
 }
 
-func (a *Account) OnNestLogged(msg *protocol.Message) {
-	errcode, ar := protocol.ParseReply(msg)
+func (a *Account) OnNestLogged(e *rpc.Error, ar *utils.LoadArchive) {
 	var id uint64
 	var token string
 	err := ar.Read(&id)
@@ -115,6 +119,11 @@ func (a *Account) OnNestLogged(msg *protocol.Message) {
 	}
 
 	ar.Read(&token)
+
+	var errcode int32
+	if e != nil {
+		errcode = e.ErrCode
+	}
 
 	session.Dispatch(NEST_RESULT, [2]interface{}{errcode, token})
 }

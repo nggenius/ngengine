@@ -20,3 +20,8 @@ const (
 	ERR_STORE_ROLE_NOT_FOUND // 玩家没找到
 	ERR_STORE_ERROR          // 其它错误
 )
+
+const (
+	ERR_REGION_NONE          = 12000 + iota
+	ERR_REGION_CREATE_FAILED // 创建场景失败
+)

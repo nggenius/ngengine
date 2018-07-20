@@ -47,7 +47,6 @@ type BaseObject struct {
 	typ        int
 	delete     bool
 	index      int
-	objid      rpc.Mailbox
 	client     rpc.Mailbox
 	spirit     object.Object
 	delegate   object.Delegate
@@ -84,8 +83,8 @@ func (b *BaseObject) Prepare() {
 
 // 构造函数
 func (b *BaseObject) Create() {
-	if b.delegate != nil {
-		b.delegate.Invoke(E_ON_CREATE, b.objid, rpc.NullMailbox)
+	if b.delegate != nil && b.spirit != nil {
+		b.delegate.Invoke(E_ON_CREATE, b.spirit.ObjId(), rpc.NullMailbox)
 	}
 }
 
@@ -96,8 +95,8 @@ func (b *BaseObject) ObjectType() int {
 
 // 准备销毁
 func (b *BaseObject) Destroy() {
-	if b.delegate != nil {
-		b.delegate.Invoke(E_ON_DESTROY, b.objid, rpc.NullMailbox)
+	if b.delegate != nil && b.spirit != nil {
+		b.delegate.Invoke(E_ON_DESTROY, b.spirit.ObjId(), rpc.NullMailbox)
 	}
 	b.delete = true
 }
@@ -137,15 +136,22 @@ func (b *BaseObject) SetSpirit(s object.Object) {
 	b.spirit = s
 }
 
+/*
 // 唯一ID
 func (b *BaseObject) ObjId() rpc.Mailbox {
-	return b.objid
+	if b.spirit == nil {
+		panic("spirit is nil")
+	}
+	return b.spirit.ObjId()
 }
 
 // 设置唯一ID
 func (b *BaseObject) SetObjId(id rpc.Mailbox) {
-	b.objid = id
-}
+	if b.spirit == nil {
+		panic("spirit is nil")
+	}
+	b.spirit.SetObjId(id)
+}*/
 
 // 客户端地址
 func (b *BaseObject) Client() rpc.Mailbox {

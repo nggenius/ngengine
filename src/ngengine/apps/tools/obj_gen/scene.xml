@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<object>
+    <package>entity</package>
+    <name>Scene</name>
+    <type>scene</type>
+    <archive></archive>
+    <propertys>
+        <property name="Name" type="string" size="128" save="false" expose="" desc="场景名" />
+        <property name="Resource" type="string" size="128" save="false" expose="" desc="资源" />
+    </propertys>
+</object>

@@ -1,0 +1,16 @@
+{
+    "Regions": [{
+        "Id": 1,
+        "Border": {
+            "Left": -250,
+            "Top": -250,
+            "Width": 500,
+            "Height": 500
+        },
+        "MaxPlayer": 512,
+        "Dummy": false,
+        "Prototype": 0,
+        "Diversion": false,
+        "Flexible": false
+    }]
+}

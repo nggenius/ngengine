@@ -1,7 +1,6 @@
 package extension
 
 import (
-	"errors"
 	"ngengine/core/rpc"
 	"ngengine/core/service"
 	"ngengine/game/gameobject/entity"
@@ -9,6 +8,7 @@ import (
 	"ngengine/module/store"
 	"ngengine/protocol"
 	"ngengine/share"
+	"ngengine/utils"
 )
 
 type Role struct {
@@ -28,23 +28,17 @@ func (r *Role) RegisterCallback(svr rpc.Servicer) {
 	svr.RegisterCallback("DeleteRole", r.DeleteRole)
 }
 
-func ParseCreateRole(reply *protocol.Message) (errcode int32, err error, tag string) {
-	errcode, ar := protocol.ParseReply(reply)
-	tag, err = ar.ReadString()
+//返回值：err *rpc.Error, tag string
+func ParseCreateRole(err *rpc.Error, ar *utils.LoadArchive) (*rpc.Error, string) {
+	tag, e := ar.ReadString()
+	if e != nil {
+		return rpc.NewError(share.ERR_ARGS_ERROR, e.Error()), ""
+	}
 	if err != nil {
-		return
-	}
-	if int(errcode) == share.ERR_TIME_OUT {
-		err = rpc.ErrTimeout
-		return
-	}
-	if errcode != 0 {
-		errstr, _ := ar.ReadString()
-		err = errors.New(errstr)
-		return
+		return err, tag
 	}
 
-	return
+	return nil, tag
 }
 
 func (r *Role) CreateRole(sender, _ rpc.Mailbox, msg *protocol.Message) (errcode int32, reply *protocol.Message) {
@@ -58,11 +52,11 @@ func (r *Role) CreateRole(sender, _ rpc.Mailbox, msg *protocol.Message) (errcode
 	var player entity.PlayerArchive
 	err = m.Read(&role)
 	if err != nil {
-		return share.ERR_ARGS_ERROR, protocol.ReplyMessage(protocol.TINY, tag, err.Error())
+		return protocol.ReplyError(protocol.TINY, share.ERR_ARGS_ERROR, err.Error(), tag)
 	}
 	err = m.Read(&player)
 	if err != nil {
-		return share.ERR_ARGS_ERROR, protocol.ReplyMessage(protocol.TINY, tag, err.Error())
+		return protocol.ReplyError(protocol.TINY, share.ERR_ARGS_ERROR, err.Error(), tag)
 	}
 
 	session := r.store.Sql().Session()
@@ -70,44 +64,39 @@ func (r *Role) CreateRole(sender, _ rpc.Mailbox, msg *protocol.Message) (errcode
 
 	count, err := session.Count(inner.Role{Index: role.Index, Account: role.Account})
 	if err != nil {
-		return share.ERR_STORE_SQL, protocol.ReplyMessage(protocol.TINY, tag, err.Error())
+		return protocol.ReplyError(protocol.TINY, share.ERR_STORE_SQL, err.Error(), tag)
 	}
 
 	if count != 0 {
-		return share.ERR_STORE_ROLE_INDEX, protocol.ReplyMessage(protocol.TINY, tag, "index error")
+		return protocol.ReplyError(protocol.TINY, share.ERR_STORE_ROLE_INDEX, "index error", tag)
 	}
 
 	session.Begin()
 	_, err = session.Insert(&role)
 	if err != nil {
-		return share.ERR_STORE_ERROR, protocol.ReplyMessage(protocol.TINY, tag, err.Error())
+		return protocol.ReplyError(protocol.TINY, share.ERR_STORE_ERROR, err.Error(), tag)
 	}
 	_, err = session.Insert(&player)
 	if err != nil {
-		return share.ERR_STORE_ERROR, protocol.ReplyMessage(protocol.TINY, tag, err.Error())
+		return protocol.ReplyError(protocol.TINY, share.ERR_STORE_ERROR, err.Error(), tag)
 	}
 
 	session.Commit()
-	return share.ERR_REPLY_SUCCEED, protocol.ReplyMessage(protocol.TINY, tag)
+	return protocol.Reply(protocol.TINY, tag)
 }
 
-func ParseDeleteRole(reply *protocol.Message) (errcode int32, err error, tag string) {
-	errcode, ar := protocol.ParseReply(reply)
-	tag, err = ar.ReadString()
+//返回值：err *rpc.Error, tag string
+func ParseDeleteRole(err *rpc.Error, ar *utils.LoadArchive) (*rpc.Error, string) {
+
+	tag, e := ar.ReadString()
+	if e != nil {
+		return rpc.NewError(share.ERR_ARGS_ERROR, e.Error()), ""
+	}
 	if err != nil {
-		return
-	}
-	if int(errcode) == share.ERR_TIME_OUT {
-		err = rpc.ErrTimeout
-		return
-	}
-	if errcode != 0 {
-		errstr, _ := ar.ReadString()
-		err = errors.New(errstr)
-		return
+		return err, tag
 	}
 
-	return
+	return nil, tag
 }
 
 func (r *Role) DeleteRole(sender, _ rpc.Mailbox, msg *protocol.Message) (errcode int32, reply *protocol.Message) {
@@ -133,11 +122,11 @@ func (r *Role) DeleteRole(sender, _ rpc.Mailbox, msg *protocol.Message) (errcode
 
 	count, err := session.Count(player)
 	if err != nil {
-		return share.ERR_STORE_ERROR, protocol.ReplyMessage(protocol.TINY, tag, err.Error())
+		return protocol.ReplyError(protocol.TINY, share.ERR_STORE_ERROR, err.Error(), tag)
 	}
 
 	if count == 0 {
-		return share.ERR_STORE_ROLE_NOT_FOUND, protocol.ReplyMessage(protocol.TINY, tag, "player not found")
+		return protocol.ReplyError(protocol.TINY, share.ERR_STORE_ROLE_NOT_FOUND, "player not found", tag)
 	}
 
 	session.Begin()
@@ -145,18 +134,18 @@ func (r *Role) DeleteRole(sender, _ rpc.Mailbox, msg *protocol.Message) (errcode
 	// 备份数据
 	_, err = session.Exec("insert into player_bak select * from player where id=?", roleid)
 	if err != nil {
-		return share.ERR_STORE_ERROR, protocol.ReplyMessage(protocol.TINY, tag, err.Error())
+		return protocol.ReplyError(protocol.TINY, share.ERR_STORE_ERROR, err.Error(), tag)
 	}
 	// 删除
 	_, err = session.Delete(&role)
 	if err != nil {
-		return share.ERR_STORE_ERROR, protocol.ReplyMessage(protocol.TINY, tag, err.Error())
+		return protocol.ReplyError(protocol.TINY, share.ERR_STORE_ERROR, err.Error(), tag)
 	}
 
 	_, err = session.Delete(&player)
 	if err != nil {
-		return share.ERR_STORE_ERROR, protocol.ReplyMessage(protocol.TINY, tag, err.Error())
+		return protocol.ReplyError(protocol.TINY, share.ERR_STORE_ERROR, err.Error(), tag)
 	}
 	session.Commit()
-	return share.ERR_REPLY_SUCCEED, protocol.ReplyMessage(protocol.TINY, tag)
+	return protocol.Reply(protocol.TINY, tag)
 }

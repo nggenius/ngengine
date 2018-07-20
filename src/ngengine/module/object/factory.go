@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"ngengine/core/rpc"
+	"ngengine/share"
 )
 
 type FactoryObject interface {
@@ -24,18 +25,18 @@ type FactoryObject interface {
 }
 
 type Factory struct {
-	objType int
-	serial  int
-	owner   *ObjectModule
-	pool    *ObjectList
-	delete  *list.List
+	identity int
+	serial   int
+	owner    *ObjectModule
+	pool     *ObjectList
+	delete   *list.List
 }
 
-func newFactory(owner *ObjectModule, typ int) *Factory {
+func newFactory(owner *ObjectModule, identity int) *Factory {
 	f := &Factory{}
-	f.objType = typ
+	f.identity = identity
 	f.owner = owner
-	f.pool = NewObjectList(128, 0x1000000)
+	f.pool = NewObjectList(128, share.OBJECT_MAX)
 	f.delete = list.New()
 	return f
 }
@@ -56,7 +57,7 @@ func (f *Factory) Create(typ string) (interface{}, error) {
 			o.Init(inst)
 			o.SetIndex(index)
 			f.serial = (f.serial + 1) % 0xFF
-			o.SetObjId(f.owner.core.Mailbox().NewObjectId(f.objType, f.serial, index))
+			o.SetObjId(f.owner.core.Mailbox().NewObjectId(f.identity, f.serial, index))
 			o.SetFactory(f)
 			o.SetDelegate(f.owner.entitydelegate[typ])
 			o.Prepare()
@@ -99,7 +100,7 @@ func (f *Factory) ClearDelete() {
 func (f *Factory) FindObject(mb rpc.Mailbox) (interface{}, error) {
 	if f.owner.core.Mailbox().ServiceId() != mb.ServiceId() ||
 		mb.Flag() != 0 ||
-		mb.ObjectType() != f.objType {
+		mb.Identity() != f.identity {
 		return nil, fmt.Errorf("mailbox %s error", mb)
 	}
 

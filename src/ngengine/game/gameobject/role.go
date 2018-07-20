@@ -4,24 +4,19 @@ import (
 	"time"
 )
 
-type Role struct {
+type RoleObject struct {
 	TransformObject
 }
 
-func NewRole() *Role {
-	r := &Role{}
+func (r *RoleObject) Create() {
 	r.typ = OBJECT_PLAYER
-	return r
-}
-
-func (r *Role) Create() {
 	r.TransformObject.Create()
 }
 
-func (r *Role) Destroy() {
+func (r *RoleObject) Destroy() {
 	r.TransformObject.Destroy()
 }
 
-func (r *Role) Update(delta time.Duration) {
+func (r *RoleObject) Update(delta time.Duration) {
 	r.TransformObject.Update(delta)
 }

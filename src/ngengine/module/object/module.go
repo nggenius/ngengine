@@ -16,7 +16,7 @@ type ObjectModule struct {
 	service.Module
 	core           service.CoreAPI
 	defaultFactory *Factory // 默认对象工厂
-	factorys       map[string]*Factory
+	factorys       map[int]*Factory
 	regs           map[string]ObjectCreate
 	entitydelegate map[string]*EventDelegate
 	sync           *SyncObject
@@ -24,8 +24,8 @@ type ObjectModule struct {
 
 func New() *ObjectModule {
 	o := &ObjectModule{}
-	o.defaultFactory = newFactory(o, share.OBJECT_TYPE_OBJECT)
-	o.factorys = make(map[string]*Factory)
+	o.defaultFactory = newFactory(o, share.OBJECT_TYPE_NONE)
+	o.factorys = make(map[int]*Factory)
 	o.regs = make(map[string]ObjectCreate)
 	o.entitydelegate = make(map[string]*EventDelegate)
 	o.sync = &SyncObject{o}
@@ -57,12 +57,31 @@ func (o *ObjectModule) Logger() logger.Logger {
 	return o.core
 }
 
-func (o *ObjectModule) FactoryCreate(factory, typ string) (interface{}, error) {
-	if f, has := o.factorys[factory]; has {
+// 增加一个对象工厂
+func (o *ObjectModule) AddFactory(identity int) error {
+	if _, has := o.factorys[identity]; has {
+		return fmt.Errorf("factory already created")
+	}
+
+	o.factorys[identity] = newFactory(o, identity)
+
+	return nil
+}
+
+// 获取工厂
+func (o *ObjectModule) Factory(identity int) *Factory {
+	if f, has := o.factorys[identity]; has {
+		return f
+	}
+	return nil
+}
+
+func (o *ObjectModule) FactoryCreate(identity int, typ string) (interface{}, error) {
+	if f, has := o.factorys[identity]; has {
 		return f.Create(typ)
 	}
 
-	return nil, fmt.Errorf("factory %s not found", factory)
+	return nil, fmt.Errorf("factory %d not found", identity)
 }
 
 // 创建
@@ -83,14 +102,12 @@ func (o *ObjectModule) Destroy(object interface{}) error {
 
 // 查找对象
 func (o *ObjectModule) FindObject(mb rpc.Mailbox) (interface{}, error) {
-	if mb.ObjectType() == o.defaultFactory.objType {
+	if mb.Identity() == o.defaultFactory.identity {
 		return o.defaultFactory.FindObject(mb)
 	}
 
-	for _, f := range o.factorys {
-		if f.objType == mb.ObjectType() {
-			return f.FindObject(mb)
-		}
+	if f, ok := o.factorys[mb.Identity()]; ok {
+		return f.FindObject(mb)
 	}
 
 	return nil, fmt.Errorf("object %s not found", mb)
