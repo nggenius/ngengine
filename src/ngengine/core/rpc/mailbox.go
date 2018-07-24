@@ -46,7 +46,12 @@ func (m Mailbox) Uid() uint64 {
 
 // 是否是一个客户端地址
 func (m Mailbox) IsClient() bool {
-	return m.Flag() == share.MB_FLAG_CLIENT
+	return int8((m>>47)&0x1) == share.MB_FLAG_CLIENT
+}
+
+// 是否是对象
+func (m Mailbox) IsObject() bool {
+	return uint64(m&ID_MAX) > 0
 }
 
 // create uid

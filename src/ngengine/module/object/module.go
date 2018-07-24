@@ -20,6 +20,7 @@ type ObjectModule struct {
 	regs           map[string]ObjectCreate
 	entitydelegate map[string]*EventDelegate
 	sync           *SyncObject
+	router         *ObjectRouter
 }
 
 func New() *ObjectModule {
@@ -29,6 +30,7 @@ func New() *ObjectModule {
 	o.regs = make(map[string]ObjectCreate)
 	o.entitydelegate = make(map[string]*EventDelegate)
 	o.sync = &SyncObject{o}
+	o.router = NewObjectRouter(o)
 	return o
 }
 
@@ -41,6 +43,7 @@ func (o *ObjectModule) Name() string {
 func (o *ObjectModule) Init(core service.CoreAPI) bool {
 	o.core = core
 	o.core.RegisterRemote("object", o.sync)
+	o.core.RegisterRemote("ObjectRouter", o.router)
 	return true
 }
 
@@ -146,4 +149,5 @@ func (o *ObjectModule) Register(name string, oc ObjectCreate) {
 
 	o.regs[name] = oc
 	o.entitydelegate[name] = NewEventDelegate()
+	o.router.Register(name, oc.Create())
 }

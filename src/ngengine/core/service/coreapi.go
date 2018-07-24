@@ -7,6 +7,7 @@ import (
 	"ngengine/logger"
 	"ngengine/protocol"
 	"ngengine/share"
+	"ngengine/utils"
 	"time"
 )
 
@@ -174,6 +175,11 @@ func (c *Core) Mailto(src *rpc.Mailbox, dest *rpc.Mailbox, method string, args .
 		src = &c.mailbox
 	}
 
+	// 对象
+	if dest.IsObject() {
+		return c.ObjectCall(src, dest, method, args...)
+	}
+
 	if !dest.IsClient() { // 判断是否是客户端的消息
 		if dest.ServiceId() == c.mailbox.ServiceId() { // 本地调用
 			return c.rpcSvr.Call(rpc.GetServiceMethod(method), *src, *dest, args...)
@@ -207,6 +213,11 @@ func (c *Core) MailtoAndCallback(src *rpc.Mailbox, dest *rpc.Mailbox, method str
 		src = &c.mailbox
 	}
 
+	// 对象
+	if dest.IsObject() {
+		return c.ObjectCallback(src, dest, method, cb, args...)
+	}
+
 	if dest.IsClient() { // 客户端的调用不支持回调
 		return fmt.Errorf("client not support callback")
 	}
@@ -226,6 +237,62 @@ func (c *Core) MailtoAndCallback(src *rpc.Mailbox, dest *rpc.Mailbox, method str
 	}
 
 	return nil
+}
+
+// ObjectCall 像对象发送消息
+func (c *Core) ObjectCall(src *rpc.Mailbox, dest *rpc.Mailbox, method string, args ...interface{}) (err error) {
+	msg := protocol.NewMessage(share.MAX_BUF_LEN)
+	defer msg.Free()
+	ar := utils.NewStoreArchiver(msg.Body)
+	for i := 0; i < len(args); i++ {
+		err = ar.Put(args[i])
+		if err != nil {
+			return
+		}
+	}
+	msg.Body = msg.Body[:ar.Len()]
+
+	// 本地
+	if dest.ServiceId() == c.mailbox.ServiceId() {
+		err = c.rpcSvr.Call(rpc.GetServiceMethod(share.ROUTER_TO_OBJECT), *src, *dest, method, msg.Body)
+		return
+	}
+
+	srv := c.dns.LookupByMailbox(*dest)
+	if srv == nil {
+		return errors.New("service not found")
+	}
+
+	err = srv.Call(*src, *dest, share.ROUTER_TO_OBJECT, method, msg.Body)
+	return
+}
+
+// ObjectCallback 向对象发送消息
+func (c *Core) ObjectCallback(src *rpc.Mailbox, dest *rpc.Mailbox, method string, cb rpc.ReplyCB, args ...interface{}) (err error) {
+	msg := protocol.NewMessage(share.MAX_BUF_LEN)
+	defer msg.Free()
+	ar := utils.NewStoreArchiver(msg.Body)
+	for i := 0; i < len(args); i++ {
+		err = ar.Put(args[i])
+		if err != nil {
+			return
+		}
+	}
+	msg.Body = msg.Body[:ar.Len()]
+
+	// 本地
+	if dest.ServiceId() == c.mailbox.ServiceId() {
+		err = c.rpcSvr.CallBack(rpc.GetServiceMethod(share.ROUTER_TO_OBJECT), *src, *dest, cb, method, msg.Body)
+		return
+	}
+
+	srv := c.dns.LookupByMailbox(*dest)
+	if srv == nil {
+		return errors.New("service not found")
+	}
+
+	err = srv.Callback(*src, *dest, share.ROUTER_TO_OBJECT, cb, method, msg.Body)
+	return
 }
 
 // 向客记端发送消息

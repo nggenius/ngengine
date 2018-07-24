@@ -1,14 +1,16 @@
 package share
 
 const (
-	ERR_REPLY_SUCCEED  = iota // 成功
-	ERR_TIME_OUT              // 超时
-	ERR_ARGS_ERROR            // 参数错误
-	ERR_SYSTEM_ERROR          // 系统错误
-	ERR_REPLY_FAILED          // 失败
-	ERR_CREATE_TIMEOUT        // 创建角色超时
-	ERR_CHOOSE_ROLE           // 选择角色出错
-	ERR_CHOOSE_TIMEOUT        // 选择角色超时
+	ERR_REPLY_SUCCEED    = iota // 成功
+	ERR_TIME_OUT                // 超时
+	ERR_ARGS_ERROR              // 参数错误
+	ERR_SYSTEM_ERROR            // 系统错误
+	ERR_REPLY_FAILED            // 失败
+	ERR_CREATE_TIMEOUT          // 创建角色超时
+	ERR_CHOOSE_ROLE             // 选择角色出错
+	ERR_CHOOSE_TIMEOUT          // 选择角色超时
+	ERR_OBJECT_NOT_FOUND        // 对象没有找到
+	ERR_OBJECT_RPC_CALL         // rpc 执行错误
 )
 
 // 存储错误码

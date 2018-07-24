@@ -218,7 +218,7 @@ func (s *SpaceManage) OnCreateRegion(e *rpc.Error, ar *utils.LoadArchive) {
 	if e != nil {
 		ri.Status = REGION_FAILED
 		err, _ := ar.ReadString()
-		s.ctx.core.LogErr("regin create failed", err)
+		s.ctx.core.LogErr("region create failed", err)
 		return
 	}
 
@@ -231,6 +231,7 @@ func (s *SpaceManage) OnCreateRegion(e *rpc.Error, ar *utils.LoadArchive) {
 	ri.Dest = mb
 	ri.Status = REGION_RUNNING
 
+	s.ctx.core.Mailto(nil, &mb, "Test", "test")
 	s.ctx.core.LogInfo("region created,", ri)
 }
 
