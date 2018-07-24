@@ -239,7 +239,7 @@ func (c *Core) MailtoAndCallback(src *rpc.Mailbox, dest *rpc.Mailbox, method str
 	return nil
 }
 
-// ObjectCall 像对象发送消息
+// ObjectCall 向对象发送消息
 func (c *Core) ObjectCall(src *rpc.Mailbox, dest *rpc.Mailbox, method string, args ...interface{}) (err error) {
 	msg := protocol.NewMessage(share.MAX_BUF_LEN)
 	defer msg.Free()
