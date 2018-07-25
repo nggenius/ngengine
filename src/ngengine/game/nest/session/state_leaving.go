@@ -22,7 +22,7 @@ func (l *leaving) Handle(event int, param interface{}) string {
 			l.owner.DestroySelf()
 		}
 	default:
-		l.owner.ctx.core.LogWarnf("leaving state receive error event(%d)", event)
+		l.owner.ctx.Core.LogWarnf("leaving state receive error event(%d)", event)
 	}
 	return ""
 }

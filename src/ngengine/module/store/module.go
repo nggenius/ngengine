@@ -12,7 +12,6 @@ const (
 
 type StoreModule struct {
 	service.Module
-	core     service.CoreAPI
 	mode     int
 	client   *StoreClient
 	store    *Store
@@ -56,18 +55,16 @@ func (m *StoreModule) Extend(name string, ext Extension) {
 		return
 	}
 
-	m.core.LogErr("add extension failed")
+	m.Core.LogErr("add extension failed")
 }
 
-func (m *StoreModule) Init(core service.CoreAPI) bool {
-	m.core = core
-
+func (m *StoreModule) Init() bool {
 	switch m.mode {
 	case STORE_CLIENT:
-		m.core.Service().AddListener(share.EVENT_READY, m.client.OnDatabaseReady)
+		m.Core.Service().AddListener(share.EVENT_READY, m.client.OnDatabaseReady)
 	case STORE_SERVER:
-		m.sql.Init(core)
-		core.RegisterRemote("Store", m.store)
+		m.sql.Init(m.Core)
+		m.Core.RegisterRemote("Store", m.store)
 	default:
 		return false
 	}
@@ -88,7 +85,7 @@ func (m *StoreModule) Start() {
 func (m *StoreModule) Shut() {
 	switch m.mode {
 	case STORE_CLIENT:
-		m.core.Service().RemoveListener(share.EVENT_READY, m.client.OnDatabaseReady)
+		m.Core.Service().RemoveListener(share.EVENT_READY, m.client.OnDatabaseReady)
 	}
 }
 

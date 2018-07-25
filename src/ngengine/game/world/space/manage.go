@@ -112,7 +112,7 @@ func (s *SpaceManage) AddRegion(rs *RegionState) {
 
 func (s *SpaceManage) OnServiceReady(e string, args ...interface{}) {
 	id := args[0].(event.EventArgs)["id"].(share.ServiceId)
-	srv := s.ctx.core.LookupService(id)
+	srv := s.ctx.Core.LookupService(id)
 	if srv == nil {
 		panic("service not found")
 	}
@@ -126,7 +126,7 @@ func (s *SpaceManage) OnServiceReady(e string, args ...interface{}) {
 
 		rs.state = RS_QUERY
 
-		s.ctx.core.MailtoAndCallback(nil, srv.Mailbox(), "Region.Query", s.OnRegionQuery)
+		s.ctx.Core.MailtoAndCallback(nil, srv.Mailbox(), "Region.Query", s.OnRegionQuery)
 	}
 }
 
@@ -134,13 +134,13 @@ func (s *SpaceManage) OnRegionQuery(e *rpc.Error, ar *utils.LoadArchive) {
 	var id share.ServiceId
 	err := ar.Read(&id)
 	if err != nil {
-		s.ctx.core.LogErr("read id error", err)
+		s.ctx.Core.LogErr("read id error", err)
 		return
 	}
 
 	rs := s.RegionState(id)
 	if rs == nil {
-		s.ctx.core.LogWarn("region state not found")
+		s.ctx.Core.LogWarn("region state not found")
 		return
 	}
 
@@ -198,41 +198,41 @@ func (s *SpaceManage) CreateRegion(id int) error {
 	s.regionmap[id] = &r
 	rs.AddRegion(id)
 
-	return s.ctx.core.MailtoAndCallback(nil, &rs.mailbox, "Region.Create", s.OnCreateRegion, r.Region)
+	return s.ctx.Core.MailtoAndCallback(nil, &rs.mailbox, "Region.Create", s.OnCreateRegion, r.Region)
 }
 
 func (s *SpaceManage) OnCreateRegion(e *rpc.Error, ar *utils.LoadArchive) {
 	var id int
 	err := ar.Read(&id)
 	if err != nil {
-		s.ctx.core.LogErr("get id error")
+		s.ctx.Core.LogErr("get id error")
 		return
 	}
 
 	ri := s.FindRegionById(id)
 	if ri == nil {
-		s.ctx.core.LogErr("region not found")
+		s.ctx.Core.LogErr("region not found")
 		return
 	}
 
 	if e != nil {
 		ri.Status = REGION_FAILED
 		err, _ := ar.ReadString()
-		s.ctx.core.LogErr("region create failed", err)
+		s.ctx.Core.LogErr("region create failed", err)
 		return
 	}
 
 	var mb rpc.Mailbox
 	err = ar.Read(&mb)
 	if err != nil {
-		s.ctx.core.LogErr("get mailbox error")
+		s.ctx.Core.LogErr("get mailbox error")
 		return
 	}
 	ri.Dest = mb
 	ri.Status = REGION_RUNNING
 
-	s.ctx.core.Mailto(nil, &mb, "Test", "test")
-	s.ctx.core.LogInfo("region created,", ri)
+	s.ctx.Core.Mailto(nil, &mb, "GameScene.Test", "test")
+	s.ctx.Core.LogInfo("region created,", ri)
 }
 
 func (s *SpaceManage) LoadResource(f string) bool {

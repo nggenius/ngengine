@@ -1,10 +1,12 @@
 package object
 
 import (
+	"fmt"
 	"ngengine/core/rpc"
 	"ngengine/protocol"
 	"ngengine/share"
 	"reflect"
+	"strings"
 )
 
 type ObjectService struct {
@@ -37,7 +39,7 @@ func NewObjectRegister(r *ObjectRouter, t reflect.Type) *ObjectRegister {
 func (o *ObjectRegister) RegisterCallback(fun string, _ rpc.CB) {
 	f, has := o.typ.MethodByName(fun)
 	if !has {
-		o.r.ctx.core.LogErr("func not found,", fun)
+		o.r.ctx.Core.LogErr("func not found,", fun)
 	}
 
 	o.svr.methods[fun] = &f
@@ -79,25 +81,43 @@ func (s *ObjectRouter) ToObject(src rpc.Mailbox, dest rpc.Mailbox, msg *protocol
 	var data []byte
 	err := protocol.ParseArgs(msg, &method, &data)
 	if err != nil {
-		return protocol.ReplyError(protocol.DEF, share.ERR_ARGS_ERROR, err.Error())
+		return protocol.ReplyError(protocol.TINY, share.ERR_ARGS_ERROR, err.Error())
 	}
 
 	obj, err := s.ctx.FindObject(dest)
 	if err != nil {
-		return protocol.ReplyError(protocol.DEF, share.ERR_OBJECT_NOT_FOUND, err.Error())
+		return protocol.ReplyError(protocol.TINY, share.ERR_OBJECT_NOT_FOUND, err.Error())
 	}
 
 	args := protocol.NewMessage(len(data))
 	args.Body = append(args.Body, data...)
-	defer args.Free()
+
+	dot := strings.LastIndex(method, ".")
+	if dot < 0 {
+		args.Free()
+		err := fmt.Errorf("object rpc: service/method request ill-formed: %s", method)
+		return protocol.ReplyError(protocol.TINY, share.ERR_ARGS_ERROR, err.Error())
+	}
+
+	s.ctx.Core.LogDebug(src, " call ", dest, "/", method)
+	serviceName := method[:dot]
+	methodName := method[dot+1:]
+
 	inter := reflect.ValueOf(obj)
 	typ := reflect.Indirect(inter).Type().Name()
-	if svr, ok := s.services[typ]; ok {
-		f := svr.Method(method)
+	if typ != serviceName {
+		args.Free()
+		err := fmt.Errorf("object rpc:type not match, recv %s, actual %s", serviceName, typ)
+		return protocol.ReplyError(protocol.TINY, share.ERR_OBJECT_RPC_NOT_MATCH, err.Error())
+	}
+	if svr, ok := s.services[serviceName]; ok {
+		f := svr.Method(methodName)
 		if f != nil {
+			args.Free()
 			ret := f.Func.Call([]reflect.Value{inter, reflect.ValueOf(src), reflect.ValueOf(dest), reflect.ValueOf(args)})
 			return ret[0].Interface().(int32), ret[1].Interface().(*protocol.Message)
 		}
 	}
-	return protocol.ReplyError(protocol.DEF, share.ERR_OBJECT_RPC_CALL, "")
+	args.Free()
+	return protocol.ReplyError(protocol.TINY, share.ERR_OBJECT_RPC_CALL, "rpc not found")
 }

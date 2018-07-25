@@ -18,7 +18,7 @@ func NewReplicate(ctx *ReplicateModule) *Replicate {
 func (r *Replicate) ObjectCreate(self, sender rpc.Mailbox, args ...interface{}) int {
 	o, err := r.ctx.objectmodule.FindObject(self)
 	if err != nil {
-		r.ctx.core.LogErr(err)
+		r.ctx.Core.LogErr(err)
 	}
 
 	if obj, ok := o.(object.Object); ok {
@@ -26,14 +26,14 @@ func (r *Replicate) ObjectCreate(self, sender rpc.Mailbox, args ...interface{}) 
 		obj.AddAttrObserver("replicate", t)
 		obj.AddTableObserver("replicate", t)
 	}
-	r.ctx.core.LogInfo("object created")
+	r.ctx.Core.LogInfo("object created")
 	return 0
 }
 
 func (r *Replicate) ObjectDestroy(self, sender rpc.Mailbox, args ...interface{}) int {
 	o, err := r.ctx.objectmodule.FindObject(self)
 	if err != nil {
-		r.ctx.core.LogErr(err)
+		r.ctx.Core.LogErr(err)
 	}
 
 	if obj, ok := o.(object.Object); ok {
@@ -41,6 +41,6 @@ func (r *Replicate) ObjectDestroy(self, sender rpc.Mailbox, args ...interface{})
 		obj.RemoveTableObserver("replicate")
 	}
 
-	r.ctx.core.LogInfo("object destroy")
+	r.ctx.Core.LogInfo("object destroy")
 	return 0
 }

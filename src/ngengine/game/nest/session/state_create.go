@@ -33,7 +33,7 @@ func (c *createrole) Handle(event int, param interface{}) string {
 		c.owner.DestroySelf()
 		return fsm.STOP
 	default:
-		c.owner.ctx.core.LogWarnf("create role state receive error event(%d)", event)
+		c.owner.ctx.Core.LogWarnf("create role state receive error event(%d)", event)
 	}
 	return ""
 }

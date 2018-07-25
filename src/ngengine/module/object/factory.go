@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"ngengine/core/rpc"
+	"ngengine/core/service"
 	"ngengine/share"
 )
 
@@ -16,6 +17,7 @@ type FactoryObject interface {
 	ObjId() rpc.Mailbox
 	Factory() *Factory
 	SetFactory(f *Factory)
+	SetCore(c service.CoreAPI)
 	Prepare()
 	Create()
 	Destroy()
@@ -57,12 +59,14 @@ func (f *Factory) Create(typ string) (interface{}, error) {
 			o.Init(inst)
 			o.SetIndex(index)
 			f.serial = (f.serial + 1) % 0xFF
-			o.SetObjId(f.owner.core.Mailbox().NewObjectId(f.identity, f.serial, index))
+			o.SetObjId(f.owner.Core.Mailbox().NewObjectId(f.identity, f.serial, index))
 			o.SetFactory(f)
+			o.SetCore(f.owner.Core)
 			o.SetDelegate(f.owner.entitydelegate[typ])
 			o.Prepare()
 			o.Create()
-			f.owner.core.LogDebug("create object ", o.ObjId())
+
+			f.owner.Core.LogDebug("create object ", o.ObjId())
 			return inst, nil
 		}
 
@@ -92,13 +96,13 @@ func (f *Factory) ClearDelete() {
 		e := ele
 		ele = ele.Next()
 		f.delete.Remove(e)
-		f.owner.core.LogDebug("delete object ", fo.ObjId())
+		f.owner.Core.LogDebug("delete object ", fo.ObjId())
 	}
 }
 
 // 查找对象
 func (f *Factory) FindObject(mb rpc.Mailbox) (interface{}, error) {
-	if f.owner.core.Mailbox().ServiceId() != mb.ServiceId() ||
+	if f.owner.Core.Mailbox().ServiceId() != mb.ServiceId() ||
 		mb.Flag() != 0 ||
 		mb.Identity() != f.identity {
 		return nil, fmt.Errorf("mailbox %s error", mb)

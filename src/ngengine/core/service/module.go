@@ -6,8 +6,9 @@ import (
 
 // 模块回调接口
 type ModuleHandler interface {
+	SetCore(c CoreAPI)
 	Name() string
-	Init(core CoreAPI) bool
+	Init() bool
 	Start()
 	Shut()
 	OnUpdate(t *Time)
@@ -15,6 +16,12 @@ type ModuleHandler interface {
 }
 
 type Module struct {
+	Core CoreAPI
+}
+
+// 设置核心
+func (m *Module) SetCore(c CoreAPI) {
+	m.Core = c
 }
 
 // Start 模块启动

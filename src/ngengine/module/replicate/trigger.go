@@ -42,7 +42,7 @@ func (t *trigger) UpdateAttr(attr string, val interface{}, old interface{}) {
 		return
 	}
 
-	t.ctx.core.LogInfo("replicate attr ", attr)
+	t.ctx.Core.LogInfo("replicate attr ", attr)
 }
 
 // tuple属性变动时的回调函数，由witness回调
@@ -57,7 +57,7 @@ func (t *trigger) UpdateTuple(attr string, val interface{}, old interface{}) {
 		return
 	}
 
-	t.ctx.core.LogInfo("replicate tuple ", attr)
+	t.ctx.Core.LogInfo("replicate tuple ", attr)
 }
 
 // table变动时的回调函数，由witness回调
@@ -71,5 +71,5 @@ func (t *trigger) UpdateTable(table string, op_type, row, col int) {
 		return
 	}
 
-	t.ctx.core.LogInfo("replicate table ", table)
+	t.ctx.Core.LogInfo("replicate table ", table)
 }

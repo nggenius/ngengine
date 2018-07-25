@@ -31,7 +31,7 @@ func (s *deleting) Handle(event int, param interface{}) string {
 		s.owner.DestroySelf()
 		return fsm.STOP
 	default:
-		s.owner.ctx.core.LogWarnf("deleting state receive error event(%d)", event)
+		s.owner.ctx.Core.LogWarnf("deleting state receive error event(%d)", event)
 	}
 	return ""
 }

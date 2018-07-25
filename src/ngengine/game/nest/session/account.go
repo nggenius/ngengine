@@ -59,18 +59,18 @@ func (a *Account) OnRoleInfo(e *rpc.Error, ar *utils.LoadArchive) {
 	var roles []*inner.Role
 	err, tag := store.ParseGetReply(e, ar, &roles)
 	if err != nil && err.ErrCode == share.ERR_ARGS_ERROR {
-		a.ctx.core.LogErr(err)
+		a.ctx.Core.LogErr(err)
 		return
 	}
 	mailbox, err1 := rpc.NewMailboxFromStr(tag)
 	if err1 != nil {
-		a.ctx.core.LogErr(err1)
+		a.ctx.Core.LogErr(err1)
 		return
 	}
 
 	session := a.ctx.FindSession(mailbox.Id())
 	if session == nil {
-		a.ctx.core.LogErr("session not found", mailbox.Id())
+		a.ctx.Core.LogErr("session not found", mailbox.Id())
 		return
 	}
 
@@ -86,7 +86,7 @@ func (a *Account) CreateRole(session *Session, args c2s.CreateRole) error {
 
 	player := entity.Create(a.ctx.mainEntity)
 	player.SetAttr("Name", args.Name)
-	player.SetId(a.ctx.core.GenerateGUID())
+	player.SetId(a.ctx.Core.GenerateGUID())
 
 	role := inner.Role{}
 	role.Account = session.Account
@@ -110,19 +110,19 @@ func (a *Account) CreateRole(session *Session, args c2s.CreateRole) error {
 func (a *Account) OnCreateRole(e *rpc.Error, ar *utils.LoadArchive) {
 	err, tag := extension.ParseCreateRole(e, ar)
 	if err != nil && e.ErrCode == share.ERR_ARGS_ERROR {
-		a.ctx.core.LogErr(err)
+		a.ctx.Core.LogErr(err)
 		return
 	}
 
 	mailbox, err1 := rpc.NewMailboxFromStr(tag)
 	if err1 != nil {
-		a.ctx.core.LogErr(err1)
+		a.ctx.Core.LogErr(err1)
 		return
 	}
 
 	session := a.ctx.FindSession(mailbox.Id())
 	if session == nil {
-		a.ctx.core.LogErr("session not found", mailbox.Id())
+		a.ctx.Core.LogErr("session not found", mailbox.Id())
 		return
 	}
 
@@ -153,21 +153,21 @@ func (a *Account) ChooseRole(session *Session, args c2s.ChooseRole) error {
 func (a *Account) OnChooseRole(e *rpc.Error, ar *utils.LoadArchive) {
 	inst, err := a.ctx.factory.Create(a.ctx.mainEntity)
 	if err != nil {
-		a.ctx.core.LogFatal("entity create failed")
+		a.ctx.Core.LogFatal("entity create failed")
 		return
 	}
 
 	gameobject, ok := inst.(gameobject.GameObject)
 	if !ok {
 		a.ctx.factory.Destroy(inst)
-		a.ctx.core.LogFatal("entity is not gameobject")
+		a.ctx.Core.LogFatal("entity is not gameobject")
 		return
 	}
 
 	player := gameobject.Spirit()
 	if player == nil {
 		a.ctx.factory.Destroy(inst)
-		a.ctx.core.LogFatal("spirit is nil")
+		a.ctx.Core.LogFatal("spirit is nil")
 		return
 	}
 
@@ -175,21 +175,21 @@ func (a *Account) OnChooseRole(e *rpc.Error, ar *utils.LoadArchive) {
 
 	if err1 != nil && err1.ErrCode == share.ERR_ARGS_ERROR {
 		a.ctx.factory.Destroy(inst)
-		a.ctx.core.LogErr(err1)
+		a.ctx.Core.LogErr(err1)
 		return
 	}
 
 	mailbox, err2 := rpc.NewMailboxFromStr(tag)
 	if err2 != nil {
 		a.ctx.factory.Destroy(inst)
-		a.ctx.core.LogErr(err2)
+		a.ctx.Core.LogErr(err2)
 		return
 	}
 
 	session := a.ctx.FindSession(mailbox.Id())
 	if session == nil {
 		a.ctx.factory.Destroy(inst)
-		a.ctx.core.LogErr("session not found", mailbox.Id())
+		a.ctx.Core.LogErr("session not found", mailbox.Id())
 		return
 	}
 
@@ -219,19 +219,19 @@ func (a *Account) DeleteRole(session *Session, args c2s.DeleteRole) error {
 func (a *Account) OnDeleteRole(e *rpc.Error, ar *utils.LoadArchive) {
 	err, tag := extension.ParseDeleteRole(e, ar)
 	if err != nil && err.ErrCode == share.ERR_ARGS_ERROR {
-		a.ctx.core.LogErr(err)
+		a.ctx.Core.LogErr(err)
 		return
 	}
 
 	mailbox, err1 := rpc.NewMailboxFromStr(tag)
 	if err1 != nil {
-		a.ctx.core.LogErr(err1)
+		a.ctx.Core.LogErr(err1)
 		return
 	}
 
 	session := a.ctx.FindSession(mailbox.Id())
 	if session == nil {
-		a.ctx.core.LogErr("session not found", mailbox.Id())
+		a.ctx.Core.LogErr("session not found", mailbox.Id())
 		return
 	}
 

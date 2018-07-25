@@ -15,7 +15,7 @@ func (o *offline) Handle(event int, param interface{}) string {
 		return fsm.STOP
 	case ETIMER:
 	default:
-		o.owner.ctx.core.LogWarnf("offline state receive error event(%d)", event)
+		o.owner.ctx.Core.LogWarnf("offline state receive error event(%d)", event)
 	}
 	return ""
 }

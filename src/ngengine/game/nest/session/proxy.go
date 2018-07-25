@@ -27,14 +27,14 @@ func (p *proxy) RegisterCallback(s rpc.Servicer) {
 // token 登录
 func (p *proxy) Login(sender, _ rpc.Mailbox, msg *protocol.Message) (errcode int32, reply *protocol.Message) {
 	login := &c2s.LoginNest{}
-	if err := p.ctx.core.ParseProto(msg, login); err != nil {
-		p.ctx.core.LogErr("login parse error,", err)
+	if err := p.ctx.Core.ParseProto(msg, login); err != nil {
+		p.ctx.Core.LogErr("login parse error,", err)
 		return 0, nil
 	}
 
 	session := p.ctx.FindSession(sender.Id())
 	if session == nil {
-		p.ctx.core.LogErr("session not found")
+		p.ctx.Core.LogErr("session not found")
 		return 0, nil
 	}
 
@@ -47,14 +47,14 @@ func (p *proxy) Login(sender, _ rpc.Mailbox, msg *protocol.Message) (errcode int
 // 创建角色
 func (p *proxy) CreateRole(sender, _ rpc.Mailbox, msg *protocol.Message) (errcode int32, reply *protocol.Message) {
 	var create c2s.CreateRole
-	if err := p.ctx.core.ParseProto(msg, &create); err != nil {
-		p.ctx.core.LogErr("create parse error,", err)
+	if err := p.ctx.Core.ParseProto(msg, &create); err != nil {
+		p.ctx.Core.LogErr("create parse error,", err)
 		return 0, nil
 	}
 
 	session := p.ctx.FindSession(sender.Id())
 	if session == nil {
-		p.ctx.core.LogErr("session not found")
+		p.ctx.Core.LogErr("session not found")
 		return 0, nil
 	}
 
@@ -66,14 +66,14 @@ func (p *proxy) CreateRole(sender, _ rpc.Mailbox, msg *protocol.Message) (errcod
 // 选择角色
 func (p *proxy) ChooseRole(sender, _ rpc.Mailbox, msg *protocol.Message) (errcode int32, reply *protocol.Message) {
 	var choose c2s.ChooseRole
-	if err := p.ctx.core.ParseProto(msg, &choose); err != nil {
-		p.ctx.core.LogErr("choose parse error,", err)
+	if err := p.ctx.Core.ParseProto(msg, &choose); err != nil {
+		p.ctx.Core.LogErr("choose parse error,", err)
 		return 0, nil
 	}
 
 	session := p.ctx.FindSession(sender.Id())
 	if session == nil {
-		p.ctx.core.LogErr("session not found")
+		p.ctx.Core.LogErr("session not found")
 		return 0, nil
 	}
 
@@ -85,14 +85,14 @@ func (p *proxy) ChooseRole(sender, _ rpc.Mailbox, msg *protocol.Message) (errcod
 // 删除角色
 func (p *proxy) DeleteRole(sender, _ rpc.Mailbox, msg *protocol.Message) (errcode int32, reply *protocol.Message) {
 	var d c2s.DeleteRole
-	if err := p.ctx.core.ParseProto(msg, &d); err != nil {
-		p.ctx.core.LogErr("delete parse error, ", err)
+	if err := p.ctx.Core.ParseProto(msg, &d); err != nil {
+		p.ctx.Core.LogErr("delete parse error, ", err)
 		return 0, nil
 	}
 
 	session := p.ctx.FindSession(sender.Id())
 	if session == nil {
-		p.ctx.core.LogErr("session not found")
+		p.ctx.Core.LogErr("session not found")
 		return 0, nil
 	}
 

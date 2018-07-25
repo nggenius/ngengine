@@ -34,102 +34,102 @@ func (o *ObjectWitness) SetOriginal(m *rpc.Mailbox) {
 
 func (o *ObjectWitness) RemoteUpdateAttr(name string, val interface{}) {
 	if o.original == nil {
-		o.factory.owner.core.LogErr("original is nil")
+		o.factory.owner.Core.LogErr("original is nil")
 		return
 	}
 
-	o.factory.owner.core.Mailto(&o.objid, o.original, "object.UpdateAttr", name, val)
+	o.factory.owner.Core.Mailto(&o.objid, o.original, "object.UpdateAttr", name, val)
 }
 
 func (o *ObjectWitness) RemoteUpdateTuple(name string, val interface{}) {
 	if o.original == nil {
-		o.factory.owner.core.LogErr("original is nil")
+		o.factory.owner.Core.LogErr("original is nil")
 		return
 	}
-	o.factory.owner.core.Mailto(&o.objid, o.original, "object.UpdateTuple", name, val)
+	o.factory.owner.Core.Mailto(&o.objid, o.original, "object.UpdateTuple", name, val)
 }
 
 func (o *ObjectWitness) RemoteAddTableRow(name string, row int) {
 	if o.original == nil {
-		o.factory.owner.core.LogErr("original is nil")
+		o.factory.owner.Core.LogErr("original is nil")
 		return
 	}
-	o.factory.owner.core.Mailto(&o.objid, o.original, "object.AddTableRow", name, row)
+	o.factory.owner.Core.Mailto(&o.objid, o.original, "object.AddTableRow", name, row)
 }
 
 func (o *ObjectWitness) RemoteAddTableRowValue(name string, row int, val ...interface{}) {
 	if o.original == nil {
-		o.factory.owner.core.LogErr("original is nil")
+		o.factory.owner.Core.LogErr("original is nil")
 		return
 	}
-	o.factory.owner.core.Mailto(&o.objid, o.original, "object.AddTableRowValue", name, row, val)
+	o.factory.owner.Core.Mailto(&o.objid, o.original, "object.AddTableRowValue", name, row, val)
 }
 
 func (o *ObjectWitness) RemoteSetTableRowValue(name string, row int, val ...interface{}) {
 	if o.original == nil {
-		o.factory.owner.core.LogErr("original is nil")
+		o.factory.owner.Core.LogErr("original is nil")
 		return
 	}
-	o.factory.owner.core.Mailto(&o.objid, o.original, "object.SetTableRowValue", name, row, val)
+	o.factory.owner.Core.Mailto(&o.objid, o.original, "object.SetTableRowValue", name, row, val)
 }
 
 func (o *ObjectWitness) RemoteDelTableRow(name string, row int) {
 	if o.original == nil {
-		o.factory.owner.core.LogErr("original is nil")
+		o.factory.owner.Core.LogErr("original is nil")
 		return
 	}
-	o.factory.owner.core.Mailto(&o.objid, o.original, "object.DelTableRow", name, row)
+	o.factory.owner.Core.Mailto(&o.objid, o.original, "object.DelTableRow", name, row)
 }
 
 func (o *ObjectWitness) RemoteClearTable(name string) {
 	if o.original == nil {
-		o.factory.owner.core.LogErr("original is nil")
+		o.factory.owner.Core.LogErr("original is nil")
 		return
 	}
-	o.factory.owner.core.Mailto(&o.objid, o.original, "object.ClearTable", name)
+	o.factory.owner.Core.Mailto(&o.objid, o.original, "object.ClearTable", name)
 }
 
 func (o *ObjectWitness) RemoteChangeTable(name string, row, col int, val interface{}) {
 	if o.original == nil {
-		o.factory.owner.core.LogErr("original is nil")
+		o.factory.owner.Core.LogErr("original is nil")
 		return
 	}
 
-	o.factory.owner.core.Mailto(&o.objid, o.original, "object.ChangeTable", name, row, col, val)
+	o.factory.owner.Core.Mailto(&o.objid, o.original, "object.ChangeTable", name, row, col, val)
 }
 
 // RemoteLockObj 远程上锁
 func (o *ObjectWitness) RemoteLockObj(lockID uint32) {
 	if o.original == nil {
-		o.factory.owner.core.LogErr("original is nil")
+		o.factory.owner.Core.LogErr("original is nil")
 		return
 	}
-	o.factory.owner.core.Mailto(&o.objid, o.original, "object.LockObj", o.original, lockID)
+	o.factory.owner.Core.Mailto(&o.objid, o.original, "object.LockObj", o.original, lockID)
 }
 
 // RemoteUnLockObj 远程解锁
 func (o *ObjectWitness) RemoteUnLockObj(lockID uint32) {
 	if o.original == nil {
-		o.factory.owner.core.LogErr("original is nil")
+		o.factory.owner.Core.LogErr("original is nil")
 		return
 	}
-	o.factory.owner.core.Mailto(&o.objid, o.original, "object.UnLockObj", o.original, lockID)
+	o.factory.owner.Core.Mailto(&o.objid, o.original, "object.UnLockObj", o.original, lockID)
 }
 
 // RemoteLockObjSuccess 远程上锁成功通知
 func (o *ObjectWitness) RemoteLockObjSuccess(lockID uint32) {
 	if o.locker == nil {
-		o.factory.owner.core.LogErr("locker is nil")
+		o.factory.owner.Core.LogErr("locker is nil")
 		return
 	}
-	o.factory.owner.core.Mailto(&o.objid, &o.locker.Locker, "object.LockObjSuccess", o.locker.Locker, lockID)
+	o.factory.owner.Core.Mailto(&o.objid, &o.locker.Locker, "object.LockObjSuccess", o.locker.Locker, lockID)
 }
 
 // RemoteUnLockObjSuccess 远程解锁成功通知
 func (o *ObjectWitness) RemoteUnLockObjSuccess() {
 	if o.locker == nil {
-		o.factory.owner.core.LogErr("locker is nil")
+		o.factory.owner.Core.LogErr("locker is nil")
 		return
 	}
-	o.factory.owner.core.Mailto(&o.objid, &o.locker.Locker, "object.UnLockObjSuccess", o.locker.Locker)
+	o.factory.owner.Core.Mailto(&o.objid, &o.locker.Locker, "object.UnLockObjSuccess", o.locker.Locker)
 }

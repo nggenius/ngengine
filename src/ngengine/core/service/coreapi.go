@@ -252,6 +252,7 @@ func (c *Core) ObjectCall(src *rpc.Mailbox, dest *rpc.Mailbox, method string, ar
 	}
 	msg.Body = msg.Body[:ar.Len()]
 
+	c.LogInfo(src, " call ", dest, "/", method)
 	// 本地
 	if dest.ServiceId() == c.mailbox.ServiceId() {
 		err = c.rpcSvr.Call(rpc.GetServiceMethod(share.ROUTER_TO_OBJECT), *src, *dest, method, msg.Body)
@@ -278,8 +279,10 @@ func (c *Core) ObjectCallback(src *rpc.Mailbox, dest *rpc.Mailbox, method string
 			return
 		}
 	}
+
 	msg.Body = msg.Body[:ar.Len()]
 
+	c.LogInfo(src, " call ", dest, "/", method)
 	// 本地
 	if dest.ServiceId() == c.mailbox.ServiceId() {
 		err = c.rpcSvr.CallBack(rpc.GetServiceMethod(share.ROUTER_TO_OBJECT), *src, *dest, cb, method, msg.Body)

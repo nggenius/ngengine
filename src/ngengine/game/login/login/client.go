@@ -161,7 +161,7 @@ func (c *Session) NestResult(errcode int32, token string) bool {
 		return false
 	}
 
-	srv := c.ctx.core.LookupService(c.nest)
+	srv := c.ctx.Core.LookupService(c.nest)
 	if srv == nil {
 		c.Error(share.S2C_ERR_SERVICE_INVALID)
 		return false
@@ -172,7 +172,7 @@ func (c *Session) NestResult(errcode int32, token string) bool {
 	nest.Port = int32(srv.OuterPort)
 	nest.Token = token
 
-	if err := c.ctx.core.Mailto(nil, c.Mailbox, "Login.Nest", nest); err != nil {
+	if err := c.ctx.Core.Mailto(nil, c.Mailbox, "Login.Nest", nest); err != nil {
 		return false
 	}
 
@@ -180,11 +180,11 @@ func (c *Session) NestResult(errcode int32, token string) bool {
 }
 
 func (c *Session) Break() {
-	c.ctx.core.Break(c.id)
+	c.ctx.Core.Break(c.id)
 }
 
 func (c *Session) Error(err int32) {
 	result := s2c.Error{}
 	result.ErrCode = err
-	c.ctx.core.Mailto(nil, c.Mailbox, "system.Error", result)
+	c.ctx.Core.Mailto(nil, c.Mailbox, "system.Error", result)
 }

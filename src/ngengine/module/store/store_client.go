@@ -18,7 +18,7 @@ func NewStoreClient(ctx *StoreModule) *StoreClient {
 }
 
 func (s *StoreClient) OnDatabaseReady(evt string, args ...interface{}) {
-	srv := s.ctx.core.LookupOneServiceByType("store")
+	srv := s.ctx.Core.LookupOneServiceByType("store")
 	if srv == nil {
 		s.db = nil
 		return
@@ -54,9 +54,9 @@ func (s *StoreClient) Get(tag string, typ string, condition map[string]interface
 		return fmt.Errorf("store not connected")
 	}
 	if reply == nil {
-		return s.ctx.core.Mailto(nil, s.db, "Store.Get", tag, typ, condition)
+		return s.ctx.Core.Mailto(nil, s.db, "Store.Get", tag, typ, condition)
 	}
-	return s.ctx.core.MailtoAndCallback(nil, s.db, "Store.Get", reply, tag, typ, condition)
+	return s.ctx.Core.MailtoAndCallback(nil, s.db, "Store.Get", reply, tag, typ, condition)
 }
 
 func ParseFindReply(err *rpc.Error, ar *utils.LoadArchive, object interface{}) (*rpc.Error, string) {
@@ -81,9 +81,9 @@ func (s *StoreClient) Find(tag string, typ string, condition map[string]interfac
 		return fmt.Errorf("store not connected")
 	}
 	if reply == nil {
-		return s.ctx.core.Mailto(nil, s.db, "Store.Find", tag, typ, condition, limit, start)
+		return s.ctx.Core.Mailto(nil, s.db, "Store.Find", tag, typ, condition, limit, start)
 	}
-	return s.ctx.core.MailtoAndCallback(nil, s.db, "Store.Find", reply, tag, typ, condition, limit, start)
+	return s.ctx.Core.MailtoAndCallback(nil, s.db, "Store.Find", reply, tag, typ, condition, limit, start)
 }
 
 // 返回值：err, tag, affected, id
@@ -113,9 +113,9 @@ func (s *StoreClient) Insert(tag string, typ string, object interface{}, reply r
 		return fmt.Errorf("store not connected")
 	}
 	if reply == nil {
-		return s.ctx.core.Mailto(nil, s.db, "Store.Insert", tag, typ, object)
+		return s.ctx.Core.Mailto(nil, s.db, "Store.Insert", tag, typ, object)
 	}
-	return s.ctx.core.MailtoAndCallback(nil, s.db, "Store.Insert", reply, tag, typ, object)
+	return s.ctx.Core.MailtoAndCallback(nil, s.db, "Store.Insert", reply, tag, typ, object)
 }
 
 // 返回值：err, tag
@@ -150,10 +150,10 @@ func (s *StoreClient) MultiInsert(tag string, reply rpc.ReplyCB, typ []string, o
 		params = append(params, object[k])
 	}
 	if reply == nil {
-		return s.ctx.core.Mailto(nil, s.db, "Store.MultiInsert", params...)
+		return s.ctx.Core.Mailto(nil, s.db, "Store.MultiInsert", params...)
 	}
 
-	return s.ctx.core.MailtoAndCallback(nil, s.db, "Store.MultiInsert", reply, params...)
+	return s.ctx.Core.MailtoAndCallback(nil, s.db, "Store.MultiInsert", reply, params...)
 }
 
 // 返回值:err *rpc.Error, tag string, affected int6
@@ -179,9 +179,9 @@ func (s *StoreClient) Update(tag string, typ string, cols []string, condition ma
 		return fmt.Errorf("store not connected")
 	}
 	if reply == nil {
-		return s.ctx.core.Mailto(nil, s.db, "Store.Update", tag, typ, cols, condition, object)
+		return s.ctx.Core.Mailto(nil, s.db, "Store.Update", tag, typ, cols, condition, object)
 	}
-	return s.ctx.core.MailtoAndCallback(nil, s.db, "Store.Update", reply, tag, typ, cols, condition, object)
+	return s.ctx.Core.MailtoAndCallback(nil, s.db, "Store.Update", reply, tag, typ, cols, condition, object)
 }
 
 // 批量更新，tag为返回的标识符,typ查询的object数据类型集合,object待插入的数据集合
@@ -198,9 +198,9 @@ func (s *StoreClient) MultiUpdate(tag string, typ []string, object []interface{}
 	}
 
 	if reply == nil {
-		return s.ctx.core.Mailto(nil, s.db, "Store.MultiUpdate", params...)
+		return s.ctx.Core.Mailto(nil, s.db, "Store.MultiUpdate", params...)
 	}
-	return s.ctx.core.MailtoAndCallback(nil, s.db, "Store.MultiUpdate", reply, params...)
+	return s.ctx.Core.MailtoAndCallback(nil, s.db, "Store.MultiUpdate", reply, params...)
 }
 
 //返回值:err *rpc.Error, tag string, affected int64
@@ -227,9 +227,9 @@ func (s *StoreClient) Delete(tag string, typ string, id int64, reply rpc.ReplyCB
 		return fmt.Errorf("store not connected")
 	}
 	if reply == nil {
-		return s.ctx.core.Mailto(nil, s.db, "Store.Delete", tag, typ, id)
+		return s.ctx.Core.Mailto(nil, s.db, "Store.Delete", tag, typ, id)
 	}
-	return s.ctx.core.MailtoAndCallback(nil, s.db, "Store.Delete", reply, tag, typ, id)
+	return s.ctx.Core.MailtoAndCallback(nil, s.db, "Store.Delete", reply, tag, typ, id)
 }
 
 // 删除一条记录，tag为返回的标识符,typ查询的数据类型，object待删除的数据(非零值为条件)
@@ -238,9 +238,9 @@ func (s *StoreClient) DeleteByObject(tag string, typ string, object interface{},
 		return fmt.Errorf("store not connected")
 	}
 	if reply == nil {
-		return s.ctx.core.Mailto(nil, s.db, "Store.Delete2", tag, typ, object)
+		return s.ctx.Core.Mailto(nil, s.db, "Store.Delete2", tag, typ, object)
 	}
-	return s.ctx.core.MailtoAndCallback(nil, s.db, "Store.Delete2", reply, tag, typ, object)
+	return s.ctx.Core.MailtoAndCallback(nil, s.db, "Store.Delete2", reply, tag, typ, object)
 }
 
 // 删除一条记录，tag为返回的标识符,typ查询的数据类型，待删除对象的id
@@ -250,9 +250,9 @@ func (s *StoreClient) MultiDelete(tag string, typ []string, id []int64, reply rp
 	}
 
 	if reply == nil {
-		return s.ctx.core.Mailto(nil, s.db, "Store.Delete3", tag, typ, id)
+		return s.ctx.Core.Mailto(nil, s.db, "Store.Delete3", tag, typ, id)
 	}
-	return s.ctx.core.MailtoAndCallback(nil, s.db, "Store.Delete3", reply, tag, typ, id)
+	return s.ctx.Core.MailtoAndCallback(nil, s.db, "Store.Delete3", reply, tag, typ, id)
 }
 
 // 返回值：err *rpc.Error, tag string, result []map[string][]byte
@@ -279,9 +279,9 @@ func (s *StoreClient) Query(tag string, sql string, args []interface{}, reply rp
 		return fmt.Errorf("store not connected")
 	}
 	if reply == nil {
-		return s.ctx.core.Mailto(nil, s.db, "Store.Query", tag, sql, args)
+		return s.ctx.Core.Mailto(nil, s.db, "Store.Query", tag, sql, args)
 	}
-	return s.ctx.core.MailtoAndCallback(nil, s.db, "Store.Query", reply, tag, sql, args)
+	return s.ctx.Core.MailtoAndCallback(nil, s.db, "Store.Query", reply, tag, sql, args)
 }
 
 //返回值：err *rpc.Error, tag string, affected int64
@@ -307,9 +307,9 @@ func (s *StoreClient) Exec(tag string, sql string, args []interface{}, reply rpc
 		return fmt.Errorf("store not connected")
 	}
 	if reply == nil {
-		return s.ctx.core.Mailto(nil, s.db, "Store.Exec", tag, sql, args)
+		return s.ctx.Core.Mailto(nil, s.db, "Store.Exec", tag, sql, args)
 	}
-	return s.ctx.core.MailtoAndCallback(nil, s.db, "Store.Exec", reply, tag, sql, args)
+	return s.ctx.Core.MailtoAndCallback(nil, s.db, "Store.Exec", reply, tag, sql, args)
 }
 
 // 批量插入，tag为返回的标识符,typ查询的object数据类型集合,object待插入的数据集合
@@ -322,8 +322,8 @@ func (s *StoreClient) Custom(tag string, reply rpc.ReplyCB, method string, args 
 	params = append(params, tag)
 	params = append(params, args...)
 	if reply == nil {
-		return s.ctx.core.Mailto(nil, s.db, method, params...)
+		return s.ctx.Core.Mailto(nil, s.db, method, params...)
 	}
 
-	return s.ctx.core.MailtoAndCallback(nil, s.db, method, reply, params...)
+	return s.ctx.Core.MailtoAndCallback(nil, s.db, method, reply, params...)
 }

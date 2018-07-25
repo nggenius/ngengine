@@ -36,7 +36,7 @@ func (c *chooserole) Handle(event int, param interface{}) string {
 			f.Close()
 		}
 
-		c.owner.ctx.core.LogDebug("enter game")
+		c.owner.ctx.Core.LogDebug("enter game")
 		c.owner.SetGameObject(player)
 		return SONLINE
 	case EBREAK:
@@ -49,7 +49,7 @@ func (c *chooserole) Handle(event int, param interface{}) string {
 			return SLOGGED
 		}
 	default:
-		c.owner.ctx.core.LogWarnf("choose role state receive error event(%d)", event)
+		c.owner.ctx.Core.LogWarnf("choose role state receive error event(%d)", event)
 	}
 	return ""
 }

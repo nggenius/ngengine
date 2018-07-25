@@ -73,7 +73,7 @@ func (s *Srv) Call(src, dest rpc.Mailbox, method string, args ...interface{}) er
 		}
 	}
 
-	s.l.LogInfo("call ", src, "/", method)
+	s.l.LogInfo(src, " call ", dest, "/", method)
 	err := s.client.Call(rpc.GetServiceMethod(method), src, dest, args...)
 	if err != nil {
 		s.Close()
@@ -90,7 +90,7 @@ func (s *Srv) Callback(src, dest rpc.Mailbox, method string, cb rpc.ReplyCB, arg
 		}
 	}
 
-	s.l.LogInfo("call ", src, "/", method)
+	s.l.LogInfo(src, " call ", dest, "/", method)
 
 	err := s.client.CallBack(rpc.GetServiceMethod(method), src, dest, cb, args...)
 	if err != nil {

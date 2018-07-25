@@ -23,14 +23,14 @@ func (a *Account) RegisterCallback(s rpc.Servicer) {
 // client:登录
 func (a *Account) Login(sender, _ rpc.Mailbox, msg *protocol.Message) (errcode int32, reply *protocol.Message) {
 	login := &c2s.Login{}
-	if err := a.ctx.core.ParseProto(msg, login); err != nil {
-		a.ctx.core.LogErr("login parse error,", err)
+	if err := a.ctx.Core.ParseProto(msg, login); err != nil {
+		a.ctx.Core.LogErr("login parse error,", err)
 		return 0, nil
 	}
 
 	session := a.ctx.FindSession(sender.Id())
 	if session == nil {
-		a.ctx.core.LogErr("session not found", sender.Id())
+		a.ctx.Core.LogErr("session not found", sender.Id())
 		return 0, nil
 	}
 
@@ -67,18 +67,18 @@ func (a *Account) OnLoginResult(e *rpc.Error, ar *utils.LoadArchive) {
 	accinfo := &inner.Account{}
 	err, tag := store.ParseGetReply(e, ar, accinfo)
 	if err != nil {
-		a.ctx.core.LogErr(err)
+		a.ctx.Core.LogErr(err)
 		return
 	}
 	mailbox, err1 := rpc.NewMailboxFromStr(tag)
 	if err1 != nil {
-		a.ctx.core.LogErr(err1)
+		a.ctx.Core.LogErr(err1)
 		return
 	}
 
 	session := a.ctx.FindSession(mailbox.Id())
 	if session == nil {
-		a.ctx.core.LogErr("session not found", mailbox.Id())
+		a.ctx.Core.LogErr("session not found", mailbox.Id())
 		return
 	}
 
@@ -90,13 +90,13 @@ func (a *Account) OnLoginResult(e *rpc.Error, ar *utils.LoadArchive) {
 }
 
 func (a *Account) findNest(s *Session) *service.Srv {
-	srv := a.ctx.core.LookupMinLoadByType("nest")
+	srv := a.ctx.Core.LookupMinLoadByType("nest")
 	if srv == nil {
 		s.Error(share.S2C_ERR_SERVICE_INVALID)
 		return nil
 	}
 
-	err := a.ctx.core.MailtoAndCallback(nil, srv.Mailbox(), "Account.Logged", a.OnNestLogged, s.id, s.Account)
+	err := a.ctx.Core.MailtoAndCallback(nil, srv.Mailbox(), "Account.Logged", a.OnNestLogged, s.id, s.Account)
 	if err != nil {
 		s.Error(share.S2C_ERR_SERVICE_INVALID)
 		return nil
@@ -109,12 +109,12 @@ func (a *Account) OnNestLogged(e *rpc.Error, ar *utils.LoadArchive) {
 	var token string
 	err := ar.Read(&id)
 	if err != nil {
-		a.ctx.core.LogErr("read id failed")
+		a.ctx.Core.LogErr("read id failed")
 		return
 	}
 	session := a.ctx.FindSession(id)
 	if session == nil {
-		a.ctx.core.LogErr("session not found", id)
+		a.ctx.Core.LogErr("session not found", id)
 		return
 	}
 

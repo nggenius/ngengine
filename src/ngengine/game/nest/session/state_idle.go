@@ -36,7 +36,7 @@ func (s *idlestate) Handle(event int, param interface{}) string {
 		s.owner.DestroySelf()
 		return fsm.STOP
 	default:
-		s.owner.ctx.core.LogWarnf("idle state receive error event(%d)", event)
+		s.owner.ctx.Core.LogWarnf("idle state receive error event(%d)", event)
 	}
 	return ""
 }

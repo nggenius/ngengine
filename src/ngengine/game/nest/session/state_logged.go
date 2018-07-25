@@ -57,7 +57,7 @@ func (s *logged) Handle(event int, param interface{}) string {
 		}
 		return SCHOOSE
 	default:
-		s.owner.ctx.core.LogWarnf("logged state receive error event(%d)", event)
+		s.owner.ctx.Core.LogWarnf("logged state receive error event(%d)", event)
 	}
 	return ""
 }

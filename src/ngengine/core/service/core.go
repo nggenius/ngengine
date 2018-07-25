@@ -108,7 +108,8 @@ func (c *Core) Init(args string) error {
 	// 初始化模块
 	em := make([]string, 0, 8)
 	for n, m := range c.modules.modules {
-		if !m.Init(c) {
+		m.SetCore(c)
+		if !m.Init() {
 			c.LogErr("module '", n, "' init failed")
 			em = append(em, n)
 			continue

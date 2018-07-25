@@ -14,7 +14,6 @@ import (
 
 type ObjectModule struct {
 	service.Module
-	core           service.CoreAPI
 	defaultFactory *Factory // 默认对象工厂
 	factorys       map[int]*Factory
 	regs           map[string]ObjectCreate
@@ -40,10 +39,9 @@ func (o *ObjectModule) Name() string {
 }
 
 // Init 模块初始化
-func (o *ObjectModule) Init(core service.CoreAPI) bool {
-	o.core = core
-	o.core.RegisterRemote("object", o.sync)
-	o.core.RegisterRemote("ObjectRouter", o.router)
+func (o *ObjectModule) Init() bool {
+	o.Core.RegisterRemote("object", o.sync)
+	o.Core.RegisterRemote("ObjectRouter", o.router)
 	return true
 }
 
@@ -57,7 +55,7 @@ func (o *ObjectModule) OnUpdate(t *service.Time) {
 
 // 获取日志接口
 func (o *ObjectModule) Logger() logger.Logger {
-	return o.core
+	return o.Core
 }
 
 // 增加一个对象工厂

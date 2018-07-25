@@ -35,7 +35,7 @@ func (s *Session) SetGameObject(g gameobject.GameObject) {
 		s.ctx.factory.Destroy(s.gameobject)
 	}
 	if s.Mailbox != nil {
-		tr := gameobject.NewTransport(s.ctx.core, *s.Mailbox)
+		tr := gameobject.NewTransport(s.ctx.Core, *s.Mailbox)
 		g.SetTransport(tr)
 	}
 	s.gameobject = g
@@ -57,7 +57,7 @@ func (s *Session) DestroySelf() {
 
 // 断开客户端的连接
 func (s *Session) Break() {
-	s.ctx.core.Break(s.id)
+	s.ctx.Core.Break(s.id)
 }
 
 // 验证token
@@ -78,7 +78,7 @@ func (s *Session) QueryRoleInfo() bool {
 
 // 发送角色信息
 func (s *Session) SendRoleInfo(role []*inner.Role) {
-	s.ctx.core.LogDebug("role info", role)
+	s.ctx.Core.LogDebug("role info", role)
 	roles := &s2c.RoleInfo{}
 	roles.Roles = make([]s2c.Role, 0, len(role))
 	for k := range role {
@@ -89,7 +89,7 @@ func (s *Session) SendRoleInfo(role []*inner.Role) {
 		roles.Roles = append(roles.Roles, r)
 	}
 
-	s.ctx.core.Mailto(nil, s.Mailbox, "Account.Roles", roles)
+	s.ctx.Core.Mailto(nil, s.Mailbox, "Account.Roles", roles)
 }
 
 // 创建角色
@@ -108,5 +108,5 @@ func (s *Session) DeleteRole(info c2s.DeleteRole) error {
 func (s *Session) Error(errcode int32) {
 	err := s2c.Error{}
 	err.ErrCode = errcode
-	s.ctx.core.Mailto(nil, s.Mailbox, "system.Error", &err)
+	s.ctx.Core.Mailto(nil, s.Mailbox, "system.Error", &err)
 }

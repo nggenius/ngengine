@@ -22,7 +22,6 @@ import (
 // 	客户端断开连接，重新建立与nest的连接，通过token进行验证
 type LoginModule struct {
 	service.Module
-	core        service.CoreAPI
 	account     *Account
 	storeClient *store.StoreClient
 	timer       *timer.TimerModule
@@ -44,27 +43,26 @@ func (l *LoginModule) Name() string {
 	return "Login"
 }
 
-func (l *LoginModule) Init(core service.CoreAPI) bool {
-	store := core.Module("Store").(*store.StoreModule)
+func (l *LoginModule) Init() bool {
+	store := l.Core.Module("Store").(*store.StoreModule)
 	if store == nil {
-		core.LogFatal("need Store module")
+		l.Core.LogFatal("need Store module")
 		return false
 	}
-	l.core = core
 	l.storeClient = store.Client()
-	l.core.Service().AddListener(share.EVENT_READY, l.OnDatabaseReady)
-	l.core.Service().AddListener(share.EVENT_USER_CONNECT, l.OnConnected)
-	l.core.Service().AddListener(share.EVENT_USER_LOST, l.OnDisconnected)
-	l.core.RegisterHandler("Account", l.account)
+	l.Core.Service().AddListener(share.EVENT_READY, l.OnDatabaseReady)
+	l.Core.Service().AddListener(share.EVENT_USER_CONNECT, l.OnConnected)
+	l.Core.Service().AddListener(share.EVENT_USER_LOST, l.OnDisconnected)
+	l.Core.RegisterHandler("Account", l.account)
 	l.lastTime = time.Now()
 	return true
 }
 
 // Shut 模块关闭
 func (l *LoginModule) Shut() {
-	l.core.Service().RemoveListener(share.EVENT_READY, l.OnDatabaseReady)
-	l.core.Service().RemoveListener(share.EVENT_USER_CONNECT, l.OnConnected)
-	l.core.Service().RemoveListener(share.EVENT_USER_LOST, l.OnDisconnected)
+	l.Core.Service().RemoveListener(share.EVENT_READY, l.OnDatabaseReady)
+	l.Core.Service().RemoveListener(share.EVENT_USER_CONNECT, l.OnConnected)
+	l.Core.Service().RemoveListener(share.EVENT_USER_LOST, l.OnDisconnected)
 }
 
 func (l *LoginModule) OnUpdate(t *service.Time) {
@@ -81,7 +79,7 @@ func (l *LoginModule) OnUpdate(t *service.Time) {
 	for ele := l.deleted.Front(); ele != nil; {
 		next := ele.Next()
 		delete(l.sessions, ele.Value.(uint64))
-		l.core.LogDebug("session delete,", ele.Value.(uint64))
+		l.Core.LogDebug("session delete,", ele.Value.(uint64))
 		l.deleted.Remove(ele)
 		ele = next
 	}
@@ -93,7 +91,7 @@ func (l *LoginModule) OnConnected(evt string, args ...interface{}) {
 	id := arg["id"].(uint64)
 	c := NewSession(id, l)
 	l.sessions[id] = c
-	l.core.LogDebug("new session,", id)
+	l.Core.LogDebug("new session,", id)
 }
 
 // 客户端断线回调
@@ -115,7 +113,7 @@ func (l *LoginModule) FindSession(id uint64) *Session {
 
 // 服务变动回调
 func (l *LoginModule) OnDatabaseReady(evt string, args ...interface{}) {
-	srv := l.core.LookupOneServiceByType("store")
+	srv := l.Core.LookupOneServiceByType("store")
 	if srv == nil {
 		l.db = nil
 		return

@@ -15,7 +15,7 @@ func (o *online) Handle(event int, param interface{}) string {
 		return SLEAVING
 	case ETIMER:
 	default:
-		o.owner.ctx.core.LogWarnf("online state receive error event(%d)", event)
+		o.owner.ctx.Core.LogWarnf("online state receive error event(%d)", event)
 	}
 	return ""
 }

@@ -7,6 +7,7 @@ import (
 	"container/list"
 	"fmt"
 	"ngengine/core/rpc"
+	"ngengine/core/service"
 )
 
 const (
@@ -33,6 +34,7 @@ type tableObserver interface {
 type LockCallBack func()
 
 type ObjectWitness struct {
+	core          service.CoreAPI
 	object        Object
 	objid         rpc.Mailbox
 	factory       *Factory
@@ -58,6 +60,16 @@ func (o *ObjectWitness) Factory() *Factory {
 // SetFactory 所属的工厂
 func (o *ObjectWitness) SetFactory(f *Factory) {
 	o.factory = f
+}
+
+// SetCore 设置core
+func (o *ObjectWitness) SetCore(c service.CoreAPI) {
+	o.core = c
+}
+
+// Core 获取Core接口
+func (o *ObjectWitness) Core() service.CoreAPI {
+	return o.core
 }
 
 // ObjId 唯一ID

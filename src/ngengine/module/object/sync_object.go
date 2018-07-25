@@ -74,7 +74,7 @@ func (s *SyncObject) LockObj(sender, _ rpc.Mailbox, msg *protocol.Message) (errc
 	r, _ := m.ReadUInt32()
 	o, err := s.owner.FindObject(objmailbox)
 	if err != nil {
-		s.owner.core.LogErr(err)
+		s.owner.Core.LogErr(err)
 	}
 
 	if obj, ok := o.(Object); ok {
@@ -92,7 +92,7 @@ func (s *SyncObject) UnLockObj(sender, _ rpc.Mailbox, msg *protocol.Message) (er
 	r, _ := m.ReadUInt32()
 	o, err := s.owner.FindObject(objmailbox)
 	if err != nil {
-		s.owner.core.LogErr(err)
+		s.owner.Core.LogErr(err)
 	}
 	if obj, ok := o.(Object); ok {
 		obj.UnLockObj(sender, r, true)
@@ -109,7 +109,7 @@ func (s *SyncObject) LockObjSuccess(sender, _ rpc.Mailbox, msg *protocol.Message
 	r, _ := m.ReadUInt32()
 	o, err := s.owner.FindObject(objmailbox)
 	if err != nil {
-		s.owner.core.LogErr(err)
+		s.owner.Core.LogErr(err)
 	}
 
 	if obj, ok := o.(Object); ok {
@@ -127,7 +127,7 @@ func (s *SyncObject) UnLockObjSuccess(sender, _ rpc.Mailbox, msg *protocol.Messa
 
 	o, err := s.owner.FindObject(objmailbox)
 	if err != nil {
-		s.owner.core.LogErr(err)
+		s.owner.Core.LogErr(err)
 	}
 	if obj, ok := o.(Object); ok {
 		obj.UnLockObjSuccess(false)

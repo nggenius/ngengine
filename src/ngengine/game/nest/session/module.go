@@ -18,7 +18,6 @@ import (
 //		存储客户端对应的entity数据
 type SessionModule struct {
 	service.Module
-	core       service.CoreAPI
 	store      *store.StoreClient
 	factory    *object.ObjectModule
 	account    *Account
@@ -44,36 +43,34 @@ func (s *SessionModule) Name() string {
 	return "Session"
 }
 
-func (s *SessionModule) Init(core service.CoreAPI) bool {
-
-	opt := core.Option()
+func (s *SessionModule) Init() bool {
+	opt := s.Core.Option()
 	s.mainEntity = opt.Args.String("MainEntity")
 
-	store := core.Module("Store").(*store.StoreModule)
+	store := s.Core.Module("Store").(*store.StoreModule)
 	if store == nil {
-		core.LogFatal("need Store module")
+		s.Core.LogFatal("need Store module")
 		return false
 	}
-	s.core = core
-	factory := core.Module("Object").(*object.ObjectModule)
+	factory := s.Core.Module("Object").(*object.ObjectModule)
 	if factory == nil {
-		core.LogFatal("need object module")
+		s.Core.LogFatal("need object module")
 		return false
 	}
 	s.factory = factory
 	s.store = store.Client()
-	s.core.RegisterRemote("Account", s.account)
-	s.core.RegisterHandler("Self", s.proxy)
-	s.core.Service().AddListener(share.EVENT_USER_CONNECT, s.OnConnected)
-	s.core.Service().AddListener(share.EVENT_USER_LOST, s.OnDisconnected)
+	s.Core.RegisterRemote("Account", s.account)
+	s.Core.RegisterHandler("Self", s.proxy)
+	s.Core.Service().AddListener(share.EVENT_USER_CONNECT, s.OnConnected)
+	s.Core.Service().AddListener(share.EVENT_USER_LOST, s.OnDisconnected)
 	s.lastTime = time.Now()
 	return true
 }
 
 // Shut 模块关闭
 func (s *SessionModule) Shut() {
-	s.core.Service().RemoveListener(share.EVENT_USER_CONNECT, s.OnConnected)
-	s.core.Service().RemoveListener(share.EVENT_USER_LOST, s.OnDisconnected)
+	s.Core.Service().RemoveListener(share.EVENT_USER_CONNECT, s.OnConnected)
+	s.Core.Service().RemoveListener(share.EVENT_USER_LOST, s.OnDisconnected)
 }
 
 func (s *SessionModule) OnUpdate(t *service.Time) {
@@ -91,8 +88,8 @@ func (s *SessionModule) OnUpdate(t *service.Time) {
 	for ele := s.deleted.Front(); ele != nil; {
 		next := ele.Next()
 		delete(s.sessions, ele.Value.(uint64))
-		s.core.LogInfo("remove session, ", ele.Value.(uint64))
-		s.core.UpdateLoad(s.core.Load() - 1)
+		s.Core.LogInfo("remove session, ", ele.Value.(uint64))
+		s.Core.UpdateLoad(s.Core.Load() - 1)
 		s.deleted.Remove(ele)
 		ele = next
 	}
@@ -103,9 +100,9 @@ func (s *SessionModule) OnConnected(evt string, args ...interface{}) {
 	arg := args[0].(event.EventArgs)
 	id := arg["id"].(uint64)
 	ns := NewSession(id, s)
-	s.core.LogInfo("new session, ", id)
+	s.Core.LogInfo("new session, ", id)
 	s.sessions[id] = ns
-	s.core.UpdateLoad(s.core.Load() + 1)
+	s.Core.UpdateLoad(s.Core.Load() + 1)
 }
 
 // 客户端断线

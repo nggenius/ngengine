@@ -7,7 +7,6 @@ import (
 
 type WorldSpaceModule struct {
 	service.Module
-	core        service.CoreAPI
 	spaceManage *SpaceManage
 }
 
@@ -17,18 +16,17 @@ func New() *WorldSpaceModule {
 	return r
 }
 
-func (r *WorldSpaceModule) Init(core service.CoreAPI) bool {
-	r.core = core
-	opt := core.Option()
+func (r *WorldSpaceModule) Init() bool {
+	opt := r.Core.Option()
 	rf := opt.Args.String("Region")
-	if !r.spaceManage.LoadResource(core.Option().ResRoot + rf) {
+	if !r.spaceManage.LoadResource(r.Core.Option().ResRoot + rf) {
 		return false
 	}
 
 	r.spaceManage.MinRegions = opt.Args.MustInt("MinRegions", 1)
-	r.core.RegisterRemote("Space", NewSpace(r))
+	r.Core.RegisterRemote("Space", NewSpace(r))
 
-	r.core.Service().AddListener(share.EVENT_READY, r.spaceManage.OnServiceReady)
+	r.Core.Service().AddListener(share.EVENT_READY, r.spaceManage.OnServiceReady)
 
 	return true
 }
@@ -38,5 +36,5 @@ func (r *WorldSpaceModule) Name() string {
 }
 
 func (r *WorldSpaceModule) Shut() {
-	r.core.Service().RemoveListener(share.EVENT_READY, r.spaceManage.OnServiceReady)
+	r.Core.Service().RemoveListener(share.EVENT_READY, r.spaceManage.OnServiceReady)
 }

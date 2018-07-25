@@ -48,7 +48,7 @@ func (r *Register) Sync(ctx *StoreModule) error {
 		if err != nil {
 			return err
 		}
-		ctx.core.LogInfo("sync ", k, " ok")
+		ctx.Core.LogInfo("sync ", k, " ok")
 	}
 	return nil
 }

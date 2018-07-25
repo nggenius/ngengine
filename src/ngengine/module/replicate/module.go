@@ -10,7 +10,6 @@ import (
 
 type ReplicateModule struct {
 	service.Module
-	core           service.CoreAPI
 	objectmodule   *object.ObjectModule
 	replicate      *Replicate
 	replicatetypes map[string]struct{}
@@ -32,7 +31,6 @@ func (o *ReplicateModule) Name() string {
 
 // Init 模块初始化
 func (o *ReplicateModule) Init(core service.CoreAPI) bool {
-	o.core = core
 	o.objectmodule = core.Module("Object").(*object.ObjectModule)
 	if o.objectmodule == nil {
 		panic("need object module")
