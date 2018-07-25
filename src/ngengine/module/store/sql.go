@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"ngengine/core/service"
 
+	_ "github.com/go-sql-driver/mysql"
 	"github.com/go-xorm/xorm"
 )
 
@@ -34,6 +35,9 @@ func (s *Sql) Init(core service.CoreAPI) (err error) {
 
 	ds := opt.Args.String("datasource")
 	s.orm, err = xorm.NewEngine(db, ds)
+	if err != nil {
+		panic(err)
+	}
 
 	s.orm.ShowSQL(opt.Args.Bool("showsql"))
 

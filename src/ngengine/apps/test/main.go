@@ -8,7 +8,6 @@ import (
 	"ngengine/game/store"
 	"ngengine/game/world"
 
-	_ "github.com/go-sql-driver/mysql"
 	"github.com/mysll/toolkit"
 )
 

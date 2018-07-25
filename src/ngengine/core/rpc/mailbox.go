@@ -10,6 +10,7 @@ import (
 
 const (
 	ID_MAX      = 0x7FFFFFFFFFFF // id最大值
+	FLAG_MASK   = 0x800000000000 // flag mask
 	NullMailbox = Mailbox(0)
 )
 
@@ -46,12 +47,12 @@ func (m Mailbox) Uid() uint64 {
 
 // 是否是一个客户端地址
 func (m Mailbox) IsClient() bool {
-	return int8((m>>47)&0x1) == share.MB_FLAG_CLIENT
+	return m&FLAG_MASK > 0
 }
 
 // 是否是对象
 func (m Mailbox) IsObject() bool {
-	return uint64(m&ID_MAX) > 0
+	return (m&FLAG_MASK == 0) && ((m & ID_MAX) > 0)
 }
 
 // create uid

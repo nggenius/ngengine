@@ -2,14 +2,6 @@
 	"version": 0,
 	"dependencies": [
 		{
-			"importpath": "github.com/davecgh/go-spew",
-			"repository": "https://github.com/davecgh/go-spew",
-			"vcs": "git",
-			"revision": "8991bc29aa16c548c550c7ff78260e27b9ab7c73",
-			"branch": "master",
-			"notests": true
-		},
-		{
 			"importpath": "github.com/PuerkitoBio/goquery",
 			"repository": "https://github.com/PuerkitoBio/goquery",
 			"vcs": "git",
@@ -22,6 +14,22 @@
 			"repository": "https://github.com/barnex/fmath",
 			"vcs": "git",
 			"revision": "ec9671f295c249e1b53d5c81d14dc79de6a26774",
+			"branch": "master",
+			"notests": true
+		},
+		{
+			"importpath": "github.com/bitly/go-simplejson",
+			"repository": "https://github.com/bitly/go-simplejson",
+			"vcs": "git",
+			"revision": "0c965951289cce37dec52ad1f34200fefc816777",
+			"branch": "master",
+			"notests": true
+		},
+		{
+			"importpath": "github.com/davecgh/go-spew",
+			"repository": "https://github.com/davecgh/go-spew",
+			"vcs": "git",
+			"revision": "8991bc29aa16c548c550c7ff78260e27b9ab7c73",
 			"branch": "master",
 			"notests": true
 		},

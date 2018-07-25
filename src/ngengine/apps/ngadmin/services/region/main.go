@@ -4,18 +4,15 @@ import (
 	"flag"
 	"fmt"
 	"io/ioutil"
-	"ngengine/ngadmin"
+	"ngengine/core"
+	"ngengine/game/region"
 	"os"
 	"runtime/debug"
 
 	"github.com/mysll/toolkit"
 )
 
-var (
-	appPath = flag.String("ap", "./app.cfg", "app config path")
-
-	appAresPath = flag.String("para", "./servers.cfg", "app parameter config path")
-)
+var startPara = flag.String("p", "", "startPara")
 
 func main() {
 	defer func() {
@@ -29,14 +26,21 @@ func main() {
 
 	flag.Parse()
 
-	var config ngadmin.Options
-	err := config.Load(*appPath, *appAresPath)
+	if *startPara == "" {
+		flag.PrintDefaults()
+		panic("region parameter is empty")
+	}
+
+	core.RegisterService("region", new(region.Region))
+
+	_, err := core.CreateService("region", *startPara)
 	if err != nil {
 		panic(err)
 	}
+	core.RunAllService()
 
-	ngadmin := ngadmin.New(&config)
-	ngadmin.Main()
 	toolkit.WaitForQuit()
-	ngadmin.Exit()
+	core.CloseAllService()
+	core.Wait()
+	return
 }

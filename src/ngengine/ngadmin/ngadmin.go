@@ -51,6 +51,9 @@ func (n *NGAdmin) Main() {
 		n.waitGroup.Wrap(func() {
 			protocol.TCPServer(tcpListener, tcpServer, n.Log)
 		})
+
+		// 启动其他服务器
+		n.StartApp()
 	} else {
 		n.slave = NewSlave(ctx)
 		n.waitGroup.Wrap(func() {
