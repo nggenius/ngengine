@@ -12,9 +12,7 @@ import (
 )
 
 var (
-	appPath = flag.String("ap", "./app.cfg", "app config path")
-
-	appAresPath = flag.String("para", "./servers.cfg", "app parameter config path")
+	configPath = flag.String("p", "../config/", "app config path")
 )
 
 func main() {
@@ -30,7 +28,8 @@ func main() {
 	flag.Parse()
 
 	var config ngadmin.Options
-	err := config.Load(*appPath, *appAresPath)
+
+	err := config.Load(*configPath+"app.cfg", *configPath+"servers.cfg")
 	if err != nil {
 		panic(err)
 	}
@@ -38,5 +37,6 @@ func main() {
 	ngadmin := ngadmin.New(&config)
 	ngadmin.Main()
 	toolkit.WaitForQuit()
+
 	ngadmin.Exit()
 }

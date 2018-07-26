@@ -87,6 +87,10 @@ func (h *HarborProtocol) Exec(msgid uint16, msg *protocol.Message) {
 			}
 			h.ctx.Core.dns.UpdateLoad(load)
 		}
+	case protocol.S2A_UNREGISTER:
+		{
+			h.ctx.Core.Close()
+		}
 	}
 }
 

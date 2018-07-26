@@ -16,6 +16,7 @@ type NGAdmin struct {
 	waitGroup   toolkit.WaitGroupWrapper
 	DB          *ServiceDB
 	slave       *Slave
+	quit        bool
 }
 
 //创建一个新的admin,提供配置属性
@@ -66,6 +67,11 @@ func (n *NGAdmin) Main() {
 
 //退出函数
 func (n *NGAdmin) Exit() {
+
+	n.shutdown()
+	// 等待所有服务退出
+	<-n.DB.Done()
+
 	if n.tcpListener != nil {
 		n.tcpListener.Close()
 	}
@@ -78,4 +84,11 @@ func (n *NGAdmin) Exit() {
 	if n.Log != nil {
 		n.CloseLog()
 	}
+}
+
+// 正常退出
+func (n *NGAdmin) shutdown() {
+	n.quit = true
+	// 关闭所有服务
+	n.DB.CloseAll()
 }

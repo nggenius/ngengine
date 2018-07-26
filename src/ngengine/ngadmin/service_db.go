@@ -6,6 +6,7 @@ import (
 	"ngengine/protocol"
 	. "ngengine/share"
 	"sync"
+	"time"
 )
 
 const (
@@ -298,4 +299,40 @@ func (s *ServiceDB) Unwatch(id ServiceId) {
 			}
 		}
 	}
+}
+
+func (s *ServiceDB) CloseAll() {
+	s.Broadcast(protocol.S2A_UNREGISTER, nil)
+}
+
+// Broadcast 广播给所有人
+func (s *ServiceDB) Broadcast(msgid uint16, msg interface{}) {
+	m, err := PackMessage(msgid, msg)
+	if err != nil {
+		s.ctx.ngadmin.LogErr("pack message failed, ", err)
+		return
+	}
+	for _, v := range s.serviceMap {
+		v.Client.SendMessage(m)
+	}
+	m.Free()
+}
+
+// 等待所有服务退出
+func (s *ServiceDB) Done() chan struct{} {
+	ch := make(chan struct{})
+	t := time.NewTicker(time.Second)
+	go func() {
+		for {
+			select {
+			case <-t.C:
+				if len(s.serviceMap) == 0 {
+					t.Stop()
+					ch <- struct{}{}
+					return
+				}
+			}
+		}
+	}()
+	return ch
 }

@@ -151,7 +151,6 @@ func (c *Core) Shut() {
 	time.Sleep(time.Second)
 	c.closeState = CS_SHUT
 	<-c.quitCh
-
 }
 
 // 关注其它服务，"all" 关注全部服务

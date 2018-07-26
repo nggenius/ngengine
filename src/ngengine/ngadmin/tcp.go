@@ -12,6 +12,11 @@ type tcpServer struct {
 
 //tcp连接处理函数
 func (p *tcpServer) Handle(clientConn net.Conn) {
+	if p.ctx.ngadmin.quit { // 已经退出了
+		clientConn.Close()
+		return
+	}
+
 	p.ctx.ngadmin.LogInfof("TCP: new client(%s)", clientConn.RemoteAddr())
 
 	buf := make([]byte, 4)

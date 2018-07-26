@@ -51,31 +51,49 @@ func newClient(id share.ServiceId, conn net.Conn, ctx *Context) *Client {
 	return c
 }
 
+// SendMessage 发送消息
 func (c *Client) SendMessage(msg *protocol.Message) bool {
 	if c.quit {
 		return false
 	}
-
+	msg.Dup()
 	c.sendqueue <- msg //消息太多的情况可能会阻塞
 	return true
 }
 
-func (c *Client) SendProtocol(msgid uint16, msg interface{}) (bool, error) {
-	data, err := json.Marshal(msg)
-	if err != nil {
-		return false, nil
+// PackMessage 将消息进行打包
+func PackMessage(msgid uint16, msg interface{}) (*protocol.Message, error) {
+	var data []byte
+	var err error
+	if msg != nil {
+		data, err = json.Marshal(msg)
+		if err != nil {
+			return nil, err
+		}
 	}
+
 	size := len(data)
 	m := protocol.NewMessage(size + 4)
 	buff := bytes.NewBuffer(m.Body)
 	binary.Write(buff, binary.LittleEndian, uint16(size+2))
 	binary.Write(buff, binary.LittleEndian, msgid)
-	buff.Write(data)
+	if len(data) > 0 {
+		buff.Write(data)
+	}
 	m.Body = m.Body[:buff.Len()]
+	return m, nil
+}
+
+func (c *Client) SendProtocol(msgid uint16, msg interface{}) (bool, error) {
+	m, err := PackMessage(msgid, msg)
+	if err != nil {
+		return false, err
+	}
 	if !c.SendMessage(m) {
 		m.Free()
 		return false, fmt.Errorf("send message failed, reason: client is quit")
 	}
+	m.Free()
 	return true, nil
 }
 

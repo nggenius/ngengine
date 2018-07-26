@@ -8,8 +8,6 @@ import (
 	"ngengine/game/login"
 	"os"
 	"runtime/debug"
-
-	"github.com/mysll/toolkit"
 )
 
 var startPara = flag.String("p", "", "startPara")
@@ -39,8 +37,6 @@ func main() {
 	}
 	core.RunAllService()
 
-	toolkit.WaitForQuit()
-	core.CloseAllService()
 	core.Wait()
 	return
 }
