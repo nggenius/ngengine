@@ -61,6 +61,8 @@ func (c *Core) doEvent(e *event.Event) {
 		id := e.Args["id"].(uint64)
 		c.service.OnDisconnect(id)
 		c.clientDB.RemoveClient(id)
+	case share.EVENT_SHUTDOWN:
+		c.Close()
 	}
 
 	// 对消息进行分发
@@ -115,8 +117,18 @@ func (c *Core) run() {
 		if !c.busy {
 			time.Sleep(time.Millisecond)
 		}
+
+		if c.closeState == CS_QUIT {
+			select {
+			case <-c.coreClose:
+				c.release()
+				c.closeState = CS_SHUT
+			default:
+				break
+			}
+		}
 	}
 
 	c.LogInfo("core is shutdown")
-	close(c.quitCh)
+	close(c.coreQuit)
 }

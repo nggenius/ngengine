@@ -27,11 +27,11 @@ func Start(startPath string, startPara *ServiceLink, l *logger.Log) error {
 
 	err = cmd.Start()
 	if err != nil {
-		log.LogFatalf(err)
+		log.LogErr(err)
 		return err
 	}
 
-	l.LogInfo("master", "app start ", startPara.ServType, ",", startPara.ServId)
+	l.LogInfo("master", " app start ", startPara.ServType, ",", startPara.ServId)
 
 	return nil
 }

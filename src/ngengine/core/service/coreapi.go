@@ -139,18 +139,8 @@ func (c *Core) Shut() {
 	if c.harbor != nil {
 		c.harbor.Close()
 	}
-	c.Wait()
 
-	// 关闭所有的模块
-	for n, m := range c.modules.modules {
-		m.Shut()
-		c.LogInfo("module '", n, "' is shut")
-	}
-
-	// 给主循环足够的时间进行收尾处理
-	time.Sleep(time.Second)
-	c.closeState = CS_SHUT
-	<-c.quitCh
+	c.notifyDone()
 }
 
 // 关注其它服务，"all" 关注全部服务

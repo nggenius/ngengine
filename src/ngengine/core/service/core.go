@@ -31,7 +31,8 @@ type Core struct {
 	opts       *CoreOption         // 配置项
 	service    Service             // 逻辑服务
 	closeState int                 // 关闭状态
-	quitCh     chan struct{}       // 关闭chan
+	coreClose  chan struct{}       // 关闭信息
+	coreQuit   chan struct{}       // 退出信号
 	startTime  time.Time           // 启动时间
 	harbor     *Harbor             // 服务连接点
 	watchs     []string            // 想要关注的服务
@@ -56,7 +57,8 @@ func CreateService(s Service) *Core {
 	sc := &Core{
 		service:    s,
 		closeState: CS_NONE,
-		quitCh:     make(chan struct{}),
+		coreClose:  make(chan struct{}),
+		coreQuit:   make(chan struct{}),
 		watchs:     make([]string, 0, 8),
 		Emitter:    event.NewAsyncEvent(),
 		rpcmgr:     NewRpcRegister(),
@@ -178,6 +180,7 @@ func (c *Core) Serv() {
 	c.Wrap(func() { harbor.KeepConnect() })
 	c.service.Ready()
 	c.run()
+	c.exit()
 }
 
 // 停止服务
@@ -192,4 +195,24 @@ func (c *Core) Close() {
 	}
 
 	c.Shut()
+}
+
+func (c *Core) release() {
+	// 关闭所有的模块
+	for n, m := range c.modules.modules {
+		m.Shut()
+		c.LogInfo("module '", n, "' is shut")
+	}
+}
+
+func (c *Core) notifyDone() {
+	go func() {
+		c.Wait()
+		close(c.coreClose)
+	}()
+}
+
+func (c *Core) exit() {
+	<-c.coreQuit
+	time.Sleep(time.Second)
 }

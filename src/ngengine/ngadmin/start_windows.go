@@ -23,7 +23,7 @@ func start(startPath string, startPara *ServiceLink, l *logger.Log) error {
 		return err
 	}
 
-	l.LogInfo("master", "app start ", startPara.ServType, ",", startPara.ServId)
+	l.LogInfo("master", " app start ", startPara.ServType, ",", startPara.ServId)
 
 	return nil
 }

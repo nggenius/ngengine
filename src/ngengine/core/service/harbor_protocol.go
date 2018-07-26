@@ -5,9 +5,11 @@ import (
 	"encoding/binary"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 	"net"
 	"ngengine/protocol"
+	"ngengine/share"
 	"strings"
 	"time"
 )
@@ -89,7 +91,7 @@ func (h *HarborProtocol) Exec(msgid uint16, msg *protocol.Message) {
 		}
 	case protocol.S2A_UNREGISTER:
 		{
-			h.ctx.Core.Close()
+			h.ctx.Core.Emitter.Fire(share.EVENT_SHUTDOWN, nil, true)
 		}
 	}
 }
@@ -239,7 +241,7 @@ func (h *HarborProtocol) Read() (uint16, *protocol.Message, error) {
 
 	size = binary.LittleEndian.Uint16(h.conn.lenSlice[:2])
 	if size > protocol.MAX_ADMIN_MESSAGE_SIZE {
-		return 0, nil, errors.New("message size exceed")
+		return 0, nil, fmt.Errorf("message size exceed, %d", size)
 	}
 
 	msgid = binary.LittleEndian.Uint16(h.conn.lenSlice[2:])

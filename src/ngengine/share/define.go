@@ -33,11 +33,16 @@ const (
 
 // 事件定义
 const (
-	EVENT_READY        = "ready"                 // 别的服务就绪, args:{id:ServiceId}
-	EVENT_LOST         = "lost"                  // 丢失服务, args:{id:ServiceId}
-	EVENT_USER_CONNECT = "user_connect"          // 玩家连接, args:{id:uint64}
-	EVENT_USER_LOST    = "user_lost"             // 玩家断开连接, args:{id:uint64}
-	ROUTER_TO_OBJECT   = "ObjectRouter.ToObject" // 对象消息路由
+	EVENT_READY        = "ready"        // 别的服务就绪, args:{id:ServiceId}
+	EVENT_LOST         = "lost"         // 丢失服务, args:{id:ServiceId}
+	EVENT_USER_CONNECT = "user_connect" // 玩家连接, args:{id:uint64}
+	EVENT_USER_LOST    = "user_lost"    // 玩家断开连接, args:{id:uint64}
+	EVENT_SHUTDOWN     = "svr_shutdown" // 关闭系统
+)
+
+const (
+	ROUTER_TO_OBJECT = "ObjectRouter.ToObject" // 对象消息路由
+
 )
 
 // MessageBox 结构体消息包
