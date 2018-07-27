@@ -15,6 +15,7 @@ type AdminProtocol struct {
 	ctx *Context
 }
 
+// IOLoop 消息循环
 func (p *AdminProtocol) IOLoop(conn net.Conn) error {
 	var zeroTime time.Time
 	adminid, peer, err := p.Register(conn)
@@ -75,6 +76,7 @@ func (p *AdminProtocol) IOLoop(conn net.Conn) error {
 	return nil
 }
 
+// Register 读取注册消息
 func (p *AdminProtocol) Register(conn net.Conn) (int, *PeerInfo, error) {
 	var buf [4]byte
 	if _, err := io.ReadFull(conn, buf[:]); err != nil {
@@ -120,6 +122,7 @@ func (p *AdminProtocol) Register(conn net.Conn) (int, *PeerInfo, error) {
 	return reg.AdminId, pi, nil
 }
 
+// Exec 消息处理
 func (p *AdminProtocol) Exec(srv *ServiceInfo, msgid uint16, msg *protocol.Message) {
 	switch msgid {
 	case protocol.S2A_WATCH:
@@ -145,6 +148,7 @@ func (p *AdminProtocol) Exec(srv *ServiceInfo, msgid uint16, msg *protocol.Messa
 	}
 }
 
+// messagePump 发送消息循环
 func (p *AdminProtocol) messagePump(client *Client) {
 	for {
 		select {

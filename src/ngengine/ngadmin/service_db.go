@@ -53,6 +53,7 @@ func (s *ServiceInfo) String() string {
 	)
 }
 
+// NewServ new serverinfo
 func NewServ(adminid int, peerinfo *PeerInfo, client *Client) *ServiceInfo {
 	s := &ServiceInfo{
 		AdminId:  adminid,
@@ -62,6 +63,7 @@ func NewServ(adminid int, peerinfo *PeerInfo, client *Client) *ServiceInfo {
 	return s
 }
 
+// NewServiceDB new service db
 func NewServiceDB(context *Context) *ServiceDB {
 	return &ServiceDB{
 		ctx:        context,
@@ -70,7 +72,7 @@ func NewServiceDB(context *Context) *ServiceDB {
 	}
 }
 
-// 增加一个服务
+// AddService 增加一个服务
 func (s *ServiceDB) AddService(id ServiceId, service *ServiceInfo) error {
 	s.Lock()
 	defer s.Unlock()
@@ -116,7 +118,7 @@ func (s *ServiceDB) AddService(id ServiceId, service *ServiceInfo) error {
 	return nil
 }
 
-// 移除一个服务
+// RemoveService 移除一个服务
 func (s *ServiceDB) RemoveService(name string, id ServiceId) bool {
 	s.Lock()
 	defer s.Unlock()
@@ -161,7 +163,7 @@ func (s *ServiceDB) RemoveService(name string, id ServiceId) bool {
 	return false
 }
 
-// 查找服务
+// LookupService 查找服务
 func (s *ServiceDB) LookupService(id ServiceId) *ServiceInfo {
 	s.RLock()
 	defer s.RUnlock()
@@ -171,7 +173,7 @@ func (s *ServiceDB) LookupService(id ServiceId) *ServiceInfo {
 	return nil
 }
 
-// 通过类型查找服务信息
+// LookupSrvByType 通过类型查找服务信息
 func (s *ServiceDB) LookupSrvByType(typ string) []*ServiceInfo {
 	s.RLock()
 	defer s.RUnlock()
@@ -184,7 +186,7 @@ func (s *ServiceDB) LookupSrvByType(typ string) []*ServiceInfo {
 	return services
 }
 
-// 关注服务变动
+// Watch 关注服务变动
 func (s *ServiceDB) Watch(id ServiceId, typ []string) {
 	s.Lock()
 	defer s.Unlock()
@@ -257,7 +259,7 @@ func (s *ServiceDB) Watch(id ServiceId, typ []string) {
 
 }
 
-// 关注服务变动
+// UpdateLoad 关注服务变动
 func (s *ServiceDB) UpdateLoad(id ServiceId, load int32) {
 	s.Lock()
 	defer s.Unlock()
@@ -288,7 +290,7 @@ func (s *ServiceDB) UpdateLoad(id ServiceId, load int32) {
 	}
 }
 
-//取消关注
+// Unwatch 取消关注
 func (s *ServiceDB) Unwatch(id ServiceId) {
 	s.Lock()
 	defer s.Unlock()
@@ -303,6 +305,7 @@ func (s *ServiceDB) Unwatch(id ServiceId) {
 	}
 }
 
+// CloseAll 关闭所有服务
 func (s *ServiceDB) CloseAll() {
 	s.Broadcast(protocol.S2A_UNREGISTER, nil)
 }
@@ -320,7 +323,7 @@ func (s *ServiceDB) Broadcast(msgid uint16, msg interface{}) {
 	m.Free()
 }
 
-// 等待所有服务退出
+// Done 等待所有服务退出
 func (s *ServiceDB) Done() chan struct{} {
 	ch := make(chan struct{})
 	t := time.NewTicker(time.Second)

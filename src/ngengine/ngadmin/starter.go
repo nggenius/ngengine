@@ -5,7 +5,8 @@ import (
 	"sync/atomic"
 )
 
-func (n *NGAdmin) StartApp() {
+// StartService 启动进程
+func (n *NGAdmin) StartService() {
 	adminConfig := n.opts
 	appConfig := n.opts.AppConfig
 

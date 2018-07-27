@@ -10,7 +10,7 @@ type tcpServer struct {
 	ctx *Context
 }
 
-//tcp连接处理函数
+// Handle tcp连接处理函数
 func (p *tcpServer) Handle(clientConn net.Conn) {
 	if p.ctx.ngadmin.quit { // 已经退出了
 		clientConn.Close()

@@ -10,7 +10,8 @@ import (
 	"syscall"
 )
 
-func Start(startPath string, startPara *ServiceLink, l *logger.Log) error {
+// start 启动进程
+func start(startPath string, startPara *ServiceLink, l *logger.Log) error {
 	b, err := json.Marshal(startPara.CoreOption)
 	if err != nil {
 		l.LogErr(err)

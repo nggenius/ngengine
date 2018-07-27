@@ -15,6 +15,7 @@ import (
 
 const defaultBufferSize = 16 * 1024
 
+// Client 管理连接
 type Client struct {
 	net.Conn
 	Id       share.ServiceId

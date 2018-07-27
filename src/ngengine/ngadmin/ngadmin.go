@@ -19,7 +19,7 @@ type NGAdmin struct {
 	quit        bool
 }
 
-//创建一个新的admin,提供配置属性
+// New 创建一个新的admin,提供配置属性
 func New(opts *Options) *NGAdmin {
 	if opts.LogFile == "" {
 		opts.LogFile = "admin.log"
@@ -37,7 +37,7 @@ func New(opts *Options) *NGAdmin {
 	return admin
 }
 
-//主函数
+// Main 主函数
 func (n *NGAdmin) Main() {
 	ctx := &Context{n}
 	n.DB = NewServiceDB(ctx)
@@ -54,7 +54,7 @@ func (n *NGAdmin) Main() {
 		})
 
 		// 启动其他服务器
-		n.StartApp()
+		n.StartService()
 	} else {
 		n.slave = NewSlave(ctx)
 		n.waitGroup.Wrap(func() {
@@ -65,7 +65,7 @@ func (n *NGAdmin) Main() {
 	n.LogInfo("admin is ready")
 }
 
-//退出函数
+// Exit 退出函数
 func (n *NGAdmin) Exit() {
 
 	n.shutdown()
@@ -86,7 +86,7 @@ func (n *NGAdmin) Exit() {
 	}
 }
 
-// 正常退出
+// shutdown 正常退出
 func (n *NGAdmin) shutdown() {
 	n.quit = true
 	// 关闭所有服务

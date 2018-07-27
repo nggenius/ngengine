@@ -21,6 +21,7 @@ type SlaveConn struct {
 	lenSlice  []byte
 }
 
+// NewSlaveConn 创建一个从连接
 func NewSlaveConn(conn net.Conn) *SlaveConn {
 
 	addr, port, _ := net.SplitHostPort(conn.RemoteAddr().String())
@@ -40,7 +41,7 @@ func NewSlaveConn(conn net.Conn) *SlaveConn {
 	return c
 }
 
-//发送消息
+// SendMessage 发送消息
 func (c *SlaveConn) SendMessage(msg *protocol.Message) bool {
 	if c.quit {
 		return false
@@ -50,7 +51,7 @@ func (c *SlaveConn) SendMessage(msg *protocol.Message) bool {
 	return true
 }
 
-//关闭连接
+// CloseConn 关闭连接
 func (c *SlaveConn) CloseConn() {
 	if !c.quit {
 		c.quit = true

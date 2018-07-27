@@ -10,6 +10,7 @@ import (
 	"time"
 )
 
+// Slave slave admin
 type Slave struct {
 	ctx       *Context
 	host      string
@@ -20,6 +21,7 @@ type Slave struct {
 	heartbeat [4]byte
 }
 
+// Slave new slave
 func NewSlave(ctx *Context) *Slave {
 	s := &Slave{
 		ctx: ctx,
@@ -27,6 +29,7 @@ func NewSlave(ctx *Context) *Slave {
 	return s
 }
 
+// KeepConnect 保持与主admin的连接
 func (s *Slave) KeepConnect(host string, port int) {
 	s.host = host
 	s.port = port
@@ -41,6 +44,7 @@ func (s *Slave) KeepConnect(host string, port int) {
 	}
 }
 
+// IOLoop 消息主循环
 func (s *Slave) IOLoop(conn net.Conn) {
 	binary.LittleEndian.PutUint16(s.heartbeat[:2], 2)
 	binary.LittleEndian.PutUint16(s.heartbeat[2:], protocol.S2A_HEARTBEAT)
@@ -105,12 +109,14 @@ exit:
 	s.ctx.ngadmin.LogInfo("send loop quit")
 }
 
+// Exec 运行消息
 func (s *Slave) Exec(msgid uint16, msg *protocol.Message) {
 	switch msgid {
 
 	}
 }
 
+// Read 读取消息
 func (s *Slave) Read() (uint16, *protocol.Message, error) {
 	var size, msgid uint16
 	if _, err := io.ReadFull(s.conn.Reader, s.conn.lenSlice); err != nil {
@@ -133,6 +139,7 @@ func (s *Slave) Read() (uint16, *protocol.Message, error) {
 	return msgid, msg, nil
 }
 
+// Close 关闭连接
 func (s *Slave) Close() {
 	if s.conn != nil {
 		s.conn.CloseConn()
