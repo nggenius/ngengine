@@ -21,6 +21,7 @@ type ServiceLinks struct {
 
 // Options 启动配置文件
 type Options struct {
+	Id           int               // id
 	LogFile      string            //日志文件名
 	LogLevel     int               //日志等级(DEBUG<INFO<WARN<ERR<FATAL)
 	Host         string            //主服务地址

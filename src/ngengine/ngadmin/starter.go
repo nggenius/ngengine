@@ -19,6 +19,7 @@ func (n *NGAdmin) StartApp() {
 				return
 			}
 
+			v.AdminId = adminConfig.Id
 			v.AdminAddr = adminConfig.Host
 			v.AdminPort = adminConfig.Port
 			v.ServId = share.ServiceId(adminConfig.SeverCount)

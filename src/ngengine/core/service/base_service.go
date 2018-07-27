@@ -4,7 +4,7 @@ import (
 	"ngengine/common/event"
 )
 
-// 服务接口，由各个服务自己实现
+// Service 服务接口，由各个服务自己实现
 type Service interface {
 	event.Dispatcher
 	// 服务前期准备
@@ -28,31 +28,38 @@ type BaseService struct {
 	CoreAPI
 }
 
+// Prepare 预处理，在这个回调里进行预加载
 func (b *BaseService) Prepare(CoreAPI) error {
 	return nil
 }
 
+// Init 初始化操作，这里可以获取到服务配置
 func (b *BaseService) Init(o *CoreOption) error {
 	return nil
 }
 
+// Start 服务器启动
 func (b *BaseService) Start() error {
 	b.CoreAPI.Watch("all")
 	return nil
 }
 
+// Ready 服务就绪
 func (b *BaseService) Ready() {
 
 }
 
+// Close 服务关闭，如果返回false，则服务自主处理关闭
 func (b *BaseService) Close() bool {
 	return true
 }
 
+// OnConnect 新的客户端连接
 func (b *BaseService) OnConnect(id uint64) {
 
 }
 
+// OnDisconnect 客户端断开连接
 func (b *BaseService) OnDisconnect(id uint64) {
 
 }

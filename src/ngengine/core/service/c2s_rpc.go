@@ -13,7 +13,7 @@ var (
 	packagesize       = 1400 //MTU大小
 )
 
-//客户端向服务器的远程调用辅助工具
+// C2SHelper 客户端向服务器的远程调用辅助工具
 type C2SHelper struct {
 	owner *Core
 }
@@ -22,7 +22,7 @@ func (t *C2SHelper) RegisterCallback(s rpc.Servicer) {
 	s.RegisterCallback("Call", t.Call)
 }
 
-//处理客户端的调用
+// Call 处理客户端的调用
 func (ch *C2SHelper) Call(sender, _ rpc.Mailbox, msg *protocol.Message) (errcode int32, reply *protocol.Message) {
 	node, sm, data, err := ch.owner.Proto.DecodeRpcMessage(msg)
 	if err != nil {

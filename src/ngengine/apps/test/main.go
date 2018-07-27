@@ -1,6 +1,7 @@
 package main
 
 import (
+	"net/http"
 	"ngengine/core"
 	"ngengine/game/login"
 	"ngengine/game/nest"
@@ -8,7 +9,7 @@ import (
 	"ngengine/game/store"
 	"ngengine/game/world"
 
-	"github.com/mysll/toolkit"
+	_ "net/http/pprof"
 )
 
 var startnest = `{
@@ -76,6 +77,25 @@ var startregion = `{
 	"Args": {}
 }`
 
+var dbargs = `{
+	"ServId":1,
+	"ServType": "store",
+	"AdminAddr":"127.0.0.1",
+	"AdminPort":12500,
+	"ServName": "db_1",
+	"ServAddr": "127.0.0.1",
+	"ServPort": 0,
+	"Expose": false,
+	"HostAddr": "",
+	"HostPort": 0,
+	"LogFile":"db.log",
+	"Args": {
+		"db":"mysql",
+		"datasource":"sa:abc@tcp(192.168.1.52:3306)/ngengine?charset=utf8",
+		"showsql":true
+	}
+}`
+
 func main() {
 	// 捕获异常
 	core.RegisterService("store", new(store.Store))
@@ -110,7 +130,6 @@ func main() {
 
 	core.RunAllService()
 
-	toolkit.WaitForQuit()
-	core.CloseAllService()
+	go http.ListenAndServe(":9600", nil)
 	core.Wait()
 }

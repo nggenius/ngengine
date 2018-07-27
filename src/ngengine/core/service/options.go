@@ -85,6 +85,7 @@ func (a Args) Float64(arg string) float64 {
 
 // 服务配置选项
 type CoreOption struct {
+	AdminId    int             // admin in
 	ServId     share.ServiceId // 服务id
 	AdminAddr  string          // 管理地址
 	AdminPort  int             // 管理端口

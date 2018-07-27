@@ -17,12 +17,12 @@ type AdminProtocol struct {
 
 func (p *AdminProtocol) IOLoop(conn net.Conn) error {
 	var zeroTime time.Time
-	peer, err := p.Register(conn)
+	adminid, peer, err := p.Register(conn)
 	if err != nil {
 		return err
 	}
 	client := newClient(peer.ServId, conn, p.ctx)
-	srv := NewServ(peer, client)
+	srv := NewServ(adminid, peer, client)
 	if err := p.ctx.ngadmin.DB.AddService(peer.ServId, srv); err != nil {
 		return err
 	}
@@ -75,34 +75,34 @@ func (p *AdminProtocol) IOLoop(conn net.Conn) error {
 	return nil
 }
 
-func (p *AdminProtocol) Register(conn net.Conn) (*PeerInfo, error) {
+func (p *AdminProtocol) Register(conn net.Conn) (int, *PeerInfo, error) {
 	var buf [4]byte
 	if _, err := io.ReadFull(conn, buf[:]); err != nil {
-		return nil, err
+		return 0, nil, err
 	}
 	var size, msgid uint16
 	size = binary.LittleEndian.Uint16(buf[:2])
 
 	if size <= 2 || size > protocol.MAX_ADMIN_MESSAGE_SIZE {
-		return nil, fmt.Errorf("message size %d exceed", size)
+		return 0, nil, fmt.Errorf("message size %d exceed", size)
 	}
 
 	msgid = binary.LittleEndian.Uint16(buf[2:])
 
 	if msgid != protocol.S2A_REGISTER {
-		return nil, fmt.Errorf("first message must register")
+		return 0, nil, fmt.Errorf("first message must register")
 	}
 
 	size = size - 2
 	msg := protocol.NewMessage(int(size))
 	msg.Body = msg.Body[:size]
 	if _, err := io.ReadFull(conn, msg.Body[:size]); err != nil {
-		return nil, err
+		return 0, nil, err
 	}
 
 	var reg protocol.Register
 	if err := json.Unmarshal(msg.Body, &reg); err != nil {
-		return nil, err
+		return 0, nil, err
 	}
 	msg.Free()
 	pi := &PeerInfo{
@@ -117,7 +117,7 @@ func (p *AdminProtocol) Register(conn net.Conn) (*PeerInfo, error) {
 		Load:       reg.Service.Load,
 	}
 
-	return pi, nil
+	return reg.AdminId, pi, nil
 }
 
 func (p *AdminProtocol) Exec(srv *ServiceInfo, msgid uint16, msg *protocol.Message) {

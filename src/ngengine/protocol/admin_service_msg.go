@@ -44,6 +44,7 @@ type LoadInfo struct {
 }
 
 type Register struct {
+	AdminId int // admin id
 	Service ServiceInfo
 }
 

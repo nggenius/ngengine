@@ -9,7 +9,7 @@ import (
 	"strconv"
 )
 
-// 和admin的连接结点
+// ClientConn 和admin的连接结点
 type ClientConn struct {
 	conn    net.Conn
 	Id      uint64
@@ -25,7 +25,7 @@ type ClientConn struct {
 	lenSlice  []byte
 }
 
-// 新的连接
+// NewClientConn 新的连接
 func NewClientConn(id uint64, conn net.Conn) *ClientConn {
 
 	addr, port, _ := net.SplitHostPort(conn.RemoteAddr().String())
@@ -46,7 +46,7 @@ func NewClientConn(id uint64, conn net.Conn) *ClientConn {
 	return c
 }
 
-// 异步发送消息
+// SendMessage 异步发送消息
 func (c *ClientConn) SendMessage(msg *protocol.Message) bool {
 	if c.quit {
 		return false
@@ -56,10 +56,12 @@ func (c *ClientConn) SendMessage(msg *protocol.Message) bool {
 	return true
 }
 
+// Read 读取消息
 func (c *ClientConn) Read(p []byte) (n int, err error) {
 	return c.Reader.Read(p)
 }
 
+// Write 写入消息
 func (c *ClientConn) Write(p []byte) (n int, err error) {
 	msg := protocol.NewMessage(len(p))
 	msg.Body = append(msg.Body, p...)
@@ -70,7 +72,7 @@ func (c *ClientConn) Write(p []byte) (n int, err error) {
 	return 0, errors.New("socket is closed")
 }
 
-// 关闭连接
+// Close 关闭连接
 func (c *ClientConn) Close() error {
 	if !c.quit {
 		c.quit = true

@@ -174,6 +174,7 @@ func (h *HarborProtocol) UpdateLoad() error {
 func (h *HarborProtocol) Register() error {
 	opts := h.ctx.Core.opts
 	r := &protocol.Register{}
+	r.AdminId = opts.AdminId
 	r.Service.Id = opts.ServId
 	r.Service.Name = opts.ServName
 	r.Service.Type = opts.ServType

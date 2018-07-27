@@ -19,6 +19,7 @@ type ClientCodec struct {
 	cachebuf []byte
 }
 
+// ReadRequest 解码客户端消息
 func (c *ClientCodec) ReadRequest(maxrc uint16) (*protocol.Message, error) {
 	for {
 		id, data, err := protocol.ReadPkg(c.client.conn.Reader, c.cachebuf)
@@ -43,19 +44,23 @@ func (c *ClientCodec) ReadRequest(maxrc uint16) (*protocol.Message, error) {
 	}
 }
 
+// WriteResponse 发送rcp应答，不支持
 func (c *ClientCodec) WriteResponse(seq uint64, errcode int32, body *protocol.Message) (err error) {
 	return ERRNOTSUPPORT
 }
 
+// Close 关闭连接
 func (c *ClientCodec) Close() error {
 	c.client.Close()
 	return nil
 }
 
+// GetConn 获取连接
 func (c *ClientCodec) GetConn() io.ReadWriteCloser {
 	return c.client.conn
 }
 
+// Mailbox 获取邮箱地址
 func (c *ClientCodec) Mailbox() *rpc.Mailbox {
 	return &c.client.Mailbox
 }

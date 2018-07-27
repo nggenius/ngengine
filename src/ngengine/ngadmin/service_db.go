@@ -34,6 +34,7 @@ type PeerInfo struct {
 }
 
 type ServiceInfo struct {
+	AdminId  int // admin id
 	PeerInfo *PeerInfo
 	Client   *Client
 }
@@ -52,8 +53,9 @@ func (s *ServiceInfo) String() string {
 	)
 }
 
-func NewServ(peerinfo *PeerInfo, client *Client) *ServiceInfo {
+func NewServ(adminid int, peerinfo *PeerInfo, client *Client) *ServiceInfo {
 	s := &ServiceInfo{
+		AdminId:  adminid,
 		PeerInfo: peerinfo,
 		Client:   client,
 	}
@@ -74,7 +76,7 @@ func (s *ServiceDB) AddService(id ServiceId, service *ServiceInfo) error {
 	defer s.Unlock()
 	srv, dup := s.serviceMap[id]
 	if dup {
-		if srv.PeerInfo.ServName == service.PeerInfo.ServName { //已经存在
+		if srv.PeerInfo.ServName == service.PeerInfo.ServName && srv.AdminId == service.AdminId { //已经存在
 			return fmt.Errorf("service dup, %v", service)
 		}
 		//id不一样,可能是服务重启了

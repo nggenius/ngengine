@@ -14,6 +14,7 @@ type ClientDB struct {
 	quit    bool
 }
 
+// NewClientDB 新DB
 func NewClientDB(ctx *context) *ClientDB {
 	db := &ClientDB{
 		clients: make(map[uint64]*Client, 2048),
@@ -24,6 +25,7 @@ func NewClientDB(ctx *context) *ClientDB {
 	return db
 }
 
+// AddClient 增加一个新的客户端连接
 func (c *ClientDB) AddClient(conn net.Conn) uint64 {
 	c.Lock()
 	defer c.Unlock()
@@ -54,6 +56,7 @@ func (c *ClientDB) AddClient(conn net.Conn) uint64 {
 	return client.Session
 }
 
+// FindClient 查找连接
 func (c *ClientDB) FindClient(session uint64) *Client {
 	c.RLock()
 	defer c.RUnlock()
@@ -64,6 +67,7 @@ func (c *ClientDB) FindClient(session uint64) *Client {
 	return nil
 }
 
+// BreakClient 断开连接
 func (c *ClientDB) BreakClient(session uint64) {
 	c.RLock()
 	defer c.RUnlock()
@@ -72,6 +76,7 @@ func (c *ClientDB) BreakClient(session uint64) {
 	}
 }
 
+// RemoveClient 移除客户端连接
 func (c *ClientDB) RemoveClient(session uint64) {
 	c.Lock()
 	defer c.Unlock()
@@ -82,6 +87,7 @@ func (c *ClientDB) RemoveClient(session uint64) {
 	}
 }
 
+// 关闭所有
 func (c *ClientDB) CloseAll() {
 	c.Lock()
 	defer c.Unlock()

@@ -27,7 +27,7 @@ type Harbor struct {
 	protocol        *HarborProtocol
 }
 
-// 创建一个新的Harbor
+// NewHarbor 创建一个新的Harbor
 func NewHarbor(ctx *context) *Harbor {
 	h := &Harbor{
 		ctx:  ctx,
@@ -42,7 +42,7 @@ func (h *Harbor) SetAdmin(addr string, port int) {
 	h.adminPort = port
 }
 
-// 保持与admin的连接
+// KeepConnect 保持与admin的连接
 func (h *Harbor) KeepConnect() {
 	retrydelay := time.Second
 	retrytimes := 0
@@ -75,17 +75,17 @@ func (h *Harbor) KeepConnect() {
 	}
 }
 
-// 连接状态
+// Connected 连接状态
 func (h *Harbor) Connected() bool {
 	return h.protocol != nil && h.protocol.connected
 }
 
-// 想要观察的其它服务，可以按类型监听，也可以监听所有的服务.传入["all"]监听所有服务
+// Watch 想要观察的其它服务，可以按类型监听，也可以监听所有的服务.传入["all"]监听所有服务
 func (h *Harbor) Watch(watchs []string) {
 	h.watchs = watchs
 }
 
-// 启动本地服务监听
+// Serv 启动本地服务监听
 func (h *Harbor) Serv(addr string, port int) error {
 	l, err := net.Listen("tcp", fmt.Sprintf("%s:%d", addr, port))
 	if err != nil {
@@ -103,7 +103,7 @@ func (h *Harbor) Serv(addr string, port int) error {
 	return nil
 }
 
-// 启动客户端的监听
+// Expose 启动客户端的监听
 func (h *Harbor) Expose(outer string, addr string, port int) error {
 	l, err := net.Listen("tcp", fmt.Sprintf("%s:%d", addr, port))
 	if err != nil {
@@ -121,7 +121,7 @@ func (h *Harbor) Expose(outer string, addr string, port int) error {
 	return nil
 }
 
-// 关闭服务
+// Close 关闭服务
 func (h *Harbor) Close() {
 	h.quit = true
 	if h.clientListener != nil {
