@@ -29,7 +29,7 @@ func (p *tcpServer) Handle(clientConn net.Conn) {
 
 	var prot protocol.Protocol
 	switch protocolMagic {
-	case "  V1":
+	case string(protocol.MagicV1):
 		prot = &AdminProtocol{ctx: p.ctx}
 	default:
 		clientConn.Close()

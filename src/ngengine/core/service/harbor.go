@@ -68,6 +68,7 @@ func (h *Harbor) KeepConnect() {
 			ctx:    h.ctx,
 			watchs: h.watchs,
 		}
+
 		h.protocol = hprot
 		hprot.IOLoop(h.adminConn)
 		h.protocol = nil

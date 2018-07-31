@@ -63,6 +63,11 @@ func (c *Core) doEvent(e *event.Event) {
 		c.clientDB.RemoveClient(id)
 	case share.EVENT_SHUTDOWN:
 		c.Close()
+	case share.EVENT_SERVICE_READY:
+		id := e.Args["id"].(share.ServiceId)
+		c.LogInfo("service ready, id:", id)
+	case share.EVENT_MUST_SERVICE_READY:
+		c.LogInfo("must service ready")
 	}
 
 	// 对消息进行分发

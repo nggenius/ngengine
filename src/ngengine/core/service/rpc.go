@@ -18,7 +18,7 @@ func NewRpcRegister() *RpcRegister {
 	return r
 }
 
-// 通过名称获取某个内部调用
+// GetRemote 通过名称获取某个内部调用
 func (r *RpcRegister) GetRemote(name string) interface{} {
 	if k, ok := r.remotes[name]; ok {
 		return k
@@ -27,7 +27,7 @@ func (r *RpcRegister) GetRemote(name string) interface{} {
 	return nil
 }
 
-// 通过名称获取某个客户端调用
+// GetHandler 通过名称获取某个客户端调用
 func (r *RpcRegister) GetHandler(name string) interface{} {
 	if k, ok := r.handlers[name]; ok {
 		return k
@@ -36,12 +36,12 @@ func (r *RpcRegister) GetHandler(name string) interface{} {
 	return nil
 }
 
-// 获取所有Handler
+// GetAllHandler 获取所有Handler
 func (r *RpcRegister) GetAllHandler() map[string]interface{} {
 	return r.handlers
 }
 
-// 注册Remote
+// RegisterRemote 注册Remote
 func (r *RpcRegister) RegisterRemote(name string, remote interface{}) {
 	if remote == nil {
 		panic("rpc: Register remote is nil")
@@ -52,7 +52,7 @@ func (r *RpcRegister) RegisterRemote(name string, remote interface{}) {
 	r.remotes[name] = remote
 }
 
-// 注册Handler
+// RegisterHandler 注册Handler
 func (r *RpcRegister) RegisterHandler(name string, handler interface{}) {
 	if handler == nil {
 		panic("rpc: Register handler is nil")

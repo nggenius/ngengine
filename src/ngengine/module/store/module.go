@@ -61,7 +61,7 @@ func (m *StoreModule) Extend(name string, ext Extension) {
 func (m *StoreModule) Init() bool {
 	switch m.mode {
 	case STORE_CLIENT:
-		m.Core.Service().AddListener(share.EVENT_READY, m.client.OnDatabaseReady)
+		m.Core.Service().AddListener(share.EVENT_SERVICE_READY, m.client.OnDatabaseReady)
 	case STORE_SERVER:
 		m.sql.Init(m.Core)
 		m.Core.RegisterRemote("Store", m.store)
@@ -85,7 +85,7 @@ func (m *StoreModule) Start() {
 func (m *StoreModule) Shut() {
 	switch m.mode {
 	case STORE_CLIENT:
-		m.Core.Service().RemoveListener(share.EVENT_READY, m.client.OnDatabaseReady)
+		m.Core.Service().RemoveListener(share.EVENT_SERVICE_READY, m.client.OnDatabaseReady)
 	}
 }
 

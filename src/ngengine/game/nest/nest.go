@@ -34,6 +34,7 @@ func (n *Nest) Init(opt *service.CoreOption) error {
 	n.CoreAPI.AddModule(n.factory)
 	n.store.SetMode(store.STORE_CLIENT)
 	entity.RegisterToDB(n.store)
+
 	return nil
 }
 

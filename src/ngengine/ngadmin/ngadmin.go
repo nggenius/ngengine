@@ -54,7 +54,9 @@ func (n *NGAdmin) Main() {
 		})
 
 		// 启动其他服务器
-		n.StartService()
+		if !n.opts.DebugMode {
+			n.StartService()
+		}
 	} else {
 		n.slave = NewSlave(ctx)
 		n.waitGroup.Wrap(func() {
@@ -62,7 +64,7 @@ func (n *NGAdmin) Main() {
 		})
 	}
 
-	n.LogInfo("admin is ready")
+	n.LogInfo("admin is ready, Debug Mode:", n.opts.DebugMode)
 }
 
 // Exit 退出函数

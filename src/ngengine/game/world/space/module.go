@@ -26,7 +26,7 @@ func (r *WorldSpaceModule) Init() bool {
 	r.spaceManage.MinRegions = opt.Args.MustInt("MinRegions", 1)
 	r.Core.RegisterRemote("Space", NewSpace(r))
 
-	r.Core.Service().AddListener(share.EVENT_READY, r.spaceManage.OnServiceReady)
+	r.Core.Service().AddListener(share.EVENT_SERVICE_READY, r.spaceManage.OnServiceReady)
 
 	return true
 }
@@ -36,5 +36,5 @@ func (r *WorldSpaceModule) Name() string {
 }
 
 func (r *WorldSpaceModule) Shut() {
-	r.Core.Service().RemoveListener(share.EVENT_READY, r.spaceManage.OnServiceReady)
+	r.Core.Service().RemoveListener(share.EVENT_SERVICE_READY, r.spaceManage.OnServiceReady)
 }

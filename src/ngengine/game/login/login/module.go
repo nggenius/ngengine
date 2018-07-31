@@ -50,19 +50,22 @@ func (l *LoginModule) Init() bool {
 		return false
 	}
 	l.storeClient = store.Client()
-	l.Core.Service().AddListener(share.EVENT_READY, l.OnDatabaseReady)
+	l.Core.Service().AddListener(share.EVENT_SERVICE_READY, l.OnDatabaseReady)
 	l.Core.Service().AddListener(share.EVENT_USER_CONNECT, l.OnConnected)
 	l.Core.Service().AddListener(share.EVENT_USER_LOST, l.OnDisconnected)
+	l.Core.Service().AddListener(share.EVENT_MUST_SERVICE_READY, l.OnAllSeverReady)
 	l.Core.RegisterHandler("Account", l.account)
 	l.lastTime = time.Now()
+
 	return true
 }
 
 // Shut 模块关闭
 func (l *LoginModule) Shut() {
-	l.Core.Service().RemoveListener(share.EVENT_READY, l.OnDatabaseReady)
+	l.Core.Service().RemoveListener(share.EVENT_SERVICE_READY, l.OnDatabaseReady)
 	l.Core.Service().RemoveListener(share.EVENT_USER_CONNECT, l.OnConnected)
 	l.Core.Service().RemoveListener(share.EVENT_USER_LOST, l.OnDisconnected)
+	l.Core.Service().RemoveListener(share.EVENT_MUST_SERVICE_READY, l.OnAllSeverReady)
 }
 
 func (l *LoginModule) OnUpdate(t *service.Time) {
@@ -121,4 +124,9 @@ func (l *LoginModule) OnDatabaseReady(evt string, args ...interface{}) {
 
 	mb := rpc.GetServiceMailbox(srv.Id)
 	l.db = &mb
+}
+
+// 所有服务准备就绪
+func (l *LoginModule) OnAllSeverReady(evt string, args ...interface{}) {
+	l.Core.LogErr("所有服务器启动成功。。。。。。。。。。。。。。")
 }

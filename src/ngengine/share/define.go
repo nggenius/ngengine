@@ -33,11 +33,13 @@ const (
 
 // 事件定义
 const (
-	EVENT_READY        = "ready"        // 别的服务就绪, args:{id:ServiceId}
-	EVENT_LOST         = "lost"         // 丢失服务, args:{id:ServiceId}
-	EVENT_USER_CONNECT = "user_connect" // 玩家连接, args:{id:uint64}
-	EVENT_USER_LOST    = "user_lost"    // 玩家断开连接, args:{id:uint64}
-	EVENT_SHUTDOWN     = "svr_shutdown" // 关闭系统
+	EVENT_SERVICE_READY      = "svr_ready"       // 别的服务就绪, args:{id:ServiceId}
+	EVENT_SERVICE_LOST       = "lost"            // 丢失服务, args:{id:ServiceId}
+	EVENT_USER_CONNECT       = "user_connect"    // 玩家连接, args:{id:uint64}
+	EVENT_USER_LOST          = "user_lost"       // 玩家断开连接, args:{id:uint64}
+	EVENT_SHUTDOWN           = "svr_shutdown"    // 关闭系统
+	EVENT_MUST_SERVICE_READY = "must_ready"      // 必须启动的服务器就绪
+	EVENT_ADMIN_CONNECTED    = "admin_connected" // admin建立连接成功
 )
 
 const (

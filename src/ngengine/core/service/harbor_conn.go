@@ -45,12 +45,13 @@ func NewHarborConn(conn net.Conn, ctx *context) *HarborConn {
 	return c
 }
 
-// 异步发送消息
+// SendMessage 发送消息
+// 注意：调用方主动调用msg.Free()，SendMessage会调用msg.Dup()，这样msg会正常进入消息缓冲池
 func (c *HarborConn) SendMessage(msg *protocol.Message) bool {
 	if c.quit {
 		return false
 	}
-
+	msg.Dup()
 	c.sendqueue <- msg //消息太多的情况可能会阻塞
 	return true
 }

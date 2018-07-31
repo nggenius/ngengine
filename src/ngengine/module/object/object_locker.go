@@ -64,7 +64,10 @@ func (o *ObjectWitness) UnLockObj(locker rpc.Mailbox, lockindex uint32, isSynclo
 	}
 	// 需要操作远程对象
 	if o.dummy {
-		o.RemoteUnLockObj(lockindex)
+		err := o.RemoteUnLockObj(lockindex)
+		if err != nil {
+			// 没有发送成功
+		}
 		return
 	}
 
@@ -81,7 +84,11 @@ func (o *ObjectWitness) LockObjSuccess(locker rpc.Mailbox, lockindex uint32, isS
 
 	// 是否是远程操作上锁
 	if isSynclock {
-		o.RemoteLockObjSuccess(lockindex)
+		err := o.RemoteLockObjSuccess(lockindex)
+		if err != nil {
+			// 远程上锁的mailbox已经没有了,本地把锁解开
+			o.UnLockObjSuccess(false)
+		}
 		return
 	}
 
@@ -98,6 +105,7 @@ func (o *ObjectWitness) LockObjSuccess(locker rpc.Mailbox, lockindex uint32, isS
 func (o *ObjectWitness) UnLockObjSuccess(isSynclock bool) {
 	// 通知远程
 	if isSynclock {
+		// 这里就算没有通知成功也不用做处理本地的解开就没问题
 		o.RemoteUnLockObjSuccess()
 	}
 

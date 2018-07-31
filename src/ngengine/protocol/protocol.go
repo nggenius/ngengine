@@ -2,7 +2,9 @@ package protocol
 
 import "net"
 
-var MagicV1 = []byte("  V1")
+var (
+	MagicV1 = []byte("  V1")
+)
 
 const (
 	MAX_ADMIN_MESSAGE_SIZE = 0x1000

@@ -85,7 +85,7 @@
 			"importpath": "github.com/mysll/toolkit",
 			"repository": "https://github.com/mysll/toolkit",
 			"vcs": "git",
-			"revision": "47b931cae835393eb6968f243baccd09dac76344",
+			"revision": "10b5d1a1d3b0f0f5e6a6fd8d9938607e75f107c1",
 			"branch": "master",
 			"notests": true
 		},

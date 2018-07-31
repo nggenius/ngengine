@@ -4,7 +4,7 @@ import (
 	"ngengine/common/event"
 	"ngengine/core/rpc"
 	"ngengine/protocol"
-	. "ngengine/share"
+	"ngengine/share"
 	"sync"
 
 	"github.com/mysll/toolkit"
@@ -15,7 +15,7 @@ type SrvDNS struct {
 	sync.RWMutex
 	ctx         *context
 	srvs        []*Srv
-	idToIndex   map[ServiceId]int
+	idToIndex   map[share.ServiceId]int
 	nameToIndex map[string]int
 }
 
@@ -24,7 +24,7 @@ func NewSrvDNS(ctx *context) *SrvDNS {
 	s := &SrvDNS{
 		ctx:         ctx,
 		srvs:        make([]*Srv, 0, 16),
-		idToIndex:   make(map[ServiceId]int),
+		idToIndex:   make(map[share.ServiceId]int),
 		nameToIndex: make(map[string]int),
 	}
 	return s
@@ -50,7 +50,7 @@ func (s *SrvDNS) Update(srvs protocol.Services) {
 
 // 同步服务器信息
 func (s *SrvDNS) sync(all bool, srvs []protocol.ServiceInfo) {
-	del := make([]ServiceId, 0, 16)
+	del := make([]share.ServiceId, 0, 16)
 	for _, v := range s.srvs {
 		if v == nil {
 			continue
@@ -116,7 +116,9 @@ func (s *SrvDNS) addSrv(srv protocol.ServiceInfo) {
 	s.idToIndex[srv.Id] = index
 	s.nameToIndex[srv.Name] = index
 	s.ctx.Core.LogInfo("add ", newsrv)
-	s.ctx.Core.Emitter.Fire(EVENT_READY, event.EventArgs{"id": srv.Id}, true)
+	if newsrv.Status > 0 { //已经就绪
+		s.ctx.Core.Emitter.Fire(share.EVENT_SERVICE_READY, event.EventArgs{"id": srv.Id}, true)
+	}
 }
 
 func (s *SrvDNS) UpdateLoad(load protocol.LoadInfo) {
@@ -124,6 +126,15 @@ func (s *SrvDNS) UpdateLoad(load protocol.LoadInfo) {
 	defer s.Unlock()
 	if index, find := s.idToIndex[load.Id]; find {
 		s.srvs[index].Load = load.Load
+	}
+}
+
+func (s *SrvDNS) ServiceReady(id share.ServiceId) {
+	s.Lock()
+	defer s.Unlock()
+	if index, find := s.idToIndex[id]; find {
+		s.srvs[index].Status = 1
+		s.ctx.Core.Emitter.Fire(share.EVENT_SERVICE_READY, event.EventArgs{"id": id}, false)
 	}
 }
 
@@ -158,7 +169,7 @@ func (s *SrvDNS) updateSrv(srv protocol.ServiceInfo) {
 }
 
 // 移除一个服务
-func (s *SrvDNS) removeSrv(id ServiceId) {
+func (s *SrvDNS) removeSrv(id share.ServiceId) {
 	if index, find := s.idToIndex[id]; find {
 		srv := s.srvs[index]
 		srv.Close()
@@ -167,12 +178,12 @@ func (s *SrvDNS) removeSrv(id ServiceId) {
 		delete(s.nameToIndex, srv.Name)
 		s.srvs[index] = nil
 		s.ctx.Core.LogInfo("remove ", srv)
-		s.ctx.Core.Emitter.Fire(EVENT_LOST, event.EventArgs{"id": srv.Id}, true)
+		s.ctx.Core.Emitter.Fire(share.EVENT_SERVICE_LOST, event.EventArgs{"id": srv.Id}, true)
 	}
 }
 
 // 通过id查找服务
-func (s *SrvDNS) Lookup(id ServiceId) *Srv {
+func (s *SrvDNS) Lookup(id share.ServiceId) *Srv {
 	s.RLock()
 	defer s.RUnlock()
 	if index, find := s.idToIndex[id]; find {
@@ -257,7 +268,7 @@ func (s *SrvDNS) LookupRandByType(typ string) *Srv {
 
 // 通过Mailbox获取服务
 func (s *SrvDNS) LookupByMailbox(mb rpc.Mailbox) *Srv {
-	id := ServiceId(mb.ServiceId())
+	id := share.ServiceId(mb.ServiceId())
 	return s.Lookup(id)
 }
 

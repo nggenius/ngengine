@@ -17,8 +17,9 @@ const (
 type ServiceDB struct {
 	sync.RWMutex
 	ctx        *Context
-	serviceMap map[ServiceId]*ServiceInfo
-	watcher    map[string]*list.List
+	serviceMap map[ServiceId]*ServiceInfo // 当前已经连接的服务
+	watcher    map[string]*list.List      // 服务的关注列表，[服务类型,all关注所有类型]：[关注者id]
+	Ready      bool
 }
 
 type PeerInfo struct {
@@ -116,6 +117,38 @@ func (s *ServiceDB) AddService(id ServiceId, service *ServiceInfo) error {
 	}
 
 	return nil
+}
+
+// CheckReady 检查关键服务是否就绪了
+func (s *ServiceDB) CheckReady(si *ServiceInfo) {
+	s.Lock()
+	defer s.Unlock()
+
+	if !s.Ready {
+		for _, t := range s.ctx.ngadmin.opts.MustServices {
+			find := false
+
+			// 查看是否有这个ready好的服务
+			for _, v := range s.serviceMap {
+				if v.PeerInfo.ServType == t && v.PeerInfo.Status == 1 {
+					find = true
+					break
+				}
+			}
+
+			if !find {
+
+				return
+			}
+		}
+
+		// 给所有的服务发送Ready
+		s.Broadcast(protocol.A2S_ALL_READY, nil)
+		s.Ready = true
+
+	} else { // 发给给当前服务
+		si.Client.SendProtocol(protocol.A2S_ALL_READY, nil)
+	}
 }
 
 // RemoveService 移除一个服务
@@ -307,7 +340,7 @@ func (s *ServiceDB) Unwatch(id ServiceId) {
 
 // CloseAll 关闭所有服务
 func (s *ServiceDB) CloseAll() {
-	s.Broadcast(protocol.S2A_UNREGISTER, nil)
+	s.Broadcast(protocol.A2S_SERVICE_CLOSE, nil)
 }
 
 // Broadcast 广播给所有人

@@ -47,8 +47,13 @@ func (h *HarborProtocol) IOLoop(conn net.Conn) {
 		h.ctx.Core.LogErr(err)
 		return
 	}
+
 	// 启动发送协程
 	go h.messagePump()
+
+	// 如果逻辑服没有准备好，就让逻辑服准备
+	h.ctx.Core.Emitter.Fire(share.EVENT_ADMIN_CONNECTED, nil, true)
+
 	// 读主循环
 	for {
 		id, msg, err := h.Read()
@@ -89,9 +94,23 @@ func (h *HarborProtocol) Exec(msgid uint16, msg *protocol.Message) {
 			}
 			h.ctx.Core.dns.UpdateLoad(load)
 		}
-	case protocol.S2A_UNREGISTER:
+	case protocol.A2S_ALL_READY:
+		{
+			h.ctx.Core.Emitter.Fire(share.EVENT_MUST_SERVICE_READY, nil, true)
+		}
+	case protocol.A2S_SERVICE_CLOSE:
 		{
 			h.ctx.Core.Emitter.Fire(share.EVENT_SHUTDOWN, nil, true)
+		}
+	case protocol.A2S_SERVICE_READY:
+		{
+			var ready protocol.ServiceReady
+			if err := json.Unmarshal(msg.Body, &ready); err != nil {
+				h.ctx.Core.LogErr(err)
+				break
+			}
+
+			h.ctx.Core.dns.ServiceReady(ready.Id)
 		}
 	}
 }
@@ -182,7 +201,9 @@ func (h *HarborProtocol) Register() error {
 	r.Service.Port = h.ctx.Core.harbor.servicePort
 	r.Service.OuterAddr = h.ctx.Core.harbor.outerAddr
 	r.Service.OuterPort = h.ctx.Core.harbor.clientPort
-	r.Service.Status = 0
+	if h.ctx.Core.IsReady {
+		r.Service.Status = 1
+	}
 	r.Service.Load = h.ctx.Core.load
 	_, err := h.WriteProtocol(protocol.S2A_REGISTER, r)
 	return err
@@ -198,22 +219,18 @@ func (h *HarborProtocol) Watch() error {
 
 // 按协议发送数据
 func (h *HarborProtocol) WriteProtocol(msgid uint16, msg interface{}) (int, error) {
-	data, err := json.Marshal(msg)
+	m, err := PackMessage(msgid, msg)
 	if err != nil {
 		return 0, err
 	}
-	size := len(data)
-	m := protocol.NewMessage(size + 4)
-	buff := bytes.NewBuffer(m.Body)
-	binary.Write(buff, binary.LittleEndian, uint16(size+2))
-	binary.Write(buff, binary.LittleEndian, msgid)
-	buff.Write(data)
-	m.Body = m.Body[:buff.Len()]
+
 	if h.conn == nil || !h.conn.SendMessage(m) {
 		m.Free()
 		return 0, errors.New("send protocol failed")
 	}
 	h.ctx.Core.LogDebug("send message, ", msgid, msg)
+
+	m.Free()
 	return len(m.Body), nil
 }
 
@@ -230,6 +247,7 @@ func (h *HarborProtocol) Write(data []byte) (int, error) {
 		return 0, errors.New("send data failed")
 	}
 
+	m.Free()
 	return len(data), nil
 }
 
@@ -254,4 +272,27 @@ func (h *HarborProtocol) Read() (uint16, *protocol.Message, error) {
 		return 0, nil, err
 	}
 	return msgid, msg, nil
+}
+
+// PackMessage 将消息进行打包
+func PackMessage(msgid uint16, msg interface{}) (*protocol.Message, error) {
+	var data []byte
+	var err error
+	if msg != nil {
+		data, err = json.Marshal(msg)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	size := len(data)
+	m := protocol.NewMessage(size + 4)
+	buff := bytes.NewBuffer(m.Body)
+	binary.Write(buff, binary.LittleEndian, uint16(size+2))
+	binary.Write(buff, binary.LittleEndian, msgid)
+	if len(data) > 0 {
+		buff.Write(data)
+	}
+	m.Body = m.Body[:buff.Len()]
+	return m, nil
 }

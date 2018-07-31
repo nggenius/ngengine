@@ -5,6 +5,9 @@ import (
 	"io"
 	"log"
 	"os"
+	"path"
+
+	"github.com/mysll/toolkit"
 )
 
 const (
@@ -46,6 +49,15 @@ type Log struct {
 
 func New(file string, log_level int) *Log {
 	l := &Log{}
+	p, _ := path.Split(file)
+	if ok, err := toolkit.PathExists(p); err != nil {
+		panic(err)
+	} else {
+		if !ok {
+			os.Mkdir(p, os.ModePerm)
+		}
+	}
+
 	l.logLevel = log_level
 	var err error
 	l.logfile, err = os.Create(file)

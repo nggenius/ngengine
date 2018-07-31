@@ -50,6 +50,7 @@ type Core struct {
 	modules    *modules            // 模块管理
 	load       int32               // 负载
 	uuid       int                 // 唯一id序列号
+	IsReady    bool                // 逻辑是否已经准备好了
 }
 
 // 创建一个服务

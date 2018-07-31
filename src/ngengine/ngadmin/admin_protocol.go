@@ -7,6 +7,7 @@ import (
 	"io"
 	"net"
 	"ngengine/protocol"
+	"ngengine/share"
 	"strings"
 	"time"
 )
@@ -27,6 +28,7 @@ func (p *AdminProtocol) IOLoop(conn net.Conn) error {
 	if err := p.ctx.ngadmin.DB.AddService(peer.ServId, srv); err != nil {
 		return err
 	}
+
 	//发送消息进程
 	go p.messagePump(client)
 	var size, msgid uint16
@@ -70,8 +72,9 @@ func (p *AdminProtocol) IOLoop(conn net.Conn) error {
 		} else {
 			p.Exec(srv, msgid, nil)
 		}
-
 	}
+
+	client.Quit()
 	p.ctx.ngadmin.DB.RemoveService(peer.ServName, peer.ServId)
 	return nil
 }
@@ -133,6 +136,7 @@ func (p *AdminProtocol) Exec(srv *ServiceInfo, msgid uint16, msg *protocol.Messa
 				break
 			}
 			p.ctx.ngadmin.DB.Watch(srv.PeerInfo.ServId, watchs.WatchType)
+			p.ctx.ngadmin.DB.CheckReady(srv)
 		}
 	case protocol.S2A_HEARTBEAT:
 		//p.ctx.ngadmin.LogDebug("recv heartbeat")
@@ -145,6 +149,22 @@ func (p *AdminProtocol) Exec(srv *ServiceInfo, msgid uint16, msg *protocol.Messa
 			}
 			p.ctx.ngadmin.DB.UpdateLoad(load.Id, load.Load)
 		}
+	case protocol.S2A_UNREGISTER:
+		{
+			var s protocol.SeverClosing
+			if err := json.Unmarshal(msg.Body, &s); err != nil {
+				p.ctx.ngadmin.LogErr(err)
+				break
+			}
+			p.ctx.ngadmin.DB.RemoveService(s.SeverName, share.ServiceId(s.ID))
+		}
+	case protocol.S2A_READY:
+		{
+			srv.PeerInfo.Status = 1
+			srv.Client.SendProtocol(protocol.A2S_SERVICE_READY, &protocol.ServiceReady{Id: srv.PeerInfo.ServId})
+			p.ctx.ngadmin.DB.CheckReady(srv)
+			p.ctx.ngadmin.LogInfo("service ready,", srv)
+		}
 	}
 }
 
@@ -154,14 +174,21 @@ func (p *AdminProtocol) messagePump(client *Client) {
 		select {
 		case m := <-client.sendqueue:
 			n, err := client.Writer.Write(m.Body)
+			msgid := binary.LittleEndian.Uint16(m.Body[2:])
 			m.Free()
 			if err != nil {
-				p.ctx.ngadmin.LogErr("write message error", err)
+				p.ctx.ngadmin.LogErr("write message error ", err)
+				break
 			}
 			if err := client.Writer.Flush(); err != nil {
 				p.ctx.ngadmin.LogErr("flush message error")
+				break
 			}
-			p.ctx.ngadmin.LogInfof("send message to service(%d), size:%d", client.Id, n)
+
+			if p.ctx.ngadmin.opts.MessageLog {
+				p.ctx.ngadmin.LogInfof("send message to service(%d), id:%d, size:%d", client.Id, msgid, n)
+			}
+
 		case <-client.exitchan:
 			goto exit
 		}
@@ -176,5 +203,5 @@ exit:
 			break exit
 		}
 	}
-	p.ctx.ngadmin.LogInfo("client quit loop")
+	p.ctx.ngadmin.LogInfo("client quit loop ", client.Id)
 }

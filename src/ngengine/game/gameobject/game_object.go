@@ -33,6 +33,14 @@ type GameObject interface {
 	GetComponent(name string) Component
 	// 获取gameobject
 	GameObject() interface{}
+	// Parent 父对象
+	Parent() GameObject
+	// SetParent 设置父对象
+	SetParent(p GameObject)
+	// Pos 获取在父对象中的位置
+	ContainerPos() int
+	// SetPos 设置在父对象中的位置
+	SetContainerPos(pos int)
 }
 
 type ComponentInfo struct {
@@ -42,7 +50,7 @@ type ComponentInfo struct {
 }
 
 type BaseObject struct {
-	object.Container
+	Container
 	object.CacheData
 	typ        int
 	delete     bool
@@ -53,47 +61,69 @@ type BaseObject struct {
 	component  map[string]ComponentInfo
 	transport  *Transport
 	gameObject interface{}
+	parent     GameObject
+	pos        int //在父对象中的位置
 }
 
-// 初始化
+// Init 初始化
 func (b *BaseObject) Init(object interface{}) {
 	b.gameObject = object
 }
 
-// 获取gameobject
+// Parent 父对象
+func (b *BaseObject) Parent() GameObject {
+	return b.parent
+}
+
+// SetParent 设置父对象
+func (b *BaseObject) SetParent(p GameObject) {
+	b.parent = p
+}
+
+// Pos 获取在父对象中的位置
+func (b *BaseObject) ContainerPos() int {
+	return b.pos
+}
+
+// SetPos 设置在父对象中的位置
+func (b *BaseObject) SetContainerPos(pos int) {
+	b.pos = pos
+}
+
+// GameObject 获取gameobject
 func (b *BaseObject) GameObject() interface{} {
 	return b.gameObject
 }
 
-// 设置传输对象
+// SetTransport 设置连接
 func (b *BaseObject) SetTransport(t *Transport) {
 	b.transport = t
 }
 
-// 获取连接
+// Transport 获取连接
 func (b *BaseObject) Transport() *Transport {
 	return b.transport
 }
 
-// 预处理
+// Prepare 预处理
 func (b *BaseObject) Prepare() {
 	b.component = make(map[string]ComponentInfo)
 	b.CacheData.Init()
 }
 
-// 构造函数
+// Create 构造函数
 func (b *BaseObject) Create() {
 	if b.delegate != nil && b.spirit != nil {
 		b.delegate.Invoke(E_ON_CREATE, b.spirit.ObjId(), rpc.NullMailbox)
 	}
 }
 
-// 获取对象类型
+// ObjectType 获取对象类型
 func (b *BaseObject) ObjectType() int {
 	return b.typ
 }
 
-// 准备销毁
+// Destroy 准备销毁
 func (b *BaseObject) Destroy() {
 	if b.delegate != nil && b.spirit != nil {
 		b.delegate.Invoke(E_ON_DESTROY, b.spirit.ObjId(), rpc.NullMailbox)
@@ -101,69 +131,52 @@ func (b *BaseObject) Destroy() {
 	b.delete = true
 }
 
-// 是否还活着
+// Alive 是否还活着
 func (b *BaseObject) Alive() bool {
 	return !b.delete
 }
 
-// 正式开始删除
+// Delete 正式开始删除
 func (b *BaseObject) Delete() {
 
 }
 
-// 设置索引，由factory调用，不要手工调用
+// SetIndex 设置索引，由factory调用，不要手工调用
 func (b *BaseObject) SetIndex(index int) {
 	b.index = index
 }
 
-// 获取索引
+// Index 获取索引
 func (b *BaseObject) Index() int {
 	return b.index
 }
 
-// 设置事件代理
+// SetDelegate 设置事件代理
 func (b *BaseObject) SetDelegate(d object.Delegate) {
 	b.delegate = d
 }
 
-// 精神实体，数据部分
+// Spirit 精神实体，数据部分
 func (b *BaseObject) Spirit() object.Object {
 	return b.spirit
 }
 
-// 设置精神实体
+// SetSpirit 设置精神实体
 func (b *BaseObject) SetSpirit(s object.Object) {
 	b.spirit = s
 }
 
-/*
-// 唯一ID
-func (b *BaseObject) ObjId() rpc.Mailbox {
-	if b.spirit == nil {
-		panic("spirit is nil")
-	}
-	return b.spirit.ObjId()
-}
-
-// 设置唯一ID
-func (b *BaseObject) SetObjId(id rpc.Mailbox) {
-	if b.spirit == nil {
-		panic("spirit is nil")
-	}
-	b.spirit.SetObjId(id)
-}*/
-
-// 客户端地址
+// Client 客户端地址
 func (b *BaseObject) Client() rpc.Mailbox {
 	return b.client
 }
 
-// 设置客户端地址
+// SetClient 设置客户端地址
 func (b *BaseObject) SetClient(mb rpc.Mailbox) {
 	b.client = mb
 }
 
-// update
+// Update
 func (b *BaseObject) Update(delta time.Duration) {
 	for _, comp := range b.component {
 		if !comp.comp.Enable() {
@@ -179,7 +192,7 @@ func (b *BaseObject) Update(delta time.Duration) {
 	}
 }
 
-// 获取组件
+// GetComponent 获取组件
 func (b *BaseObject) GetComponent(name string) Component {
 	if comp, has := b.component[name]; has {
 		return comp.comp
@@ -187,7 +200,7 @@ func (b *BaseObject) GetComponent(name string) Component {
 	return nil
 }
 
-// 增加组件
+// AddComponent 增加组件
 func (b *BaseObject) AddComponent(name string, com Component, update bool) error {
 	if _, has := b.component[name]; has {
 		return fmt.Errorf("component has register twice, %s ", name)
@@ -206,7 +219,7 @@ func (b *BaseObject) AddComponent(name string, com Component, update bool) error
 	return nil
 }
 
-// 移除组件
+// RemoveComponent 移除组件
 func (b *BaseObject) RemoveComponent(name string) {
 	if comp, has := b.component[name]; has {
 		comp.comp.Destroy() // 销毁组件

@@ -7,7 +7,7 @@ import (
 	"strings"
 )
 
-// 获取目录下面的所有文件，subdir是否要包含子目录, filter过滤的扩展名
+// AllFiles 获取目录下面的所有文件，subdir是否要包含子目录, filter过滤的扩展名
 func AllFiles(dir string, subdir bool, filter []string) []string {
 	curdir, _ := os.Open(dir)
 	all, _ := curdir.Readdir(0)
@@ -38,7 +38,7 @@ func AllFiles(dir string, subdir bool, filter []string) []string {
 	return files
 }
 
-// 读文件，返回文件内容
+// ReadFile 读文件，返回文件内容
 func ReadFile(f string) ([]byte, error) {
 	file, err := os.Open(f)
 	if err != nil {
@@ -47,4 +47,16 @@ func ReadFile(f string) ([]byte, error) {
 
 	defer file.Close()
 	return ioutil.ReadAll(file)
+}
+
+// PathExists 文件夹是否存在
+func PathExists(path string) (bool, error) {
+	_, err := os.Stat(path)
+	if err == nil {
+		return true, nil
+	}
+	if os.IsNotExist(err) {
+		return false, nil
+	}
+	return false, err
 }

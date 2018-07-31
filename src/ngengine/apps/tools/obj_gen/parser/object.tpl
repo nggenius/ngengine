@@ -339,8 +339,6 @@ type {{.Name}}Archive struct {
     Id int64 {{range .Property}} {{if eq .Save "true"}}
 	{{.Name}} {{if eq .Type "tuple"}}*{{$.Name}}{{.Name}}_t `xorm:"json"`{{else if eq .Type "table"}}*{{$.Name}}{{.Name}}_r `xorm:"json"`{{else}}{{.Type}} {{if eq .Type "string"}}`xorm:"varchar({{strsize .}})"`{{end}}{{end}}  // {{.Desc}}{{end}} {{end}}
 
-	{{range .Container}}{{if eq .Save "true"}}
-	{{.Name}} *object.Container `xorm:"json"` // {{.Desc}} {{end}}{{end}}
 }
 
 // {{.Name}} archive construct
@@ -348,8 +346,6 @@ func New{{.Name}}Archive(root object.Object) *{{.Name}}Archive {
     archive := &{{.Name}}Archive{root:root}
     {{range .Property}}{{if eq .Save "true"}}
     {{if eq .Type "tuple"}}archive.{{.Name}} = New{{$.Name}}{{.Name}}(){{else if eq .Type "table"}}archive.{{.Name}} = New{{$.Name}}{{.Name}}(root){{end}}{{end}}{{end}}
-    {{range .Container}}{{if eq .Save "true"}}
-	archive.{{.Name}} = object.NewContainer() {{end}}{{end}}
 	return archive
 }
 
@@ -384,9 +380,6 @@ func (c *{{.Name}}ArchiveCreater) CreateSlice() interface{} {
 type {{.Name}}ArchiveBak struct {
     Id int64 {{range .Property}} {{if eq .Save "true"}}
 	{{.Name}} {{if eq .Type "tuple"}}*{{$.Name}}{{.Name}}_t `xorm:"json"`{{else if eq .Type "table"}}*{{$.Name}}{{.Name}}_r `xorm:"json"`{{else}}{{.Type}} {{if eq .Type "string"}}`xorm:"varchar({{strsize .}})"`{{end}}{{end}}  // {{.Desc}}{{end}} {{end}}
-
-	{{range .Container}}{{if eq .Save "true"}}
-	{{.Name}} *object.Container `xorm:"json"` // {{.Desc}} {{end}}{{end}}
 }
 
 // archive table name
@@ -423,9 +416,6 @@ type {{.Name}}Attr struct{
 
     {{range .Property}}{{if ne .Save "true"}}
     {{.Name}} {{if eq .Type "tuple"}}{{$.Name}}{{.Name}}_t{{else if eq .Type "table"}}{{$.Name}}{{.Name}}_r{{else}}{{.Type}}{{end}} // {{.Desc}}{{end}}{{end}}
-
-	{{range .Container}}{{if ne .Save "true"}}
-	{{.Name}} *object.Container  // {{.Desc}} {{end}}{{end}}
 }
 
 // {{.Name}} attr construct
@@ -433,8 +423,6 @@ func New{{.Name}}Attr(root object.Object) *{{.Name}}Attr {
     attr := &{{.Name}}Attr{root:root} 
     {{range .Property}}{{if ne .Save "true"}}
     {{if eq .Type "tuple"}}attr.{{.Name}} = New{{$.Name}}{{.Name}}(){{else if eq .Type "table"}}attr.{{.Name}} = New{{$.Name}}{{.Name}}(root){{end}}{{end}}{{end}}
-    {{range .Container}}{{if ne .Save "true"}}
-	attr.{{.Name}} = object.NewContainer() {{end}}{{end}}
 	return attr
 }
 
@@ -601,23 +589,6 @@ func  (o *{{$.Name}}) SetAttr(name string, value interface{}) error {
 		return  fmt.Errorf("attr {{.Name}} type not match") {{end}}
 	default:
 		return fmt.Errorf("attr %s not found", name)
-	}
-}
-
-{{range .Container}}
-// get container {{.Desc}}
-func (o *{{$.Name}}) Get{{.Name}}() *object.Container {
-	{{if eq .Save "true"}}return o.archive.{{.Name}}{{else}}return o.attr.{{.Name}}{{end}}
-}
-{{end}}
-
-// find container
-func (o *{{$.Name}}) FindContainer(name string) *object.Container {
-	switch(name) { {{range .Container}}
-		case "{{.Name}}":
-			return o.Get{{.Name}}() {{end}}
-		default:
-			return nil
 	}
 }
 

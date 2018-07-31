@@ -1,6 +1,9 @@
 package object
 
-import "ngengine/core/rpc"
+import (
+	"ngengine/core/rpc"
+	"ngengine/utils"
+)
 
 // 是否是复制对象
 func (o *ObjectWitness) Dummy() bool {
@@ -108,28 +111,35 @@ func (o *ObjectWitness) RemoteLockObj(lockID uint32) {
 }
 
 // RemoteUnLockObj 远程解锁
-func (o *ObjectWitness) RemoteUnLockObj(lockID uint32) {
+func (o *ObjectWitness) RemoteUnLockObj(lockID uint32) error {
 	if o.original == nil {
 		o.factory.owner.Core.LogErr("original is nil")
-		return
+		return nil
 	}
-	o.factory.owner.Core.Mailto(&o.objid, o.original, "object.UnLockObj", o.original, lockID)
+	return o.factory.owner.Core.Mailto(&o.objid, o.original, "object.UnLockObj", o.original, lockID)
 }
 
 // RemoteLockObjSuccess 远程上锁成功通知
-func (o *ObjectWitness) RemoteLockObjSuccess(lockID uint32) {
+func (o *ObjectWitness) RemoteLockObjSuccess(lockID uint32) error {
 	if o.locker == nil {
 		o.factory.owner.Core.LogErr("locker is nil")
-		return
+		return nil
 	}
-	o.factory.owner.Core.Mailto(&o.objid, &o.locker.Locker, "object.LockObjSuccess", o.locker.Locker, lockID)
+	return o.factory.owner.Core.MailtoAndCallback(&o.objid, &o.locker.Locker, "object.LockObjSuccess",
+		func(e *rpc.Error, l *utils.LoadArchive) {
+			if e != nil {
+				// 如果远端已经没有这个对象了，解开锁
+				o.UnLockObjSuccess(false)
+			}
+		},
+		o.locker.Locker, lockID)
 }
 
 // RemoteUnLockObjSuccess 远程解锁成功通知
-func (o *ObjectWitness) RemoteUnLockObjSuccess() {
+func (o *ObjectWitness) RemoteUnLockObjSuccess() error {
 	if o.locker == nil {
 		o.factory.owner.Core.LogErr("locker is nil")
-		return
+		return nil
 	}
-	o.factory.owner.Core.Mailto(&o.objid, &o.locker.Locker, "object.UnLockObjSuccess", o.locker.Locker)
+	return o.factory.owner.Core.Mailto(&o.objid, &o.locker.Locker, "object.UnLockObjSuccess", o.locker.Locker)
 }

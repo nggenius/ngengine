@@ -13,7 +13,7 @@ import (
 )
 
 var startnest = `{
-	"ServId":4,
+	"ServId":5,
 	"ServType": "nest",
 	"AdminAddr":"127.0.0.1",
 	"AdminPort":12500,
@@ -24,14 +24,14 @@ var startnest = `{
 	"OuterAddr":"192.168.1.12",
 	"HostAddr": "0.0.0.0",
 	"HostPort": 0,
-	"LogFile":"nest.log",
+	"LogFile":"log/nest.log",
 	"Args": {
 		"MainEntity":"entity.Player"
 	}
 }`
 
 var startlogin = `{
-	"ServId":3,
+	"ServId":4,
 	"ServType": "login",
 	"AdminAddr":"127.0.0.1",
 	"AdminPort":12500,
@@ -42,12 +42,12 @@ var startlogin = `{
 	"OuterAddr":"192.168.1.12",
 	"HostAddr": "0.0.0.0",
 	"HostPort": 2002,
-	"LogFile":"login.log",
+	"LogFile":"log/login.log",
 	"Args": {}
 }`
 
 var startworld = `{
-	"ServId":5,
+	"ServId":3,
 	"ServType": "world",
 	"AdminAddr":"127.0.0.1",
 	"AdminPort":12500,
@@ -55,7 +55,7 @@ var startworld = `{
 	"ServAddr": "127.0.0.1",
 	"ServPort": 0,
 	"Expose": false,
-	"LogFile":"world.log",
+	"LogFile":"log/world.log",
 	"ResRoot":"D:/home/work/github/ngengine/res/",
 	"Args": {
 		"Region":"region.json",
@@ -64,7 +64,7 @@ var startworld = `{
 }`
 
 var startregion = `{
-	"ServId":6,
+	"ServId":2,
 	"ServType": "region",
 	"AdminAddr":"127.0.0.1",
 	"AdminPort":12500,
@@ -72,7 +72,7 @@ var startregion = `{
 	"ServAddr": "127.0.0.1",
 	"ServPort": 0,
 	"Expose": false,
-	"LogFile":"region.log",
+	"LogFile":"log/region.log",
 	"ResRoot":"D:/home/work/github/ngengine/res/",
 	"Args": {}
 }`
@@ -88,11 +88,11 @@ var dbargs = `{
 	"Expose": false,
 	"HostAddr": "",
 	"HostPort": 0,
-	"LogFile":"db.log",
+	"LogFile":"log/db.log",
 	"Args": {
 		"db":"mysql",
 		"datasource":"sa:abc@tcp(192.168.1.52:3306)/ngengine?charset=utf8",
-		"showsql":true
+		"showsql":false
 	}
 }`
 

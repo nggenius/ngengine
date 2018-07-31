@@ -53,6 +53,7 @@ func newClient(id share.ServiceId, conn net.Conn, ctx *Context) *Client {
 }
 
 // SendMessage 发送消息
+// 注意：调用方主动调用msg.Free()，SendMessage会调用msg.Dup()，否则消息会被GC回收掉
 func (c *Client) SendMessage(msg *protocol.Message) bool {
 	if c.quit {
 		return false

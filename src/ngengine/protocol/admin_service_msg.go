@@ -15,9 +15,15 @@ const (
 	S2A_WATCH                 // 获取服务信息
 	S2A_HEARTBEAT             // 心跳
 	S2A_LOAD                  // 更新负载
+	S2A_READY                 // 服务准备好了
+)
 
-	A2S_SERVICES = 100 + iota // 服务信息
-	A2S_LOAD                  // 同步负载信息
+const (
+	A2S_SERVICES      = 100 + iota // 服务信息
+	A2S_LOAD                       // 同步负载信息
+	A2S_SERVICE_READY              // 服务就绪
+	A2S_ALL_READY                  // 准备好
+	A2S_SERVICE_CLOSE              // 关闭服务
 )
 
 const (
@@ -56,4 +62,13 @@ type Services struct {
 	OpType  int8
 	All     bool
 	Service []ServiceInfo
+}
+
+type SeverClosing struct {
+	ID        uint16 // 关闭的服务器id
+	SeverName string //关闭的服务器名字
+}
+
+type ServiceReady struct {
+	Id ServiceId // 服务ID
 }

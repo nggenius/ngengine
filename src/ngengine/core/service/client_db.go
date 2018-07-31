@@ -87,7 +87,7 @@ func (c *ClientDB) RemoveClient(session uint64) {
 	}
 }
 
-// 关闭所有
+// CloseAll 关闭所有
 func (c *ClientDB) CloseAll() {
 	c.Lock()
 	defer c.Unlock()

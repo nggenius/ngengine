@@ -39,6 +39,8 @@ type CoreAPI interface {
 	Option() *CoreOption
 	// 关闭服务
 	Shut()
+	// SendReady 发送Ready消息
+	SendReady()
 	// 关注其它服务，"all" 关注全部服务
 	Watch(...string)
 	// 返回服务相关的时间
@@ -135,12 +137,30 @@ func (c *Core) Shut() {
 	}
 
 	c.closeState = CS_QUIT
+
+	// 给admin发关闭消息
+	s := &protocol.SeverClosing{}
+	s.ID = uint16(c.Id)
+	s.SeverName = c.opts.ServName
+	c.harbor.protocol.WriteProtocol(protocol.S2A_UNREGISTER, s)
+
 	// 关闭harbor
 	if c.harbor != nil {
 		c.harbor.Close()
 	}
 
 	c.notifyDone()
+}
+
+// SendReady 发送Ready消息
+func (c *Core) SendReady() {
+	if c.IsReady {
+		return
+	}
+	c.IsReady = true
+	if c.harbor.protocol != nil && c.harbor.protocol.connected {
+		c.harbor.protocol.WriteProtocol(protocol.S2A_READY, nil)
+	}
 }
 
 // 关注其它服务，"all" 关注全部服务

@@ -54,7 +54,7 @@ func (s *Store) RegisterCallback(svr rpc.Servicer) {
 	svr.RegisterCallback("Exec", s.Exec)
 	for k, v := range s.extension {
 		v.RegisterCallback(svr)
-		s.ctx.Core.LogInfo("register extension", k)
+		s.ctx.Core.LogInfo("register extension ", k)
 	}
 }
 

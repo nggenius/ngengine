@@ -95,7 +95,6 @@ type SceneAttr struct {
 
 	Name     string // 场景名
 	Resource string // 资源
-
 }
 
 // Scene attr construct
@@ -267,14 +266,6 @@ func (o *Scene) SetAttr(name string, value interface{}) error {
 		return fmt.Errorf("attr Resource type not match")
 	default:
 		return fmt.Errorf("attr %s not found", name)
-	}
-}
-
-// find container
-func (o *Scene) FindContainer(name string) *object.Container {
-	switch name {
-	default:
-		return nil
 	}
 }
 

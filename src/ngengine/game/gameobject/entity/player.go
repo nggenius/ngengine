@@ -368,7 +368,6 @@ type PlayerArchive struct {
 	Pos     *PlayerPos_t     `xorm:"json"`         // 位置
 	Orient  float32          // 朝向(弧度)
 
-	Tools *object.Container `xorm:"json"` // 道具容器
 }
 
 // Player archive construct
@@ -378,7 +377,6 @@ func NewPlayerArchive(root object.Object) *PlayerArchive {
 	archive.Toolbox = NewPlayerToolbox(root)
 	archive.Pos = NewPlayerPos()
 
-	archive.Tools = object.NewContainer()
 	return archive
 }
 
@@ -416,8 +414,6 @@ type PlayerArchiveBak struct {
 	Toolbox *PlayerToolbox_r `xorm:"json"`         // 道具(表格测试)
 	Pos     *PlayerPos_t     `xorm:"json"`         // 位置
 	Orient  float32          // 朝向(弧度)
-
-	Tools *object.Container `xorm:"json"` // 道具容器
 }
 
 // archive table name
@@ -454,15 +450,12 @@ type PlayerAttr struct {
 	GroupId     int32 // 分组
 	Invisible   byte  // 是否不可见(1不可见)
 	VisualRange int32 // 可视范围
-
-	Weapons *object.Container // 物品容器
 }
 
 // Player attr construct
 func NewPlayerAttr(root object.Object) *PlayerAttr {
 	attr := &PlayerAttr{root: root}
 
-	attr.Weapons = object.NewContainer()
 	return attr
 }
 
@@ -798,28 +791,6 @@ func (o *Player) SetAttr(name string, value interface{}) error {
 		return fmt.Errorf("attr Orient type not match")
 	default:
 		return fmt.Errorf("attr %s not found", name)
-	}
-}
-
-// get container 道具容器
-func (o *Player) GetTools() *object.Container {
-	return o.archive.Tools
-}
-
-// get container 物品容器
-func (o *Player) GetWeapons() *object.Container {
-	return o.attr.Weapons
-}
-
-// find container
-func (o *Player) FindContainer(name string) *object.Container {
-	switch name {
-	case "Tools":
-		return o.GetTools()
-	case "Weapons":
-		return o.GetWeapons()
-	default:
-		return nil
 	}
 }
 

@@ -8,10 +8,10 @@ import (
 // StartService 启动进程
 func (n *NGAdmin) StartService() {
 	adminConfig := n.opts
-	appConfig := n.opts.AppConfig
+	appConfig := n.opts.ServicesConfig
 
-	for key := range appConfig.AppConfig {
-		for _, v := range appConfig.AppConfig[key] {
+	for key := range appConfig.Services {
+		for _, v := range appConfig.Services[key] {
 			// 分配server_id
 			atomic.AddInt32(&adminConfig.SeverCount, 1)
 			if adminConfig.SeverCount&share.SID_MAX == 0 {

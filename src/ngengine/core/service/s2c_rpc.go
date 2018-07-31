@@ -25,7 +25,7 @@ func NewS2CHelper(core *Core) *S2CHelper {
 	return sc
 }
 
-//处理服务器向客户端的调用，对消息进行封装转成客户端的协议
+// Call 处理服务器向客户端的调用，对消息进行封装转成客户端的协议
 func (s *S2CHelper) Call(sender, _ rpc.Mailbox, msg *protocol.Message) (errcode int32, reply *protocol.Message) {
 	request := &protocol.S2CMsg{}
 	reader := protocol.NewMessageReader(msg)
@@ -64,7 +64,7 @@ func (s *S2CHelper) call(sender rpc.Mailbox, session uint64, method string, out 
 	return nil
 }
 
-//处理服务器向客户端的广播
+// Broadcast 处理服务器向客户端的广播
 func (s *S2CHelper) Broadcast(sender rpc.Mailbox, msg *protocol.Message) (errcode int32, reply *protocol.Message) {
 	request := &protocol.S2CBrocast{}
 	reader := protocol.NewMessageReader(msg)

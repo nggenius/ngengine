@@ -46,7 +46,7 @@ func (b *BaseService) Start() error {
 
 // Ready 服务就绪
 func (b *BaseService) Ready() {
-
+	b.CoreAPI.SendReady()
 }
 
 // Close 服务关闭，如果返回false，则服务自主处理关闭
