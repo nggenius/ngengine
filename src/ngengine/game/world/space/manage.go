@@ -3,10 +3,12 @@ package space
 import (
 	"encoding/json"
 	"fmt"
-	"ngengine/common/event"
+	"ngengine/common/fsm"
 	"ngengine/core/rpc"
+	"ngengine/protocol"
 	"ngengine/share"
 	"ngengine/utils"
+	"sync"
 
 	"github.com/mysll/toolkit"
 )
@@ -85,6 +87,8 @@ type SpaceManage struct {
 	regiondef   map[int]share.Region
 	regionmap   map[int]*RegionInfo
 	regionstate []*RegionState
+	firstLoad   sync.Once
+	fsm         *fsm.FSM
 }
 
 func NewSpaceManage(ctx *WorldSpaceModule) *SpaceManage {
@@ -93,6 +97,7 @@ func NewSpaceManage(ctx *WorldSpaceModule) *SpaceManage {
 	s.regionmap = make(map[int]*RegionInfo)
 	s.regiondef = make(map[int]share.Region)
 	s.regionstate = make([]*RegionState, 0, 10)
+	s.fsm = initState(s)
 	return s
 }
 
@@ -111,14 +116,13 @@ func (s *SpaceManage) AddRegion(rs *RegionState) {
 }
 
 func (s *SpaceManage) OnServiceReady(e string, args ...interface{}) {
-	id := args[0].(event.EventArgs)["id"].(share.ServiceId)
-	srv := s.ctx.Core.LookupService(id)
-	if srv == nil {
-		panic("service not found")
-	}
+	s.firstLoad.Do(s.CheckRegion)
+}
 
-	if srv.Type == "region" {
-		rs := s.RegionState(id)
+func (s *SpaceManage) CheckRegion() {
+	srvs := s.ctx.Core.LookupAllServiceByType("region")
+	for _, srv := range srvs {
+		rs := s.RegionState(srv.Id)
 		if rs == nil {
 			rs = NewRegionState(*srv.Mailbox())
 			s.AddRegion(rs)
@@ -126,17 +130,17 @@ func (s *SpaceManage) OnServiceReady(e string, args ...interface{}) {
 
 		rs.state = RS_QUERY
 
-		s.ctx.Core.MailtoAndCallback(nil, srv.Mailbox(), "Region.Query", s.OnRegionQuery)
+		s.ctx.Core.MailtoAndCallback(nil, srv.Mailbox(), "Region.Query", s.OnRegionQuery, srv.Id)
 	}
 }
 
-func (s *SpaceManage) OnRegionQuery(e *rpc.Error, ar *utils.LoadArchive) {
-	var id share.ServiceId
-	err := ar.Read(&id)
-	if err != nil {
-		s.ctx.Core.LogErr("read id error", err)
+func (s *SpaceManage) OnRegionQuery(p interface{}, rpcerr *rpc.Error, ar *utils.LoadArchive) {
+	if rpcerr != nil && protocol.CheckRpcError(rpcerr) {
+		s.ctx.Core.LogErr("rpc error:", rpcerr.Error())
 		return
 	}
+
+	id := p.(share.ServiceId)
 
 	rs := s.RegionState(id)
 	if rs == nil {
@@ -146,10 +150,34 @@ func (s *SpaceManage) OnRegionQuery(e *rpc.Error, ar *utils.LoadArchive) {
 
 	//TODO: 这里需要同步原来服务器的信息，主要是world异常关闭后进行重建
 	rs.state = RS_RUNNING
-	s.CreateRegion(1)
+	s.fsm.Dispatch(EREGION_RESP, nil)
+	//s.CreateRegion(1)
 }
 
-// 通过ID查找场景
+// checkAllRegion 检查所有的区域是否准备好
+func (s *SpaceManage) checkAllRegion() bool {
+	for _, rs := range s.regionstate {
+		if rs.state != RS_RUNNING {
+			return false
+		}
+	}
+	return true
+}
+
+// createAllRegions 创建所有的场景
+func (s *SpaceManage) createAllRegions() error {
+	for k := range s.regiondef {
+		if s.FindRegionById(k) == nil {
+			err := s.CreateRegion(k)
+			if err != nil {
+				return err
+			}
+		}
+	}
+	return nil
+}
+
+// FindRegionById 通过ID查找场景
 func (s *SpaceManage) FindRegionById(id int) *RegionInfo {
 	if r, has := s.regionmap[id]; has {
 		return r
@@ -198,32 +226,25 @@ func (s *SpaceManage) CreateRegion(id int) error {
 	s.regionmap[id] = &r
 	rs.AddRegion(id)
 
-	return s.ctx.Core.MailtoAndCallback(nil, &rs.mailbox, "Region.Create", s.OnCreateRegion, r.Region)
+	return s.ctx.Core.MailtoAndCallback(nil, &rs.mailbox, "Region.Create", s.OnCreateRegion, id, r.Region)
 }
 
-func (s *SpaceManage) OnCreateRegion(e *rpc.Error, ar *utils.LoadArchive) {
-	var id int
-	err := ar.Read(&id)
-	if err != nil {
-		s.ctx.Core.LogErr("get id error")
-		return
-	}
-
+func (s *SpaceManage) OnCreateRegion(p interface{}, rpcerr *rpc.Error, ar *utils.LoadArchive) {
+	id := p.(int)
 	ri := s.FindRegionById(id)
 	if ri == nil {
 		s.ctx.Core.LogErr("region not found")
 		return
 	}
 
-	if e != nil {
+	if rpcerr != nil && protocol.CheckRpcError(rpcerr) {
 		ri.Status = REGION_FAILED
-		err, _ := ar.ReadString()
-		s.ctx.Core.LogErr("region create failed", err)
+		s.ctx.Core.LogErr("region create failed", rpcerr.Error())
 		return
 	}
 
 	var mb rpc.Mailbox
-	err = ar.Read(&mb)
+	err := ar.Read(&mb)
 	if err != nil {
 		s.ctx.Core.LogErr("get mailbox error")
 		return
@@ -231,10 +252,12 @@ func (s *SpaceManage) OnCreateRegion(e *rpc.Error, ar *utils.LoadArchive) {
 	ri.Dest = mb
 	ri.Status = REGION_RUNNING
 
-	s.ctx.Core.Mailto(nil, &mb, "GameScene.Test", "test")
+	//s.ctx.Core.Mailto(nil, &mb, "GameScene.Test", "test")
 	s.ctx.Core.LogInfo("region created,", ri)
+	s.fsm.Dispatch(EREGION_CREATED, id)
 }
 
+// LoadResource 加载资源
 func (s *SpaceManage) LoadResource(f string) bool {
 	data, err := toolkit.ReadFile(f)
 	if err != nil {

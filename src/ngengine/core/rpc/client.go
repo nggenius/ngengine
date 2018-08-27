@@ -26,7 +26,7 @@ var (
 	ErrTimeout  = errors.New("timeout")
 )
 
-type ReplyCB func(*Error, *utils.LoadArchive)
+type ReplyCB func(param interface{}, rpcerr *Error, ar *utils.LoadArchive)
 
 // ServerError represents an error that has been returned from
 // the remote side of the RPC connection.
@@ -42,7 +42,8 @@ type Call struct {
 	Args          *protocol.Message // The argument to the function (*struct).
 	Reply         *protocol.Message // The reply from the function (*struct).
 	Error         error             // After completion, the error status.
-	CB            ReplyCB           //callback function
+	CB            ReplyCB           // callback function
+	CBParam       interface{}       // callback function param
 	noreply       bool
 	src           Mailbox
 	dest          Mailbox
@@ -69,6 +70,7 @@ func (call *Call) Free() {
 		call.Reply.Free()
 	}
 
+	call.CBParam = nil
 	call.Args = nil
 	call.Reply = nil
 	call.CB = nil
@@ -134,10 +136,10 @@ func (client *Client) Go() {
 						v.Args = protocol.NewMessage(1)
 					}
 					sr := utils.NewStoreArchiver(v.Args.Header)
+					sr.Put(k)
 					sr.Put(int8(1))
 					sr.Put(int32(ERR_TIME_OUT))
 					v.Args.Header = v.Args.Header[:sr.Len()]
-					v.Reply = v.Args.Dup()
 					v.Error = ErrTimeout
 					client.queue <- v
 					client.log.LogDebug("response timeout, seq:", k)
@@ -266,9 +268,17 @@ func (call *Call) done() {
 		var err *Error
 		if errcode != 0 {
 			err = NewError(errcode, "")
-			if errcode == ERR_TIME_OUT {
+			switch errcode {
+			case ERR_TIME_OUT:
 				err.Err = ErrTimeout.Error()
-			} else {
+
+			case ERR_RPC_FAILED:
+				errstr, e := ar.ReadString()
+				if e != nil {
+					panic(e)
+				}
+				err.Err = errstr
+			default:
 				errstr, e := ar.ReadString()
 				if e != nil {
 					panic(e)
@@ -277,7 +287,7 @@ func (call *Call) done() {
 			}
 
 		}
-		call.CB(err, ar)
+		call.CB(call.CBParam, err, ar)
 	}
 
 	call.Free()
@@ -389,13 +399,14 @@ func (client *Client) SyncCall(serviceMethod string, src, dest Mailbox, args *pr
 	return client.send(call)
 }
 
-func (client *Client) SyncCallBack(serviceMethod string, src, dest Mailbox, args *protocol.Message, reply ReplyCB) error {
+func (client *Client) SyncCallBack(serviceMethod string, src, dest Mailbox, args *protocol.Message, reply ReplyCB, cbparam interface{}) error {
 	call := NewCall()
 	call.ServiceMethod = serviceMethod
 	if args != nil {
 		call.Args = args.Dup()
 	}
 	call.CB = reply
+	call.CBParam = cbparam
 	call.noreply = false
 	call.src = src
 	call.dest = dest
@@ -415,13 +426,14 @@ func (client *Client) CallMessage(serviceMethod string, src, dest Mailbox, args 
 	return nil
 }
 
-func (client *Client) CallMessageBack(serviceMethod string, src, dest Mailbox, args *protocol.Message, reply ReplyCB) error {
+func (client *Client) CallMessageBack(serviceMethod string, src, dest Mailbox, args *protocol.Message, reply ReplyCB, cbparam interface{}) error {
 	call := NewCall()
 	call.ServiceMethod = serviceMethod
 	if args != nil {
 		call.Args = args.Dup()
 	}
 	call.CB = reply
+	call.CBParam = cbparam
 	call.noreply = false
 	call.src = src
 	call.dest = dest
@@ -452,7 +464,7 @@ func (client *Client) Call(serviceMethod string, src, dest Mailbox, args ...inte
 	return err
 }
 
-func (client *Client) CallBack(serviceMethod string, src, dest Mailbox, reply ReplyCB, args ...interface{}) error {
+func (client *Client) CallBack(serviceMethod string, src, dest Mailbox, reply ReplyCB, cbparam interface{}, args ...interface{}) error {
 	var msg *protocol.Message
 	if len(args) > 0 {
 		msg = protocol.NewMessage(MAX_BUF_LEN)
@@ -467,7 +479,7 @@ func (client *Client) CallBack(serviceMethod string, src, dest Mailbox, reply Re
 		msg.Body = msg.Body[:ar.Len()]
 	}
 
-	err := client.CallMessageBack(serviceMethod, src, dest, msg, reply)
+	err := client.CallMessageBack(serviceMethod, src, dest, msg, reply, cbparam)
 	if msg != nil {
 		msg.Free()
 	}

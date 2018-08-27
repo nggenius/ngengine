@@ -35,7 +35,7 @@ type Options struct {
 	SeverCount     int32             // 启动服务器个数计数
 	MinClusters    int               // 最小的admin个数（最小集群数量(启动条件)
 	ServicePath    map[string]string // 启动的路径
-	MustServices   []string          // 必须要启动的app
+	MustServices   map[string]int    // 必须要启动的app
 	ServicesConfig ServiceLinks      // 启动其他服的配置
 	DebugMode      bool              // 调试模式，只启动admin,不启动其它服务
 	MessageLog     bool              // 消息日志

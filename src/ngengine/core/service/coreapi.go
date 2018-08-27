@@ -48,7 +48,7 @@ type CoreAPI interface {
 	// 发起远程调用
 	Mailto(src *rpc.Mailbox, dest *rpc.Mailbox, method string, args ...interface{}) error
 	// 发起远程调用并调用回调函数
-	MailtoAndCallback(src *rpc.Mailbox, dest *rpc.Mailbox, method string, cb rpc.ReplyCB, args ...interface{}) error
+	MailtoAndCallback(src *rpc.Mailbox, dest *rpc.Mailbox, method string, cb rpc.ReplyCB, cbparam interface{}, args ...interface{}) error
 	// 通过服务ID获取服务信息
 	LookupService(id share.ServiceId) *Srv
 	// 获取一个特定类型的服务
@@ -88,7 +88,7 @@ type CoreAPI interface {
 	// 增加模块
 	AddModule(m ModuleHandler) error
 	// 获取模块
-	Module(name string) interface{}
+	MustModule(name string) interface{}
 	// 调用模块
 	Call(module string, id int, args ...interface{}) error
 	// 获取log指针
@@ -213,7 +213,7 @@ func (c *Core) Mailto(src *rpc.Mailbox, dest *rpc.Mailbox, method string, args .
 }
 
 // 发起远程调用并调用回调函数
-func (c *Core) MailtoAndCallback(src *rpc.Mailbox, dest *rpc.Mailbox, method string, cb rpc.ReplyCB, args ...interface{}) error {
+func (c *Core) MailtoAndCallback(src *rpc.Mailbox, dest *rpc.Mailbox, method string, cb rpc.ReplyCB, cbparam interface{}, args ...interface{}) error {
 	if dest == nil {
 		return errors.New("dest is nil")
 	}
@@ -224,7 +224,7 @@ func (c *Core) MailtoAndCallback(src *rpc.Mailbox, dest *rpc.Mailbox, method str
 
 	// 对象
 	if dest.IsObject() {
-		return c.ObjectCallback(src, dest, method, cb, args...)
+		return c.ObjectCallback(src, dest, method, cb, cbparam, args...)
 	}
 
 	if dest.IsClient() { // 客户端的调用不支持回调
@@ -232,7 +232,7 @@ func (c *Core) MailtoAndCallback(src *rpc.Mailbox, dest *rpc.Mailbox, method str
 	}
 
 	if dest.ServiceId() == c.mailbox.ServiceId() { // 本地调用
-		return c.rpcSvr.CallBack(rpc.GetServiceMethod(method), *src, *dest, cb, args...)
+		return c.rpcSvr.CallBack(rpc.GetServiceMethod(method), *src, *dest, cb, cbparam, args...)
 	}
 
 	srv := c.dns.LookupByMailbox(*dest)
@@ -240,7 +240,7 @@ func (c *Core) MailtoAndCallback(src *rpc.Mailbox, dest *rpc.Mailbox, method str
 		return errors.New("service not found")
 	}
 
-	if err := srv.Callback(*src, *dest, method, cb, args...); err != nil {
+	if err := srv.Callback(*src, *dest, method, cb, cbparam, args...); err != nil {
 		c.LogErr(err)
 		return err
 	}
@@ -278,7 +278,7 @@ func (c *Core) ObjectCall(src *rpc.Mailbox, dest *rpc.Mailbox, method string, ar
 }
 
 // ObjectCallback 向对象发送消息
-func (c *Core) ObjectCallback(src *rpc.Mailbox, dest *rpc.Mailbox, method string, cb rpc.ReplyCB, args ...interface{}) (err error) {
+func (c *Core) ObjectCallback(src *rpc.Mailbox, dest *rpc.Mailbox, method string, cb rpc.ReplyCB, cbparam interface{}, args ...interface{}) (err error) {
 	msg := protocol.NewMessage(share.MAX_BUF_LEN)
 	defer msg.Free()
 	ar := utils.NewStoreArchiver(msg.Body)
@@ -303,7 +303,7 @@ func (c *Core) ObjectCallback(src *rpc.Mailbox, dest *rpc.Mailbox, method string
 		return errors.New("service not found")
 	}
 
-	err = srv.Callback(*src, *dest, share.ROUTER_TO_OBJECT, cb, method, msg.Body)
+	err = srv.Callback(*src, *dest, share.ROUTER_TO_OBJECT, cb, cbparam, method, msg.Body)
 	return
 }
 
@@ -393,8 +393,12 @@ func (c *Core) AddModule(m ModuleHandler) error {
 }
 
 // 获取模块
-func (c *Core) Module(module string) interface{} {
-	return c.modules.Module(module)
+func (c *Core) MustModule(module string) interface{} {
+	m := c.modules.Module(module)
+	if m == nil {
+		panic(fmt.Errorf("must get module failed, %s", module))
+	}
+	return m
 }
 
 // 调用模块

@@ -48,7 +48,7 @@ func (a *Account) sendLogin(s *Session, login *c2s.Login) error {
 	}
 
 	if err := a.ctx.storeClient.Get(
-		s.Mailbox.String(),
+		s.Mailbox,
 		"inner.Account",
 		map[string]interface{}{
 			"Account=?":  login.Name,
@@ -63,18 +63,8 @@ func (a *Account) sendLogin(s *Session, login *c2s.Login) error {
 }
 
 // 帐号信息回调
-func (a *Account) OnLoginResult(e *rpc.Error, ar *utils.LoadArchive) {
-	accinfo := &inner.Account{}
-	err, tag := store.ParseGetReply(e, ar, accinfo)
-	if err != nil {
-		a.ctx.Core.LogErr(err)
-		return
-	}
-	mailbox, err1 := rpc.NewMailboxFromStr(tag)
-	if err1 != nil {
-		a.ctx.Core.LogErr(err1)
-		return
-	}
+func (a *Account) OnLoginResult(p interface{}, e *rpc.Error, ar *utils.LoadArchive) {
+	mailbox := p.(*rpc.Mailbox)
 
 	session := a.ctx.FindSession(mailbox.Id())
 	if session == nil {
@@ -82,11 +72,15 @@ func (a *Account) OnLoginResult(e *rpc.Error, ar *utils.LoadArchive) {
 		return
 	}
 
-	var errcode int32
+	accinfo := &inner.Account{}
+	err := store.ParseGetReply(e, ar, accinfo)
 	if err != nil {
-		errcode = err.ErrCode
+		session.Dispatch(LOGIN_RESULT, [2]interface{}{err.ErrCode(), accinfo})
+		return
 	}
-	session.Dispatch(LOGIN_RESULT, [2]interface{}{errcode, accinfo})
+
+	session.Dispatch(LOGIN_RESULT, [2]interface{}{rpc.OK, accinfo})
+
 }
 
 func (a *Account) findNest(s *Session) *service.Srv {
@@ -104,26 +98,21 @@ func (a *Account) findNest(s *Session) *service.Srv {
 	return srv
 }
 
-func (a *Account) OnNestLogged(e *rpc.Error, ar *utils.LoadArchive) {
-	var id uint64
-	var token string
-	err := ar.Read(&id)
-	if err != nil {
-		a.ctx.Core.LogErr("read id failed")
-		return
-	}
+func (a *Account) OnNestLogged(p interface{}, e *rpc.Error, ar *utils.LoadArchive) {
+	id := p.(uint64)
 	session := a.ctx.FindSession(id)
 	if session == nil {
 		a.ctx.Core.LogErr("session not found", id)
 		return
 	}
 
-	ar.Read(&token)
-
-	var errcode int32
-	if e != nil {
-		errcode = e.ErrCode
+	if e != nil && protocol.CheckRpcError(e) {
+		session.Dispatch(NEST_RESULT, [2]interface{}{e.ErrCode(), ""})
+		return
 	}
 
-	session.Dispatch(NEST_RESULT, [2]interface{}{errcode, token})
+	var token string
+	ar.Read(&token)
+
+	session.Dispatch(NEST_RESULT, [2]interface{}{rpc.OK, token})
 }

@@ -1,11 +1,11 @@
 package session
 
 import (
+	"fmt"
 	"ngengine/core/rpc"
 	"ngengine/game/gameobject"
 	"ngengine/game/gameobject/entity"
 	"ngengine/game/gameobject/entity/inner"
-	"ngengine/game/store/extension"
 	"ngengine/module/store"
 	"ngengine/protocol"
 	"ngengine/protocol/proto/c2s"
@@ -13,6 +13,13 @@ import (
 	"ngengine/utils"
 	"time"
 )
+
+type LandInfo interface {
+	SetLandScene(landscene int64)
+	SetLandPosXYZOrient(x float64, y float64, z float64, orient float64)
+	LandScene() int64
+	LandPosXYZOrient() (x float64, y float64, z float64, orient float64)
+}
 
 type Account struct {
 	ctx *SessionModule
@@ -31,18 +38,16 @@ func (a *Account) RegisterCallback(s rpc.Servicer) {
 // login服务调用
 func (a *Account) Logged(sender, _ rpc.Mailbox, msg *protocol.Message) (errcode int32, reply *protocol.Message) {
 	m := protocol.NewMessageReader(msg)
-	var id uint64
 	var account string
-	m.Read(&id)
 	m.Read(&account)
 	token := a.ctx.cache.Put(account)
-	return protocol.Reply(protocol.TINY, id, token)
+	return protocol.Reply(protocol.TINY, token)
 }
 
 // 请求玩家信息
 func (a *Account) requestRoleInfo(session *Session) error {
 	if err := a.ctx.store.Find(
-		session.Mailbox.String(),
+		session.Mailbox,
 		"inner.Role",
 		map[string]interface{}{
 			"Account=?": session.Account,
@@ -55,18 +60,8 @@ func (a *Account) requestRoleInfo(session *Session) error {
 }
 
 // 收到玩家信息
-func (a *Account) OnRoleInfo(e *rpc.Error, ar *utils.LoadArchive) {
-	var roles []*inner.Role
-	err, tag := store.ParseGetReply(e, ar, &roles)
-	if err != nil && err.ErrCode == share.ERR_ARGS_ERROR {
-		a.ctx.Core.LogErr(err)
-		return
-	}
-	mailbox, err1 := rpc.NewMailboxFromStr(tag)
-	if err1 != nil {
-		a.ctx.Core.LogErr(err1)
-		return
-	}
+func (a *Account) OnRoleInfo(p interface{}, e *rpc.Error, ar *utils.LoadArchive) {
+	mailbox := p.(*rpc.Mailbox)
 
 	session := a.ctx.FindSession(mailbox.Id())
 	if session == nil {
@@ -74,12 +69,14 @@ func (a *Account) OnRoleInfo(e *rpc.Error, ar *utils.LoadArchive) {
 		return
 	}
 
-	var errcode int32
-	if err != nil {
-		errcode = err.ErrCode
-	}
+	var roles []*inner.Role
+	err := store.ParseGetReply(e, ar, &roles)
 
-	session.Dispatch(EROLEINFO, [2]interface{}{errcode, roles})
+	if err != nil {
+		session.Dispatch(EROLEINFO, [2]interface{}{err.ErrCode(), roles})
+		return
+	}
+	session.Dispatch(EROLEINFO, [2]interface{}{rpc.OK, roles})
 }
 
 func (a *Account) CreateRole(session *Session, args c2s.CreateRole) error {
@@ -87,6 +84,13 @@ func (a *Account) CreateRole(session *Session, args c2s.CreateRole) error {
 	player := entity.Create(a.ctx.mainEntity)
 	player.SetAttr("Name", args.Name)
 	player.SetId(a.ctx.Core.GenerateGUID())
+	li, ok := player.(LandInfo)
+	if !ok {
+		return fmt.Errorf("player not implement LandInfo")
+	}
+
+	li.SetLandScene(1)
+	li.SetLandPosXYZOrient(0, 0, 0, 0)
 
 	role := inner.Role{}
 	role.Account = session.Account
@@ -96,7 +100,7 @@ func (a *Account) CreateRole(session *Session, args c2s.CreateRole) error {
 	role.Id = player.DBId()
 
 	if err := a.ctx.store.Custom(
-		session.Mailbox.String(),
+		session.Mailbox,
 		a.OnCreateRole,
 		"Store.CreateRole",
 		&role,
@@ -107,18 +111,9 @@ func (a *Account) CreateRole(session *Session, args c2s.CreateRole) error {
 	return nil
 }
 
-func (a *Account) OnCreateRole(e *rpc.Error, ar *utils.LoadArchive) {
-	err, tag := extension.ParseCreateRole(e, ar)
-	if err != nil && e.ErrCode == share.ERR_ARGS_ERROR {
-		a.ctx.Core.LogErr(err)
-		return
-	}
+func (a *Account) OnCreateRole(p interface{}, e *rpc.Error, ar *utils.LoadArchive) {
 
-	mailbox, err1 := rpc.NewMailboxFromStr(tag)
-	if err1 != nil {
-		a.ctx.Core.LogErr(err1)
-		return
-	}
+	mailbox := p.(*rpc.Mailbox)
 
 	session := a.ctx.FindSession(mailbox.Id())
 	if session == nil {
@@ -126,18 +121,19 @@ func (a *Account) OnCreateRole(e *rpc.Error, ar *utils.LoadArchive) {
 		return
 	}
 
-	var errcode int32
-	if err != nil {
-		errcode = err.ErrCode
+	if e != nil {
+		session.Dispatch(ECREATED, e.ErrCode())
+		return
 	}
 
-	session.Dispatch(ECREATED, errcode)
+	session.Dispatch(ECREATED, rpc.OK)
+
 }
 
 func (a *Account) ChooseRole(session *Session, args c2s.ChooseRole) error {
 
 	if err := a.ctx.store.Get(
-		session.Mailbox.String(),
+		session.Mailbox,
 		a.ctx.mainEntity,
 		map[string]interface{}{
 			"id=?": args.RoleID,
@@ -150,7 +146,16 @@ func (a *Account) ChooseRole(session *Session, args c2s.ChooseRole) error {
 	return nil
 }
 
-func (a *Account) OnChooseRole(e *rpc.Error, ar *utils.LoadArchive) {
+func (a *Account) OnChooseRole(p interface{}, e *rpc.Error, ar *utils.LoadArchive) {
+
+	mailbox := p.(*rpc.Mailbox)
+
+	session := a.ctx.FindSession(mailbox.Id())
+	if session == nil {
+		a.ctx.Core.LogErr("session not found", mailbox.Id())
+		return
+	}
+
 	inst, err := a.ctx.factory.Create(a.ctx.mainEntity)
 	if err != nil {
 		a.ctx.Core.LogFatal("entity create failed")
@@ -171,40 +176,22 @@ func (a *Account) OnChooseRole(e *rpc.Error, ar *utils.LoadArchive) {
 		return
 	}
 
-	err1, tag := store.ParseGetReply(e, ar, player.Archive())
+	err1 := store.ParseGetReply(e, ar, player.Archive())
 
-	if err1 != nil && err1.ErrCode == share.ERR_ARGS_ERROR {
+	if err1 != nil {
 		a.ctx.factory.Destroy(inst)
 		a.ctx.Core.LogErr(err1)
+		session.Dispatch(ECHOOSED, [2]interface{}{err1.ErrCode(), nil})
 		return
 	}
 
-	mailbox, err2 := rpc.NewMailboxFromStr(tag)
-	if err2 != nil {
-		a.ctx.factory.Destroy(inst)
-		a.ctx.Core.LogErr(err2)
-		return
-	}
-
-	session := a.ctx.FindSession(mailbox.Id())
-	if session == nil {
-		a.ctx.factory.Destroy(inst)
-		a.ctx.Core.LogErr("session not found", mailbox.Id())
-		return
-	}
-
-	var errcode int32
-	if err1 != nil {
-		errcode = err1.ErrCode
-	}
-
-	session.Dispatch(ECHOOSED, [2]interface{}{errcode, gameobject})
+	session.Dispatch(ECHOOSED, [2]interface{}{rpc.OK, gameobject})
 }
 
 func (a *Account) DeleteRole(session *Session, args c2s.DeleteRole) error {
 
 	err := a.ctx.store.Custom(
-		session.Mailbox.String(),
+		session.Mailbox,
 		a.OnDeleteRole,
 		"Store.DeleteRole",
 		args.RoleId)
@@ -216,18 +203,8 @@ func (a *Account) DeleteRole(session *Session, args c2s.DeleteRole) error {
 	return nil
 }
 
-func (a *Account) OnDeleteRole(e *rpc.Error, ar *utils.LoadArchive) {
-	err, tag := extension.ParseDeleteRole(e, ar)
-	if err != nil && err.ErrCode == share.ERR_ARGS_ERROR {
-		a.ctx.Core.LogErr(err)
-		return
-	}
-
-	mailbox, err1 := rpc.NewMailboxFromStr(tag)
-	if err1 != nil {
-		a.ctx.Core.LogErr(err1)
-		return
-	}
+func (a *Account) OnDeleteRole(p interface{}, e *rpc.Error, ar *utils.LoadArchive) {
+	mailbox := p.(*rpc.Mailbox)
 
 	session := a.ctx.FindSession(mailbox.Id())
 	if session == nil {
@@ -235,9 +212,50 @@ func (a *Account) OnDeleteRole(e *rpc.Error, ar *utils.LoadArchive) {
 		return
 	}
 
-	var errcode int32
-	if err != nil {
-		errcode = err.ErrCode
+	if e != nil {
+		session.Dispatch(EDELETED, e.ErrCode())
+		return
 	}
-	session.Dispatch(EDELETED, errcode)
+
+	session.Dispatch(EDELETED, rpc.OK)
+
+}
+
+func (a *Account) FindRegion(session *Session, id int64, fx, fy, fz float64) error {
+	srv := a.ctx.Core.LookupRandServiceByType("world")
+	if srv == nil {
+		return fmt.Errorf("world not found")
+	}
+
+	return a.ctx.Core.MailtoAndCallback(nil, srv.Mailbox(), "Space.FindRegion", a.OnFindRegion, session.Mailbox, id, fx, fy, fz)
+}
+
+func (a *Account) OnFindRegion(param interface{}, replyerr *rpc.Error, ar *utils.LoadArchive) {
+	mb := param.(*rpc.Mailbox)
+	session := a.ctx.FindSession(mb.Id())
+	if session == nil {
+		a.ctx.Core.LogErr("session not found,", mb)
+		return
+	}
+
+	if replyerr != nil && protocol.CheckRpcError(replyerr) {
+		session.Dispatch(EFREGION, [2]interface{}{replyerr.Code, rpc.NullMailbox})
+		return
+	}
+
+	var w rpc.Mailbox
+	if err := ar.Read(&w); err != nil {
+		panic(err)
+	}
+
+	session.Dispatch(EFREGION, [2]interface{}{rpc.OK, w})
+
+}
+
+func (p *Account) EnterRegion(s *Session, r rpc.Mailbox) error {
+	return p.ctx.Core.MailtoAndCallback(nil, &r, "GameScene.AddPlayer", p.OnEnterRegion, s.Mailbox, p.ctx.mainEntity, s.gameobject)
+}
+
+func (p *Account) OnEnterRegion(param interface{}, replyerr *rpc.Error, ar *utils.LoadArchive) {
+
 }

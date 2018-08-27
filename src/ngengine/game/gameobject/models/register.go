@@ -7,5 +7,5 @@ type reg interface {
 }
 
 func Register(r reg) {
-	r.Register("entity.Player", new(GamePlayerCreater))
+	r.Register(GAME_PLAYER, new(GamePlayer))
 }

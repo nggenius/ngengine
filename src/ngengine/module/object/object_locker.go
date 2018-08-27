@@ -24,19 +24,19 @@ func NewLocker(obj rpc.Mailbox, lockIndex uint32, isSyncLock bool) *Locker {
 // LockObj 对对象上锁
 func (o *ObjectWitness) LockObj(callback LockCallBack) {
 	// 先加入回调
-	o.LockCount++
+	o.lockCount++
 	if nil != callback {
-		o.LockCb[o.LockCount] = callback
+		o.lockcb[o.lockCount] = callback
 	}
 
 	// 需要操作远程对象
 	if o.dummy {
-		o.RemoteLockObj(o.LockCount)
+		o.RemoteLockObj(o.lockCount)
 		return
 	}
 
 	// 本地上锁
-	o.AddLocker(o.objid, o.LockCount, false)
+	o.AddLocker(o.objid, o.lockCount, false)
 }
 
 // AddLocker 增加上锁对象
@@ -45,11 +45,11 @@ func (o *ObjectWitness) AddLocker(locker rpc.Mailbox, lockindex uint32, isSynclo
 	if !o.dummy {
 		// 先加入队列
 		l := NewLocker(locker, lockindex, isSynclock)
-		o.LockerQueue.PushBack(l)
+		o.lockerQueue.PushBack(l)
 	}
 
 	// 如果队列没人就直接通知上锁成功
-	if 1 == o.LockerQueue.Len() {
+	if 1 == o.lockerQueue.Len() {
 		o.LockObjSuccess(locker, lockindex, isSynclock)
 		return
 	}
@@ -59,7 +59,7 @@ func (o *ObjectWitness) AddLocker(locker rpc.Mailbox, lockindex uint32, isSynclo
 func (o *ObjectWitness) UnLockObj(locker rpc.Mailbox, lockindex uint32, isSynclock bool) {
 
 	// 检查是否是上锁者
-	if !o.Islock || locker.ServiceId() != o.locker.Locker.ServiceId() || lockindex != o.locker.LockIndex {
+	if !o.locked || locker.ServiceId() != o.locker.Locker.ServiceId() || lockindex != o.locker.LockIndex {
 		return
 	}
 	// 需要操作远程对象
@@ -79,7 +79,7 @@ func (o *ObjectWitness) UnLockObj(locker rpc.Mailbox, lockindex uint32, isSynclo
 func (o *ObjectWitness) LockObjSuccess(locker rpc.Mailbox, lockindex uint32, isSynclock bool) {
 
 	// 这里不管是远程还是本地都要把本地设置成锁定
-	o.Islock = true
+	o.locked = true
 	o.locker = NewLocker(locker, lockindex, isSynclock)
 
 	// 是否是远程操作上锁
@@ -93,7 +93,7 @@ func (o *ObjectWitness) LockObjSuccess(locker rpc.Mailbox, lockindex uint32, isS
 	}
 
 	// 本地的触发对应回调
-	if cb, ok := o.LockCb[lockindex]; ok {
+	if cb, ok := o.lockcb[lockindex]; ok {
 		cb()
 	}
 
@@ -111,11 +111,11 @@ func (o *ObjectWitness) UnLockObjSuccess(isSynclock bool) {
 
 	if !o.dummy {
 		// 移除队列
-		e := o.LockerQueue.Front()
-		o.LockerQueue.Remove(e)
+		e := o.lockerQueue.Front()
+		o.lockerQueue.Remove(e)
 	}
 
-	o.Islock = false
+	o.locked = false
 	o.locker = nil
 
 	// 对象是本地的查看列表还有没有任务
@@ -126,11 +126,11 @@ func (o *ObjectWitness) UnLockObjSuccess(isSynclock bool) {
 
 // ExecuteNextLock 执行下一个锁请求
 func (o *ObjectWitness) ExecuteNextLock() {
-	if o.Islock || 0 == o.LockerQueue.Len() {
+	if o.locked || 0 == o.lockerQueue.Len() {
 		return
 	}
 
-	for e := o.LockerQueue.Front(); e != nil; {
+	for e := o.lockerQueue.Front(); e != nil; {
 		if locker, ok := e.Value.(*Locker); ok {
 			o.LockObjSuccess(locker.Locker, locker.LockIndex, locker.IsSyncLock)
 			break
@@ -138,6 +138,6 @@ func (o *ObjectWitness) ExecuteNextLock() {
 		// 如果不是这个就是放入错误，直接干掉
 		d := e
 		e = e.Next()
-		o.LockerQueue.Remove(d)
+		o.lockerQueue.Remove(d)
 	}
 }

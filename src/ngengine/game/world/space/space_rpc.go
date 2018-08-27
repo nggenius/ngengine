@@ -26,18 +26,17 @@ func (r *Space) CreateRegion(src rpc.Mailbox, dest rpc.Mailbox, msg *protocol.Me
 }
 
 func (s *Space) FindRegion(src rpc.Mailbox, dest rpc.Mailbox, msg *protocol.Message) (int32, *protocol.Message) {
-	var tag string
 	var id int
 	var fx, fy, fz float64
-	err := protocol.ParseArgs(msg, &tag, &id, &fx, &fy, &fz)
+	err := protocol.ParseArgs(msg, &id, &fx, &fy, &fz)
 	if err != nil {
-		return protocol.ReplyError(protocol.TINY, share.ERR_ARGS_ERROR, err.Error(), tag)
+		return protocol.ReplyError(protocol.TINY, share.ERR_ARGS_ERROR, err.Error())
 	}
 
-	r := s.ctx.spaceManage.FindRegionById(id)
+	r := s.ctx.sm.FindRegionById(id)
 	if r == nil {
-		return protocol.Reply(protocol.TINY, tag, rpc.NullMailbox)
+		return protocol.Reply(protocol.TINY, rpc.NullMailbox)
 	}
 
-	return protocol.Reply(protocol.TINY, tag, r.Where)
+	return protocol.Reply(protocol.TINY, r.Dest)
 }

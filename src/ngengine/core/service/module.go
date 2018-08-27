@@ -8,6 +8,7 @@ import (
 type ModuleHandler interface {
 	SetCore(c CoreAPI)
 	Name() string
+	Prepare()
 	Init() bool
 	Start()
 	Shut()
@@ -16,7 +17,12 @@ type ModuleHandler interface {
 }
 
 type Module struct {
+	*Period
 	Core CoreAPI
+}
+
+func (m *Module) Prepare() {
+	m.Period = newPeriod()
 }
 
 // 设置核心
@@ -34,6 +40,7 @@ func (m *Module) Shut() {
 
 // OnUpdate 模块Update
 func (m *Module) OnUpdate(t *Time) {
+	m.Update(t)
 }
 
 // OnMessage 模块消息

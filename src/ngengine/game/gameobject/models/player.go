@@ -5,21 +5,20 @@ import (
 	"ngengine/game/gameobject/entity"
 )
 
+const (
+	GAME_PLAYER = "entity.GamePlayer"
+)
+
 type GamePlayer struct {
 	gameobject.RoleObject
 	*entity.Player
 }
 
-func NewGamePlayer() *GamePlayer {
-	var p GamePlayer
+func (p *GamePlayer) Ctor() {
 	p.Player = entity.NewPlayer()
 	p.SetSpirit(p.Player)
-	return &p
 }
 
-type GamePlayerCreater struct{}
-
-func (c *GamePlayerCreater) Create() interface{} {
-	p := NewGamePlayer()
-	return p
+func (p *GamePlayer) Type() string {
+	return GAME_PLAYER
 }

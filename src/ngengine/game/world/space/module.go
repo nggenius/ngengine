@@ -1,40 +1,55 @@
 package space
 
 import (
+	"ngengine/common/event"
 	"ngengine/core/service"
 	"ngengine/share"
+	"time"
 )
 
 type WorldSpaceModule struct {
 	service.Module
-	spaceManage *SpaceManage
+	sm *SpaceManage
+	rl *event.EventListener
 }
 
 func New() *WorldSpaceModule {
-	r := &WorldSpaceModule{}
-	r.spaceManage = NewSpaceManage(r)
-	return r
+	w := &WorldSpaceModule{}
+	w.sm = NewSpaceManage(w)
+	return w
 }
 
-func (r *WorldSpaceModule) Init() bool {
-	opt := r.Core.Option()
+func (w *WorldSpaceModule) Init() bool {
+	opt := w.Core.Option()
 	rf := opt.Args.String("Region")
-	if !r.spaceManage.LoadResource(r.Core.Option().ResRoot + rf) {
+	if !w.sm.LoadResource(w.Core.Option().ResRoot + rf) {
 		return false
 	}
 
-	r.spaceManage.MinRegions = opt.Args.MustInt("MinRegions", 1)
-	r.Core.RegisterRemote("Space", NewSpace(r))
+	w.sm.MinRegions = opt.Args.MustInt("MinRegions", 1)
+	w.Core.RegisterRemote("Space", NewSpace(w))
 
-	r.Core.Service().AddListener(share.EVENT_SERVICE_READY, r.spaceManage.OnServiceReady)
+	w.rl = w.Core.Service().AddListener(share.EVENT_MUST_SERVICE_READY, w.sm.OnServiceReady)
 
+	w.AddPeriod(time.Second)
+	w.AddCallback(time.Second, w.PerSecondCheck)
 	return true
 }
 
-func (r *WorldSpaceModule) Name() string {
+func (w *WorldSpaceModule) Name() string {
 	return "WorldSpace"
 }
 
-func (r *WorldSpaceModule) Shut() {
-	r.Core.Service().RemoveListener(share.EVENT_SERVICE_READY, r.spaceManage.OnServiceReady)
+func (w *WorldSpaceModule) PerSecondCheck(t time.Duration) {
+	w.sm.fsm.Dispatch(ETIMER, nil)
+}
+
+func (w *WorldSpaceModule) OnUpdate(t *service.Time) {
+	w.Module.Update(t)
+}
+
+func (w *WorldSpaceModule) Shut() {
+	if w.rl != nil {
+		w.Core.Service().RemoveListener(share.EVENT_MUST_SERVICE_READY, w.rl)
+	}
 }

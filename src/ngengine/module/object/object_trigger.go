@@ -45,7 +45,7 @@ func (a *AttrTrigger) AddCallback(attr string, cbname string, cb AttrAlter) erro
 		return fmt.Errorf("attr not found %s", attr)
 	}
 
-	if a.object.GetAttrType(attr) == "table" {
+	if a.object.AttrType(attr) == "table" {
 		return fmt.Errorf("attr is table %s", attr)
 	}
 
@@ -79,7 +79,7 @@ func (a *AttrTrigger) AddTableCallback(table string, cbname string, cb TableAlte
 		return fmt.Errorf("attr not found %s", table)
 	}
 
-	if a.object.GetAttrType(table) != "table" {
+	if a.object.AttrType(table) != "table" {
 		return fmt.Errorf("attr is not table %s", table)
 	}
 

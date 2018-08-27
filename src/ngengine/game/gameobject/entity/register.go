@@ -3,20 +3,26 @@ package entity
 import (
 	"ngengine/game/gameobject/entity/inner"
 	"ngengine/module/object"
-	"ngengine/module/store"
+)
+
+const (
+	ACCOUNT       = "inner.Account"
+	ROLE          = "inner.Role"
+	ROLE_SAVE     = "entyty.Player"
+	ROLE_SAVE_BAK = "entity.PlayerBak"
 )
 
 var objreg = make(map[string]func() object.Object)
 
 type Register interface {
-	Register(name string, creater store.DataCreater) error
+	Register(name string, obj interface{}, objslice interface{}) error
 }
 
 func RegisterToDB(r Register) {
-	r.Register("inner.Account", &inner.AccountCreater{})
-	r.Register("inner.Role", &inner.RoleCreater{})
-	r.Register("entity.Player", &PlayerArchiveCreater{})
-	r.Register("entity.PlayerBak", &PlayerArchiveBakCreater{})
+	r.Register(ACCOUNT, &inner.Account{}, []*inner.Account{})
+	r.Register(ROLE, &inner.Role{}, []*inner.Role{})
+	r.Register(ROLE_SAVE, &PlayerArchive{}, []*PlayerArchive{})
+	r.Register(ROLE_SAVE_BAK, &PlayerArchiveBak{}, []*PlayerArchiveBak{})
 }
 
 func registObject(typ string, f func() object.Object) {

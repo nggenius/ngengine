@@ -45,10 +45,10 @@ type ObjectWitness struct {
 	attrobserver  map[string]attrObserver
 	tableobserver map[string]tableObserver
 
-	Islock      bool                    // 是否已加锁
-	LockCount   uint32                  // 加锁计数
-	LockCb      map[uint32]LockCallBack // 回调函数
-	LockerQueue *list.List              // 加锁的队列
+	locked      bool                    // 是否已加锁
+	lockCount   uint32                  // 加锁计数
+	lockcb      map[uint32]LockCallBack // 回调函数
+	lockerQueue *list.List              // 加锁的队列
 	locker      *Locker                 // 当前上锁的人以及信息
 }
 
@@ -97,8 +97,8 @@ func (o *ObjectWitness) Witness(obj Object) {
 	o.object = obj
 	o.attrobserver = make(map[string]attrObserver)
 	o.tableobserver = make(map[string]tableObserver)
-	o.LockerQueue = list.New()
-	o.LockCb = make(map[uint32]LockCallBack)
+	o.lockerQueue = list.New()
+	o.lockcb = make(map[uint32]LockCallBack)
 }
 
 // AddAttrObserver 增加属性观察者,这里的name是观察者的标识符，不是属性名称

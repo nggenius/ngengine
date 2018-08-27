@@ -1,79 +1,82 @@
 package event
 
-import (
-	"reflect"
-)
-
 type Dispatcher interface {
 	ClearEvent()
-	AddListener(event string, f callback)
-	RemoveListener(event string, f callback)
+	AddListener(event string, f callback) *EventListener
+	RemoveListener(event string, l *EventListener)
 	DispatchEvent(event string, args ...interface{})
+}
+
+type EventListener struct {
+	handler callback
+}
+
+func newEventListener(c callback) *EventListener {
+	l := new(EventListener)
+	l.handler = c
+	return l
 }
 
 type callback func(event string, args ...interface{})
 
-type DelegateList []callback
+type delegate []*EventListener
 
 // 事件代理，按优先级排序
 type EventDispatch struct {
-	event map[string]DelegateList
+	delegate map[string]delegate
 }
 
 func NewEventDispatch() *EventDispatch {
 	e := &EventDispatch{}
-	e.event = make(map[string]DelegateList)
+	e.delegate = make(map[string]delegate)
 	return e
 }
 
 // 初始化事件
 func (e *EventDispatch) ClearEvent() {
-	e.event = make(map[string]DelegateList)
+	e.delegate = make(map[string]delegate)
 }
 
 // 执行指定事件的回调,并带返回值
 func (e *EventDispatch) DispatchEvent(event string, args ...interface{}) {
-	if l, has := e.event[event]; has {
+	if l, has := e.delegate[event]; has {
 		for _, f := range l {
 			if f == nil {
 				continue
 			}
-			f(event, args...)
+			f.handler(event, args...)
 		}
 	}
 }
 
 // 增加事件监听
-func (e *EventDispatch) AddListener(event string, f callback) {
-	if _, has := e.event[event]; !has {
-		e.event[event] = make(DelegateList, 0, 4)
+func (e *EventDispatch) AddListener(event string, f callback) *EventListener {
+	if _, has := e.delegate[event]; !has {
+		e.delegate[event] = make(delegate, 0, 4)
 	}
-
-	e.event[event] = append(e.event[event], f)
-
+	l := newEventListener(f)
+	e.delegate[event] = append(e.delegate[event], l)
+	return l
 }
 
 // 移除事件监听
-func (e *EventDispatch) RemoveListener(event string, f callback) {
+func (e *EventDispatch) RemoveListener(event string, l *EventListener) {
 	del := make([]int, 0, 2)
-	if l, has := e.event[event]; has {
-		for k, f1 := range l {
+	if d, has := e.delegate[event]; has {
+		for k, f1 := range d {
 			if f1 == nil {
 				continue
 			}
-
-			sf1 := reflect.ValueOf(f1)
-			sf2 := reflect.ValueOf(f)
-			if sf1.Pointer() == sf2.Pointer() {
-				l[k] = nil
+			if f1 == l {
+				d[k] = nil
 				del = append(del, k)
 			}
 		}
 	}
 	for _, d := range del {
-		copy(e.event[event][d:], e.event[event][d+1:])
+		copy(e.delegate[event][d:], e.delegate[event][d+1:])
 	}
 
-	size := len(e.event[event])
-	e.event[event] = e.event[event][:size-len(del)]
+	size := len(e.delegate[event])
+	e.delegate[event] = e.delegate[event][:size-len(del)]
 }

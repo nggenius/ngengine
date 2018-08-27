@@ -10,13 +10,29 @@ import (
 	"ngengine/core/service"
 	"ngengine/logger"
 	"ngengine/share"
+	"reflect"
 )
+
+type create struct {
+	obj interface{}
+	v   reflect.Value
+	t   reflect.Type
+}
+
+func (c create) Create() interface{} {
+	o := reflect.New(c.t).Interface()
+	if oc, ok := o.(ObjectCreate); ok {
+		oc.Ctor()
+	}
+
+	return o
+}
 
 type ObjectModule struct {
 	service.Module
 	defaultFactory *Factory // 默认对象工厂
 	factorys       map[int]*Factory
-	regs           map[string]ObjectCreate
+	regs           map[string]create
 	entitydelegate map[string]*EventDelegate
 	sync           *SyncObject
 	router         *ObjectRouter
@@ -26,7 +42,7 @@ func New() *ObjectModule {
 	o := &ObjectModule{}
 	o.defaultFactory = newFactory(o, share.OBJECT_TYPE_NONE)
 	o.factorys = make(map[int]*Factory)
-	o.regs = make(map[string]ObjectCreate)
+	o.regs = make(map[string]create)
 	o.entitydelegate = make(map[string]*EventDelegate)
 	o.sync = &SyncObject{o}
 	o.router = NewObjectRouter(o)
@@ -145,7 +161,17 @@ func (o *ObjectModule) Register(name string, oc ObjectCreate) {
 		panic("object: Register called twice for object " + name)
 	}
 
-	o.regs[name] = oc
+	v := reflect.ValueOf(oc)
+
+	if v.Kind() != reflect.Ptr {
+		panic("object: Register object must be pointer")
+	}
+
+	o.regs[name] = create{
+		obj: oc,
+		v:   v,
+		t:   v.Type().Elem(),
+	}
 	o.entitydelegate[name] = NewEventDelegate()
-	o.router.Register(name, oc.Create())
+	o.router.Register(name, oc)
 }

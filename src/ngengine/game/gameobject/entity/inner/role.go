@@ -24,14 +24,3 @@ func (r *Role) SetId(val int64) {
 func (r *Role) DBId() int64 {
 	return r.Id
 }
-
-type RoleCreater struct {
-}
-
-func (c *RoleCreater) Create() interface{} {
-	return &Role{}
-}
-
-func (c *RoleCreater) CreateSlice() interface{} {
-	return &[]*Role{}
-}

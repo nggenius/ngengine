@@ -29,6 +29,7 @@ type LoginModule struct {
 	sessions    map[uint64]*Session
 	deleted     *list.List
 	db          *rpc.Mailbox
+	ls          map[string]*event.EventListener
 }
 
 func New() *LoginModule {
@@ -36,6 +37,7 @@ func New() *LoginModule {
 	l.account = &Account{ctx: l}
 	l.sessions = make(map[uint64]*Session)
 	l.deleted = list.New()
+	l.ls = make(map[string]*event.EventListener)
 	return l
 }
 
@@ -44,39 +46,39 @@ func (l *LoginModule) Name() string {
 }
 
 func (l *LoginModule) Init() bool {
-	store := l.Core.Module("Store").(*store.StoreModule)
+	store := l.Core.MustModule("Store").(*store.StoreModule)
 	if store == nil {
 		l.Core.LogFatal("need Store module")
 		return false
 	}
 	l.storeClient = store.Client()
-	l.Core.Service().AddListener(share.EVENT_SERVICE_READY, l.OnDatabaseReady)
-	l.Core.Service().AddListener(share.EVENT_USER_CONNECT, l.OnConnected)
-	l.Core.Service().AddListener(share.EVENT_USER_LOST, l.OnDisconnected)
-	l.Core.Service().AddListener(share.EVENT_MUST_SERVICE_READY, l.OnAllSeverReady)
+	l.ls[share.EVENT_SERVICE_READY] = l.Core.Service().AddListener(share.EVENT_SERVICE_READY, l.OnDatabaseReady)
+	l.ls[share.EVENT_USER_CONNECT] = l.Core.Service().AddListener(share.EVENT_USER_CONNECT, l.OnConnected)
+	l.ls[share.EVENT_USER_LOST] = l.Core.Service().AddListener(share.EVENT_USER_LOST, l.OnDisconnected)
+	l.ls[share.EVENT_MUST_SERVICE_READY] = l.Core.Service().AddListener(share.EVENT_MUST_SERVICE_READY, l.OnAllSeverReady)
 	l.Core.RegisterHandler("Account", l.account)
-	l.lastTime = time.Now()
-
+	l.AddPeriod(time.Second)
+	l.AddCallback(time.Second, l.PerSecondCheck)
 	return true
 }
 
 // Shut 模块关闭
 func (l *LoginModule) Shut() {
-	l.Core.Service().RemoveListener(share.EVENT_SERVICE_READY, l.OnDatabaseReady)
-	l.Core.Service().RemoveListener(share.EVENT_USER_CONNECT, l.OnConnected)
-	l.Core.Service().RemoveListener(share.EVENT_USER_LOST, l.OnDisconnected)
-	l.Core.Service().RemoveListener(share.EVENT_MUST_SERVICE_READY, l.OnAllSeverReady)
+	for k, v := range l.ls {
+		l.Core.Service().RemoveListener(k, v)
+	}
+}
+
+func (l *LoginModule) PerSecondCheck(d time.Duration) {
+	for _, c := range l.sessions {
+		if !c.delete {
+			c.Dispatch(TIMER, nil)
+		}
+	}
 }
 
 func (l *LoginModule) OnUpdate(t *service.Time) {
-	if time.Now().Sub(l.lastTime).Seconds() > 1.0 {
-		l.lastTime = time.Now()
-		for _, c := range l.sessions {
-			if !c.delete {
-				c.Dispatch(TIMER, nil)
-			}
-		}
-	}
+	l.Module.Update(t)
 
 	// 清理删除对象
 	for ele := l.deleted.Front(); ele != nil; {

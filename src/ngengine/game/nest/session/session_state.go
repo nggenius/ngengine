@@ -17,6 +17,9 @@ const (
 	EDELETE   // 删除角色
 	EDELETED  // 删除成功
 	ESTORED   // 存档完成
+	EONLINE   // 进入场景
+	EFREGION  // 查找场景
+	ESWREGION // 切换场景
 )
 
 const (

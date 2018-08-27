@@ -124,6 +124,26 @@ func ParseArgs(msg *Message, args ...interface{}) error {
 	return nil
 }
 
+type errcoder interface {
+	ErrCode() int32
+}
+
+// CheckRpcError 检查rpc的系统错误，不检查逻辑错误
+func CheckRpcError(c errcoder) bool {
+	code := int(c.ErrCode())
+	if code == 0 {
+		return false
+	}
+
+	if code == share.ERR_ARGS_ERROR ||
+		code == share.ERR_TIME_OUT ||
+		code == share.ERR_RPC_FAILED {
+		return true
+	}
+
+	return false
+}
+
 // 错误处理函数，如果有错误则写入日志
 func Check(l *logger.Log, err error) bool {
 	if err != nil {
@@ -226,6 +246,7 @@ func ReplyError(poolsize int, errcode int32, err string, args ...interface{}) (i
 		msg.Free()
 		panic("write error failed, " + err.Error())
 	}
+
 	if len(args) > 0 {
 		for i := 0; i < len(args); i++ {
 			err := mw.Put(args[i])
@@ -234,8 +255,9 @@ func ReplyError(poolsize int, errcode int32, err string, args ...interface{}) (i
 				panic("write args failed," + err.Error())
 			}
 		}
-		mw.Flush()
 	}
+
+	mw.Flush()
 
 	return errcode, msg
 }

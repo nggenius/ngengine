@@ -17,17 +17,17 @@ const (
 )
 
 type GameObject interface {
-	// 初始化
+	// Init 初始化
 	Init(object interface{})
-	// 获取Object对象
+	// Spirit 获取Object对象
 	Spirit() object.Object
-	// 设置连接
+	// SetTransport 设置连接
 	SetTransport(t *Transport)
-	// 获取连接
+	// Transport 获取连接
 	Transport() *Transport
-	// 增加组件
+	// AddComponent 增加组件
 	AddComponent(name string, com Component, update bool) error
-	// 移除组件
+	// RemoveComponent 移除组件
 	RemoveComponent(name string)
 	// 获取组件
 	GetComponent(name string) Component
@@ -37,10 +37,21 @@ type GameObject interface {
 	Parent() GameObject
 	// SetParent 设置父对象
 	SetParent(p GameObject)
-	// Pos 获取在父对象中的位置
-	ContainerPos() int
-	// SetPos 设置在父对象中的位置
-	SetContainerPos(pos int)
+	// ParentIndex 获取在父对象中的位置
+	ParentIndex() int
+	// SetParentIndex 设置在父对象中的位置
+	SetParentIndex(pos int)
+	// Cap 获取容量，返回-1表示不限容量
+	Cap() int
+}
+
+// GameObjectEqual 判断两个对象是否相等
+func GameObjectEqual(l GameObject, r GameObject) bool {
+	if l.Spirit() == nil || r.Spirit() == nil {
+		panic("object spirit is nil")
+	}
+
+	return l.Spirit().ObjId() == l.Spirit().ObjId()
 }
 
 type ComponentInfo struct {
@@ -50,24 +61,30 @@ type ComponentInfo struct {
 }
 
 type BaseObject struct {
-	Container
+	c *Container
 	object.CacheData
 	typ        int
 	delete     bool
-	index      int
+	index      int // 在factory中的索引
 	client     rpc.Mailbox
 	spirit     object.Object
 	delegate   object.Delegate
 	component  map[string]ComponentInfo
 	transport  *Transport
-	gameObject interface{}
+	gameObject GameObject
 	parent     GameObject
-	pos        int //在父对象中的位置
+	pi         int  // 在父对象容器中的位置
+	update     bool // 是否每一帧进行调用
 }
 
 // Init 初始化
 func (b *BaseObject) Init(object interface{}) {
-	b.gameObject = object
+	if g, ok := object.(GameObject); ok {
+		b.gameObject = g
+		return
+	}
+
+	panic("object not implement GameObject")
 }
 
 // Parent 父对象
@@ -80,14 +97,14 @@ func (b *BaseObject) SetParent(p GameObject) {
 	b.parent = p
 }
 
-// Pos 获取在父对象中的位置
-func (b *BaseObject) ContainerPos() int {
-	return b.pos
+// ParentIndex 获取在父对象中的位置
+func (b *BaseObject) ParentIndex() int {
+	return b.pi
 }
 
-// SetPos 设置在父对象中的位置
-func (b *BaseObject) SetContainerPos(pos int) {
-	b.pos = pos
+// SetParentIndex 设置在父对象中的位置
+func (b *BaseObject) SetParentIndex(pi int) {
+	b.pi = pi
 }
 
 // GameObject 获取gameobject

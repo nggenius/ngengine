@@ -45,18 +45,6 @@ func (a *SceneArchive) DBId() int64 {
 	return a.Id
 }
 
-// archive creater
-type SceneArchiveCreater struct {
-}
-
-func (c *SceneArchiveCreater) Create() interface{} {
-	return &SceneArchive{}
-}
-
-func (c *SceneArchiveCreater) CreateSlice() interface{} {
-	return &[]*SceneArchive{}
-}
-
 // Scene archive
 type SceneArchiveBak struct {
 	Id int64
@@ -75,18 +63,6 @@ func (a *SceneArchiveBak) SetId(val int64) {
 // db id
 func (a *SceneArchiveBak) DBId() int64 {
 	return a.Id
-}
-
-// archive bak creater
-type SceneArchiveBakCreater struct {
-}
-
-func (c *SceneArchiveBakCreater) Create() interface{} {
-	return &SceneArchiveBak{}
-}
-
-func (c *SceneArchiveBakCreater) CreateSlice() interface{} {
-	return &[]*SceneArchiveBak{}
 }
 
 // Scene attr
@@ -197,7 +173,7 @@ func (o *Scene) Resource() string {
 }
 
 // attr type
-func (o *Scene) GetAttrType(name string) string {
+func (o *Scene) AttrType(name string) string {
 	switch name {
 	case "Name":
 		return "string"
@@ -238,7 +214,7 @@ func (o *Scene) AttrIndex(name string) int {
 }
 
 // get attr value
-func (o *Scene) GetAttr(name string) interface{} {
+func (o *Scene) FindAttr(name string) interface{} {
 	switch name {
 	case "Name":
 		return o.attr.Name

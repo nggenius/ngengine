@@ -125,19 +125,10 @@ func (s *ServiceDB) CheckReady(si *ServiceInfo) {
 	defer s.Unlock()
 
 	if !s.Ready {
-		for _, t := range s.ctx.ngadmin.opts.MustServices {
-			find := false
-
-			// 查看是否有这个ready好的服务
-			for _, v := range s.serviceMap {
-				if v.PeerInfo.ServType == t && v.PeerInfo.Status == 1 {
-					find = true
-					break
-				}
-			}
-
-			if !find {
-
+		for src_typ, num := range s.ctx.ngadmin.opts.MustServices {
+			// 查看是否有这么多个Ready好的服务
+			srvList := s.lookupReadySrvByType(src_typ)
+			if num != len(srvList) {
 				return
 			}
 		}
@@ -213,6 +204,17 @@ func (s *ServiceDB) LookupSrvByType(typ string) []*ServiceInfo {
 	services := make([]*ServiceInfo, 0, len(s.serviceMap))
 	for _, v := range s.serviceMap {
 		if typ == "all" || v.PeerInfo.ServType == typ {
+			services = append(services, v)
+		}
+	}
+	return services
+}
+
+// lookupReadySrvByType 通过类型查找已准备好的服务信息(无锁的)
+func (s *ServiceDB) lookupReadySrvByType(typ string) []*ServiceInfo {
+	services := make([]*ServiceInfo, 0, len(s.serviceMap))
+	for _, v := range s.serviceMap {
+		if (typ == "all" || v.PeerInfo.ServType == typ) && v.PeerInfo.Status == 1 {
 			services = append(services, v)
 		}
 	}

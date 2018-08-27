@@ -15,6 +15,42 @@ import (
 var _ = json.Marshal
 var _ = toolkit.ParseNumber
 
+// tuple LandPos 位置
+type PlayerLandPos_t struct {
+	X      float64 // X
+	Y      float64 // Y
+	Z      float64 // Z
+	Orient float64 // Orient
+}
+
+// tuple LandPos construct
+func NewPlayerLandPos() *PlayerLandPos_t {
+	landpos := &PlayerLandPos_t{}
+	return landpos
+}
+
+// tuple LandPos Set
+func (landpos *PlayerLandPos_t) Set(x float64, y float64, z float64, orient float64) {
+
+	landpos.X = x
+	landpos.Y = y
+	landpos.Z = z
+	landpos.Orient = orient
+}
+
+// tuple LandPos Get
+func (landpos *PlayerLandPos_t) Get() (x float64, y float64, z float64, orient float64) {
+	return landpos.X, landpos.Y, landpos.Z, landpos.Orient
+}
+
+// tuple LandPos equal other
+func (landpos *PlayerLandPos_t) Equal(other PlayerLandPos_t) bool {
+	if (landpos.X == other.X) && (landpos.Y == other.Y) && (landpos.Z == other.Z) && (landpos.Orient == other.Orient) {
+		return true
+	}
+	return false
+}
+
 // record Toolbox row define
 type PlayerToolbox_c struct {
 	Id     int64 //
@@ -362,11 +398,13 @@ type PlayerArchive struct {
 	root object.Object `xorm:"-"`
 	flag int           `xorm:"-"`
 
-	Id      int64
-	Name    string           `xorm:"varchar(128)"` // 玩家名
-	Toolbox *PlayerToolbox_r `xorm:"json"`         // 道具(表格测试)
-	Pos     *PlayerPos_t     `xorm:"json"`         // 位置
-	Orient  float32          // 朝向(弧度)
+	Id        int64
+	Name      string           `xorm:"varchar(128)"` // 玩家名
+	LandScene int64            // 场景编号
+	LandPos   *PlayerLandPos_t `xorm:"json"` // 位置
+	Toolbox   *PlayerToolbox_r `xorm:"json"` // 道具(表格测试)
+	Pos       *PlayerPos_t     `xorm:"json"` // 位置
+	Orient    float32          // 朝向(弧度)
 
 }
 
@@ -374,6 +412,7 @@ type PlayerArchive struct {
 func NewPlayerArchive(root object.Object) *PlayerArchive {
 	archive := &PlayerArchive{root: root}
 
+	archive.LandPos = NewPlayerLandPos()
 	archive.Toolbox = NewPlayerToolbox(root)
 	archive.Pos = NewPlayerPos()
 
@@ -395,25 +434,15 @@ func (a *PlayerArchive) DBId() int64 {
 	return a.Id
 }
 
-// archive creater
-type PlayerArchiveCreater struct {
-}
-
-func (c *PlayerArchiveCreater) Create() interface{} {
-	return &PlayerArchive{}
-}
-
-func (c *PlayerArchiveCreater) CreateSlice() interface{} {
-	return &[]*PlayerArchive{}
-}
-
 // Player archive
 type PlayerArchiveBak struct {
-	Id      int64
-	Name    string           `xorm:"varchar(128)"` // 玩家名
-	Toolbox *PlayerToolbox_r `xorm:"json"`         // 道具(表格测试)
-	Pos     *PlayerPos_t     `xorm:"json"`         // 位置
-	Orient  float32          // 朝向(弧度)
+	Id        int64
+	Name      string           `xorm:"varchar(128)"` // 玩家名
+	LandScene int64            // 场景编号
+	LandPos   *PlayerLandPos_t `xorm:"json"` // 位置
+	Toolbox   *PlayerToolbox_r `xorm:"json"` // 道具(表格测试)
+	Pos       *PlayerPos_t     `xorm:"json"` // 位置
+	Orient    float32          // 朝向(弧度)
 }
 
 // archive table name
@@ -429,18 +458,6 @@ func (a *PlayerArchiveBak) SetId(val int64) {
 // db id
 func (a *PlayerArchiveBak) DBId() int64 {
 	return a.Id
-}
-
-// archive bak creater
-type PlayerArchiveBakCreater struct {
-}
-
-func (c *PlayerArchiveBakCreater) Create() interface{} {
-	return &PlayerArchiveBak{}
-}
-
-func (c *PlayerArchiveBakCreater) CreateSlice() interface{} {
-	return &[]*PlayerArchiveBak{}
 }
 
 // Player attr
@@ -530,6 +547,58 @@ func (o *Player) SetName(name string) {
 // get Name 玩家名
 func (o *Player) Name() string {
 	return o.archive.Name
+}
+
+// set LandScene 场景编号
+func (o *Player) SetLandScene(landscene int64) {
+	if o.Dummy() && !o.Sync() {
+		o.UpdateAttr("LandScene", landscene, nil)
+		return
+	}
+	if o.archive.LandScene == landscene {
+		return
+	}
+	old := o.archive.LandScene
+	o.archive.LandScene = landscene
+	o.UpdateAttr("LandScene", landscene, old)
+}
+
+// get LandScene 场景编号
+func (o *Player) LandScene() int64 {
+	return o.archive.LandScene
+}
+
+// set LandPos 位置
+func (o *Player) SetLandPos(landpos PlayerLandPos_t) {
+	if o.Dummy() && !o.Sync() {
+		o.UpdateTuple("LandPos", landpos, nil)
+		return
+	}
+	old := *o.archive.LandPos
+	*o.archive.LandPos = landpos
+	o.UpdateTuple("LandPos", landpos, old)
+}
+
+// set LandPos detail
+func (o *Player) SetLandPosXYZOrient(x float64, y float64, z float64, orient float64) {
+	if o.Dummy() && !o.Sync() {
+		val := PlayerLandPos_t{x, y, z, orient}
+		o.UpdateTuple("LandPos", val, nil)
+		return
+	}
+	old := *o.archive.LandPos
+	o.archive.LandPos.Set(x, y, z, orient)
+	o.UpdateTuple("LandPos", *o.archive.LandPos, old)
+}
+
+// get LandPos 位置
+func (o *Player) LandPos() PlayerLandPos_t {
+	return *o.archive.LandPos
+}
+
+// get LandPos detail
+func (o *Player) LandPosXYZOrient() (x float64, y float64, z float64, orient float64) {
+	return o.archive.LandPos.Get()
 }
 
 // set Toolbox 道具(表格测试)
@@ -628,7 +697,7 @@ func (o *Player) Pos() PlayerPos_t {
 }
 
 // get Pos detail
-func (o *Player) GetPosXYZ() (x float32, y float32, z float32) {
+func (o *Player) PosXYZ() (x float32, y float32, z float32) {
 	return o.archive.Pos.Get()
 }
 
@@ -652,10 +721,14 @@ func (o *Player) Orient() float32 {
 }
 
 // attr type
-func (o *Player) GetAttrType(name string) string {
+func (o *Player) AttrType(name string) string {
 	switch name {
 	case "Name":
 		return "string"
+	case "LandScene":
+		return "int64"
+	case "LandPos":
+		return "tuple"
 	case "Toolbox":
 		return "table"
 	case "GroupId":
@@ -678,6 +751,10 @@ func (o *Player) Expose(name string) int {
 	switch name {
 	case "Name":
 		return object.EXPOSE_OWNER
+	case "LandScene":
+		return object.EXPOSE_NONE
+	case "LandPos":
+		return object.EXPOSE_NONE
 	case "Toolbox":
 		return object.EXPOSE_NONE
 	case "GroupId":
@@ -697,7 +774,7 @@ func (o *Player) Expose(name string) int {
 
 // get all attr name
 func (o *Player) AllAttr() []string {
-	return []string{"Name", "Toolbox", "GroupId", "Invisible", "VisualRange", "Pos", "Orient"}
+	return []string{"Name", "LandScene", "LandPos", "Toolbox", "GroupId", "Invisible", "VisualRange", "Pos", "Orient"}
 }
 
 // get attr index by name
@@ -705,28 +782,36 @@ func (o *Player) AttrIndex(name string) int {
 	switch name {
 	case "Name":
 		return 0
-	case "Toolbox":
+	case "LandScene":
 		return 1
-	case "GroupId":
+	case "LandPos":
 		return 2
-	case "Invisible":
+	case "Toolbox":
 		return 3
-	case "VisualRange":
+	case "GroupId":
 		return 4
-	case "Pos":
+	case "Invisible":
 		return 5
-	case "Orient":
+	case "VisualRange":
 		return 6
+	case "Pos":
+		return 7
+	case "Orient":
+		return 8
 	default:
 		return -1
 	}
 }
 
 // get attr value
-func (o *Player) GetAttr(name string) interface{} {
+func (o *Player) FindAttr(name string) interface{} {
 	switch name {
 	case "Name":
 		return o.archive.Name
+	case "LandScene":
+		return o.archive.LandScene
+	case "LandPos":
+		return *o.archive.LandPos
 	case "Toolbox":
 		return o.archive.Toolbox
 	case "GroupId":
@@ -753,6 +838,18 @@ func (o *Player) SetAttr(name string, value interface{}) error {
 			return nil
 		}
 		return fmt.Errorf("attr Name type not match")
+	case "LandScene":
+		if v, ok := value.(int64); ok {
+			o.SetLandScene(v)
+			return nil
+		}
+		return fmt.Errorf("attr LandScene type not match")
+	case "LandPos":
+		if v, ok := value.(PlayerLandPos_t); ok {
+			o.SetLandPos(v)
+			return nil
+		}
+		return fmt.Errorf("attr LandPos type not match")
 	case "Toolbox":
 		if v, ok := value.(*PlayerToolbox_r); ok {
 			o.SetToolbox(v)

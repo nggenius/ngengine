@@ -26,7 +26,7 @@ var startnest = `{
 	"HostPort": 0,
 	"LogFile":"log/nest.log",
 	"Args": {
-		"MainEntity":"entity.Player"
+		"MainEntity":"entity.GamePlayer"
 	}
 }`
 
@@ -41,7 +41,7 @@ var startlogin = `{
 	"Expose": true,
 	"OuterAddr":"192.168.1.12",
 	"HostAddr": "0.0.0.0",
-	"HostPort": 2002,
+	"HostPort": 4000,
 	"LogFile":"log/login.log",
 	"Args": {}
 }`

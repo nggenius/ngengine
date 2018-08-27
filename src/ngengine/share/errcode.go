@@ -5,6 +5,7 @@ const (
 	ERR_TIME_OUT                    // 超时
 	ERR_ARGS_ERROR                  // 参数错误
 	ERR_SYSTEM_ERROR                // 系统错误
+	ERR_RPC_FAILED                  // rpc错误
 	ERR_REPLY_FAILED                // 失败
 	ERR_CREATE_TIMEOUT              // 创建角色超时
 	ERR_CHOOSE_ROLE                 // 选择角色出错
@@ -12,6 +13,8 @@ const (
 	ERR_OBJECT_NOT_FOUND            // 对象没有找到
 	ERR_OBJECT_RPC_CALL             // rpc 执行错误
 	ERR_OBJECT_RPC_NOT_MATCH        // rpc 对象不匹配
+	ERR_REGION_NOT_FOUND            // 场景未找到
+	ERR_ENTER_REGION_FAILED         // 进入场景失败
 )
 
 // 存储错误码

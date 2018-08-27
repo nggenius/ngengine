@@ -14,12 +14,15 @@ type SessionDB map[uint64]*Session
 // session保存当前连接和角色的相关信息
 type Session struct {
 	*fsm.FSM
-	ctx        *SessionModule
-	id         uint64
-	Account    string
-	Mailbox    *rpc.Mailbox
-	delete     bool
-	gameobject gameobject.GameObject
+	ctx                *SessionModule
+	id                 uint64
+	Account            string
+	Mailbox            *rpc.Mailbox
+	delete             bool
+	gameobject         gameobject.GameObject
+	landscene          int64
+	lx, ly, lz, orient float64
+	region             rpc.Mailbox
 }
 
 func NewSession(id uint64, ctx *SessionModule) *Session {
@@ -28,6 +31,14 @@ func NewSession(id uint64, ctx *SessionModule) *Session {
 	s.id = id
 	s.FSM = initState(s)
 	return s
+}
+
+func (s *Session) SetLandInfo(scene int64, x, y, z, o float64) {
+	s.landscene = scene
+	s.lx = x
+	s.ly = y
+	s.lz = z
+	s.orient = o
 }
 
 func (s *Session) SetGameObject(g gameobject.GameObject) {
@@ -92,19 +103,30 @@ func (s *Session) SendRoleInfo(role []*inner.Role) {
 	s.ctx.Core.Mailto(nil, s.Mailbox, "Account.Roles", roles)
 }
 
-// 创建角色
+// CreateRole 创建角色
 func (s *Session) CreateRole(info c2s.CreateRole) error {
 	return s.ctx.account.CreateRole(s, info)
 }
 
-// 选择角色
+// ChooseRole 选择角色
 func (s *Session) ChooseRole(info c2s.ChooseRole) error {
 	return s.ctx.account.ChooseRole(s, info)
 }
 
+// DeleteRole 删除角色
 func (s *Session) DeleteRole(info c2s.DeleteRole) error {
 	return s.ctx.account.DeleteRole(s, info)
 }
+
+func (s *Session) FindRegion() error {
+	return s.ctx.account.FindRegion(s, s.landscene, s.lx, s.ly, s.lz)
+}
+
+func (s *Session) EnterRegion(r rpc.Mailbox) error {
+	s.region = r
+	return s.ctx.account.EnterRegion(s, r)
+}
+
 func (s *Session) Error(errcode int32) {
 	err := s2c.Error{}
 	err.ErrCode = errcode

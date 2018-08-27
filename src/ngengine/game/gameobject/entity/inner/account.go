@@ -15,14 +15,3 @@ func (a *Account) SetId(val int64) {
 func (a *Account) DBId() int64 {
 	return a.Id
 }
-
-type AccountCreater struct {
-}
-
-func (c *AccountCreater) Create() interface{} {
-	return &Account{}
-}
-
-func (c *AccountCreater) CreateSlice() interface{} {
-	return &[]*Account{}
-}

@@ -3,12 +3,15 @@ package scene
 import (
 	"ngengine/core/service"
 	"ngengine/module/object"
+	"ngengine/module/timer"
+	"time"
 )
 
 type SceneModule struct {
 	service.Module
 	creater *RegionCreate
 	object  *object.ObjectModule
+	timer   *timer.TimerModule
 	scenes  *Scenes
 }
 
@@ -20,17 +23,23 @@ func New() *SceneModule {
 }
 
 func (m *SceneModule) Init() bool {
-	f := m.Core.Module("Object")
-	if f == nil {
-		panic("need object module")
-	}
-	m.object = f.(*object.ObjectModule)
-
-	m.object.Register("GameScene", new(GameSceneCreater))
+	m.object = m.Core.MustModule("Object").(*object.ObjectModule)
+	m.timer = m.Core.MustModule("Timer").(*timer.TimerModule)
+	m.object.Register("GameScene", new(GameScene))
 	m.Core.RegisterRemote("Region", m.creater)
+	m.AddPeriod(time.Second)
+	m.AddCallback(time.Second, m.PerSecondCheck)
 	return true
 }
 
 func (m *SceneModule) Name() string {
 	return "Scene"
+}
+
+func (s *SceneModule) PerSecondCheck(d time.Duration) {
+	s.scenes.UpdateAllScene(d)
+}
+
+func (s *SceneModule) OnUpdate(t *service.Time) {
+	s.Module.Update(t)
 }

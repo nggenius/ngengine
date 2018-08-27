@@ -103,12 +103,18 @@ func (r *Response) Free() {
 type RpcCall struct {
 	session uint64
 	srv     *service
+	svr     *Server
 	header  *Header
 	message *protocol.Message
 	reply   *protocol.Message
 	errcode int32
 	method  CB
 	cb      ReplyCB
+	cbparam interface{}
+}
+
+func (call *RpcCall) Error() bool {
+	return call.errcode != 0
 }
 
 func (call *RpcCall) Call() error {
@@ -138,6 +144,7 @@ func (call *RpcCall) Free() error {
 	call.message = nil
 	call.srv = nil
 	call.cb = nil
+	call.cbparam = nil
 	call.session = 0
 	call.errcode = 0
 	if call.reply != nil {
@@ -153,7 +160,7 @@ func (call *RpcCall) Free() error {
 
 func (call *RpcCall) Done() error {
 	if call.header.Seq != 0 || call.cb != nil {
-		return call.srv.svr.sendResponse(call)
+		return call.svr.sendResponse(call)
 	}
 	return nil
 }
@@ -250,9 +257,10 @@ func (server *Server) Call(servicemethod string, src, dest Mailbox, args ...inte
 	return err
 }
 
-func (server *Server) CallBack(servicemethod string, src, dest Mailbox, cb ReplyCB, args ...interface{}) error {
+func (server *Server) CallBack(servicemethod string, src, dest Mailbox, cb ReplyCB, cbparam interface{}, args ...interface{}) error {
 	call, err := server.getCall(servicemethod, src, dest, cb, args...)
 	if call != nil {
+		call.cbparam = cbparam
 		server.ch <- call
 	}
 	return err
@@ -289,8 +297,12 @@ func (server *Server) ServeCodec(codec ServerCodec, maxlen uint16) {
 			break
 		}
 
-		call := server.createCall(msg)
+		call, err := server.createCall(msg)
 		if call != nil {
+			if err != nil {
+				call.errcode, call.reply = protocol.ReplyError(protocol.TINY, share.ERR_RPC_FAILED, err.Error())
+			}
+			call.svr = server
 			call.session = serial
 			server.ch <- call
 			continue
@@ -351,7 +363,7 @@ func (server *Server) sendResponse(call *RpcCall) error {
 			}
 			err.Err = errstr
 		}
-		call.cb(err, ar)
+		call.cb(call.cbparam, err, ar)
 		return nil
 	}
 
@@ -373,7 +385,7 @@ func (server *Server) sendResponse(call *RpcCall) error {
 	return nil
 }
 
-func (server *Server) createCall(msg *protocol.Message) *RpcCall {
+func (server *Server) createCall(msg *protocol.Message) (*RpcCall, error) {
 	call := NewRpcCall()
 	call.header = NewHeader()
 	call.message = msg
@@ -383,49 +395,49 @@ func (server *Server) createCall(msg *protocol.Message) *RpcCall {
 	if err != nil {
 		server.log.LogErr(err)
 		call.Free()
-		return nil
+		return nil, err
 	}
 	call.header.Src, err = ar.ReadUInt64()
 	if err != nil {
 		server.log.LogErr(err)
 		call.Free()
-		return nil
+		return nil, err
 	}
 	call.header.Dest, err = ar.ReadUInt64()
 	if err != nil {
 		server.log.LogErr(err)
 		call.Free()
-		return nil
+		return nil, err
 	}
 	call.header.ServiceMethod, err = ar.ReadString()
 	if err != nil {
 		server.log.LogErr(err)
 		call.Free()
-		return nil
+		return nil, err
 	}
 	dot := strings.LastIndex(call.header.ServiceMethod, ".")
 	if dot < 0 {
-		server.log.LogErr("rpc: service/method request ill-formed: ", call.header.ServiceMethod)
-		call.Free()
-		return nil
+		err := fmt.Errorf("rpc: service/method request ill-formed: %s", call.header.ServiceMethod)
+		server.log.LogErr(err)
+		return call, err
 	}
 	serviceName := call.header.ServiceMethod[:dot]
 	methodName := call.header.ServiceMethod[dot+1:]
 
 	call.srv = server.serviceMap[serviceName]
 	if call.srv == nil {
-		server.log.LogErr("rpc: can't find service ", call.header.ServiceMethod)
-		call.Free()
-		return nil
+		err := fmt.Errorf("rpc: can't find service %s", call.header.ServiceMethod)
+		server.log.LogErr(err)
+		return call, err
 	}
 
 	call.method = call.srv.method[methodName]
 	if call.method == nil {
-		server.log.LogErr("rpc: can't find method ", call.header.ServiceMethod)
-		call.Free()
-		return nil
+		err := fmt.Errorf("rpc: can't find method %s", call.header.ServiceMethod)
+		server.log.LogErr(err)
+		return call, err
 	}
-	return call
+	return call, nil
 }
 
 func ReadMessage(rwc io.Reader, maxrx uint16) (*protocol.Message, error) {

@@ -75,7 +75,7 @@ func (f *Factory) Create(typ string) (interface{}, error) {
 	return nil, fmt.Errorf("object %s not found", typ)
 }
 
-// 销毁一个对象``
+// 销毁一个对象
 func (f *Factory) Destroy(object interface{}) error {
 	if fo, ok := object.(FactoryObject); ok {
 		if fo.Alive() {

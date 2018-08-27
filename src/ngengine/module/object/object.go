@@ -11,7 +11,7 @@ const (
 
 // 对象创建接口
 type ObjectCreate interface {
-	Create() interface{}
+	Ctor() //构造函数
 }
 
 // 缓存接口
@@ -66,9 +66,9 @@ type Object interface {
 	// entity 类型(对应xml里面的name)
 	Entity() string
 	// 获取某个属性的类型
-	GetAttrType(name string) string
+	AttrType(name string) string
 	// 获取属性
-	GetAttr(name string) interface{}
+	FindAttr(name string) interface{}
 	// 设置属性
 	SetAttr(name string, value interface{}) error
 	// 导出状态

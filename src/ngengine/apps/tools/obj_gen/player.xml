@@ -9,6 +9,13 @@
     <archive>player</archive>
     <propertys>
         <property name="Name" type="string" size="128" save="true" expose="owner" desc="玩家名" />
+        <property name="LandScene" type="int64" save="true" desc="场景编号" />
+        <property name="LandPos" type="tuple" save="true" desc="位置">
+            <tuple name="X" type="float64" desc="X" />
+            <tuple name="Y" type="float64" desc="Y" />
+            <tuple name="Z" type="float64" desc="Z" />
+            <tuple name="Orient" type="float64" desc="Orient" />
+        </property>
         <property name="Toolbox" type="table" save="true" expose="" desc="道具(表格测试)">
             <table name="Toolbox" maxrows="10" >
                 <col name="Id" type="int64" save="" desc="" />

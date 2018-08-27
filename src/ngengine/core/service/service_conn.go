@@ -83,7 +83,7 @@ func (s *Srv) Call(src, dest rpc.Mailbox, method string, args ...interface{}) er
 }
 
 // 带返回函数的调用
-func (s *Srv) Callback(src, dest rpc.Mailbox, method string, cb rpc.ReplyCB, args ...interface{}) error {
+func (s *Srv) Callback(src, dest rpc.Mailbox, method string, cb rpc.ReplyCB, cbparam interface{}, args ...interface{}) error {
 	if !s.connected {
 		if err := s.Connect(); err != nil {
 			return err
@@ -92,7 +92,7 @@ func (s *Srv) Callback(src, dest rpc.Mailbox, method string, cb rpc.ReplyCB, arg
 
 	s.l.LogInfo(src, " call ", dest, "/", method)
 
-	err := s.client.CallBack(rpc.GetServiceMethod(method), src, dest, cb, args...)
+	err := s.client.CallBack(rpc.GetServiceMethod(method), src, dest, cb, cbparam, args...)
 	if err != nil {
 		s.Close()
 	}

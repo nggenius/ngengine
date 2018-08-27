@@ -24,9 +24,9 @@ type SessionModule struct {
 	proxy      *proxy
 	sessions   SessionDB  // session管理器
 	deleted    *list.List // 标志为删除的session
-	lastTime   time.Time  // 最后一次更新时间
 	cache      cache      // 缓存的口令
 	mainEntity string     // 主实体
+	ls         map[string]*event.EventListener
 }
 
 func New() *SessionModule {
@@ -36,6 +36,7 @@ func New() *SessionModule {
 	l.cache = make(cache)
 	l.sessions = make(SessionDB)
 	l.deleted = list.New()
+	l.ls = make(map[string]*event.EventListener)
 	return l
 }
 
@@ -47,12 +48,12 @@ func (s *SessionModule) Init() bool {
 	opt := s.Core.Option()
 	s.mainEntity = opt.Args.String("MainEntity")
 
-	store := s.Core.Module("Store").(*store.StoreModule)
+	store := s.Core.MustModule("Store").(*store.StoreModule)
 	if store == nil {
 		s.Core.LogFatal("need Store module")
 		return false
 	}
-	factory := s.Core.Module("Object").(*object.ObjectModule)
+	factory := s.Core.MustModule("Object").(*object.ObjectModule)
 	if factory == nil {
 		s.Core.LogFatal("need object module")
 		return false
@@ -61,29 +62,32 @@ func (s *SessionModule) Init() bool {
 	s.store = store.Client()
 	s.Core.RegisterRemote("Account", s.account)
 	s.Core.RegisterHandler("Self", s.proxy)
-	s.Core.Service().AddListener(share.EVENT_USER_CONNECT, s.OnConnected)
-	s.Core.Service().AddListener(share.EVENT_USER_LOST, s.OnDisconnected)
-	s.lastTime = time.Now()
+	s.ls[share.EVENT_USER_CONNECT] = s.Core.Service().AddListener(share.EVENT_USER_CONNECT, s.OnConnected)
+	s.ls[share.EVENT_USER_LOST] = s.Core.Service().AddListener(share.EVENT_USER_LOST, s.OnDisconnected)
+	s.AddPeriod(time.Second)
+	s.AddCallback(time.Second, s.PerSecondCheck)
 	return true
 }
 
 // Shut 模块关闭
 func (s *SessionModule) Shut() {
-	s.Core.Service().RemoveListener(share.EVENT_USER_CONNECT, s.OnConnected)
-	s.Core.Service().RemoveListener(share.EVENT_USER_LOST, s.OnDisconnected)
+	for k, v := range s.ls {
+		s.Core.Service().RemoveListener(k, v)
+	}
+}
+
+// PerSecondCheck 每分钟检查
+func (s *SessionModule) PerSecondCheck(d time.Duration) {
+	s.cache.Check()
+	for _, s := range s.sessions {
+		if !s.delete {
+			s.Dispatch(ETIMER, nil)
+		}
+	}
 }
 
 func (s *SessionModule) OnUpdate(t *service.Time) {
-	if time.Now().Sub(s.lastTime).Seconds() > 1.0 {
-		s.lastTime = time.Now()
-		s.cache.Check()
-		for _, s := range s.sessions {
-			if !s.delete {
-				s.Dispatch(ETIMER, nil)
-			}
-		}
-	}
-
+	s.Module.OnUpdate(t)
 	// 清理删除对象
 	for ele := s.deleted.Front(); ele != nil; {
 		next := ele.Next()

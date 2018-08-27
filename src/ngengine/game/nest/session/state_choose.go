@@ -4,9 +4,6 @@ import (
 	"ngengine/common/fsm"
 	"ngengine/game/gameobject"
 	"ngengine/share"
-	"os"
-
-	"github.com/davecgh/go-spew/spew"
 )
 
 type chooserole struct {
@@ -30,14 +27,17 @@ func (c *chooserole) Handle(event int, param interface{}) string {
 			return SLOGGED
 		}
 
-		f, err := os.OpenFile("dump.txt", os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0644)
-		if err == nil {
-			spew.Fdump(f, player)
-			f.Close()
+		ls, ok := player.(LandInfo)
+		if !ok {
+			c.owner.DestroySelf()
+			c.owner.ctx.Core.LogErr("entity not define landpos ", c.owner.ctx.mainEntity)
+			return ""
 		}
-
 		c.owner.ctx.Core.LogDebug("enter game")
 		c.owner.SetGameObject(player)
+		x, y, z, o := ls.LandPosXYZOrient()
+		c.owner.SetLandInfo(ls.LandScene(), x, y, z, o)
+		c.owner.FindRegion()
 		return SONLINE
 	case EBREAK:
 		c.owner.DestroySelf()

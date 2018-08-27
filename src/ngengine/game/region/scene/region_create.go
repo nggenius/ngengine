@@ -33,7 +33,7 @@ func (s *RegionCreate) Create(src rpc.Mailbox, dest rpc.Mailbox, msg *protocol.M
 	}
 	mb, err := s.ctx.scenes.CreateScene(r)
 	if err != nil {
-		return protocol.ReplyError(protocol.TINY, share.ERR_REGION_CREATE_FAILED, err.Error(), r.Id)
+		return protocol.ReplyError(protocol.TINY, share.ERR_REGION_CREATE_FAILED, err.Error())
 	}
-	return protocol.Reply(protocol.TINY, r.Id, mb)
+	return protocol.Reply(protocol.TINY, mb)
 }

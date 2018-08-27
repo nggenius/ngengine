@@ -1,6 +1,7 @@
 package store
 
 import (
+	"ngengine/common/event"
 	"ngengine/core/service"
 	"ngengine/share"
 )
@@ -17,6 +18,7 @@ type StoreModule struct {
 	store    *Store
 	register *Register
 	sql      *Sql
+	readyl   *event.EventListener
 }
 
 func New() *StoreModule {
@@ -61,7 +63,7 @@ func (m *StoreModule) Extend(name string, ext Extension) {
 func (m *StoreModule) Init() bool {
 	switch m.mode {
 	case STORE_CLIENT:
-		m.Core.Service().AddListener(share.EVENT_SERVICE_READY, m.client.OnDatabaseReady)
+		m.readyl = m.Core.Service().AddListener(share.EVENT_SERVICE_READY, m.client.OnDatabaseReady)
 	case STORE_SERVER:
 		m.sql.Init(m.Core)
 		m.Core.RegisterRemote("Store", m.store)
@@ -85,7 +87,9 @@ func (m *StoreModule) Start() {
 func (m *StoreModule) Shut() {
 	switch m.mode {
 	case STORE_CLIENT:
-		m.Core.Service().RemoveListener(share.EVENT_SERVICE_READY, m.client.OnDatabaseReady)
+		if m.readyl != nil {
+			m.Core.Service().RemoveListener(share.EVENT_SERVICE_READY, m.readyl)
+		}
 	}
 }
 
@@ -93,6 +97,6 @@ func (m *StoreModule) Client() *StoreClient {
 	return m.client
 }
 
-func (m *StoreModule) Register(name string, creater DataCreater) error {
-	return m.register.Register(name, creater)
+func (m *StoreModule) Register(name string, obj interface{}, objslice interface{}) error {
+	return m.register.Register(name, obj, objslice)
 }

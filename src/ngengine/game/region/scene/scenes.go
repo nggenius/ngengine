@@ -3,6 +3,7 @@ package scene
 import (
 	"ngengine/core/rpc"
 	"ngengine/share"
+	"time"
 )
 
 type Scenes struct {
@@ -36,4 +37,10 @@ func (s *Scenes) CreateScene(r share.Region) (rpc.Mailbox, error) {
 	s.scenes[r.Id] = gamescene
 
 	return gamescene.Scene.ObjId(), nil
+}
+
+func (s *Scenes) UpdateAllScene(t time.Duration) {
+	for k := range s.scenes {
+		s.scenes[k].Update(t)
+	}
 }

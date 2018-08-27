@@ -364,18 +364,6 @@ func (a *{{.Name}}Archive) DBId() int64 {
     return a.Id
 }
 
-// archive creater
-type {{.Name}}ArchiveCreater struct{
-}
-
-func (c *{{.Name}}ArchiveCreater) Create() interface{} {
-	return &{{.Name}}Archive{}
-}
-
-func (c *{{.Name}}ArchiveCreater) CreateSlice() interface{} {
-	return &[]*{{.Name}}Archive{}
-}
-
 // {{.Name}} archive
 type {{.Name}}ArchiveBak struct {
     Id int64 {{range .Property}} {{if eq .Save "true"}}
@@ -396,19 +384,6 @@ func (a *{{.Name}}ArchiveBak) SetId(val int64) {
 func (a *{{.Name}}ArchiveBak) DBId() int64 {
     return a.Id
 }
-
-// archive bak creater
-type {{.Name}}ArchiveBakCreater struct{
-}
-
-func (c *{{.Name}}ArchiveBakCreater) Create() interface{} {
-	return &{{.Name}}ArchiveBak{}
-}
-
-func (c *{{.Name}}ArchiveBakCreater) CreateSlice() interface{} {
-	return &[]*{{.Name}}ArchiveBak{}
-}
-
 
 // {{.Name}} attr
 type {{.Name}}Attr struct{
@@ -520,13 +495,13 @@ func (o *{{$.Name}}) {{.Name}}() {{if eq .Type "tuple"}} {{$.Name}}{{.Name}}_t{{
 }
 {{if eq .Type "tuple"}}
 // get {{.Name}} detail
-func (o *{{$.Name}}) Get{{.Name}}{{range  .Tuple}}{{.Name}}{{end}}()({{range $k, $t := .Tuple}} {{if ne $k 0}},{{end}}{{tolower $t.Name}} {{$t.Type}} {{end}}){
+func (o *{{$.Name}}) {{.Name}}{{range  .Tuple}}{{.Name}}{{end}}()({{range $k, $t := .Tuple}} {{if ne $k 0}},{{end}}{{tolower $t.Name}} {{$t.Type}} {{end}}){
 	return {{if eq .Save "true"}} o.archive.{{.Name}} {{else}}o.attr.{{.Name}} {{end}}.Get()
 } {{end}}
 {{end}}
 
 // attr type
-func  (o *{{$.Name}}) GetAttrType(name string) string {
+func  (o *{{$.Name}}) AttrType(name string) string {
 	switch name { {{range .Property}}
 	case "{{.Name}}":
 		return "{{.Type}}" {{end}}
@@ -561,7 +536,7 @@ func (o *{{$.Name}}) AttrIndex(name string) int {
 }
 
 // get attr value
-func  (o *{{$.Name}}) GetAttr(name string) interface{} {
+func  (o *{{$.Name}}) FindAttr(name string) interface{} {
 	switch name { {{range .Property}}
 	case "{{.Name}}":
 		return {{if eq .Save "true"}}{{if eq .Type "tuple"}}*{{end}}o.archive.{{.Name}} {{else}}{{if eq .Type "tuple"}}*{{end}}o.attr.{{.Name}} {{end}} {{end}}

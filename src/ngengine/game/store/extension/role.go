@@ -8,7 +8,6 @@ import (
 	"ngengine/module/store"
 	"ngengine/protocol"
 	"ngengine/share"
-	"ngengine/utils"
 )
 
 type Role struct {
@@ -26,19 +25,6 @@ func NewRole(core service.CoreAPI, s *store.StoreModule) *Role {
 func (r *Role) RegisterCallback(svr rpc.Servicer) {
 	svr.RegisterCallback("CreateRole", r.CreateRole)
 	svr.RegisterCallback("DeleteRole", r.DeleteRole)
-}
-
-//返回值：err *rpc.Error, tag string
-func ParseCreateRole(err *rpc.Error, ar *utils.LoadArchive) (*rpc.Error, string) {
-	tag, e := ar.ReadString()
-	if e != nil {
-		return rpc.NewError(share.ERR_ARGS_ERROR, e.Error()), ""
-	}
-	if err != nil {
-		return err, tag
-	}
-
-	return nil, tag
 }
 
 func (r *Role) CreateRole(sender, _ rpc.Mailbox, msg *protocol.Message) (errcode int32, reply *protocol.Message) {
@@ -83,20 +69,6 @@ func (r *Role) CreateRole(sender, _ rpc.Mailbox, msg *protocol.Message) (errcode
 
 	session.Commit()
 	return protocol.Reply(protocol.TINY, tag)
-}
-
-//返回值：err *rpc.Error, tag string
-func ParseDeleteRole(err *rpc.Error, ar *utils.LoadArchive) (*rpc.Error, string) {
-
-	tag, e := ar.ReadString()
-	if e != nil {
-		return rpc.NewError(share.ERR_ARGS_ERROR, e.Error()), ""
-	}
-	if err != nil {
-		return err, tag
-	}
-
-	return nil, tag
 }
 
 func (r *Role) DeleteRole(sender, _ rpc.Mailbox, msg *protocol.Message) (errcode int32, reply *protocol.Message) {

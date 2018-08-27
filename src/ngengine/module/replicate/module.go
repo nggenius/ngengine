@@ -31,7 +31,7 @@ func (o *ReplicateModule) Name() string {
 
 // Init 模块初始化
 func (o *ReplicateModule) Init(core service.CoreAPI) bool {
-	o.objectmodule = core.Module("Object").(*object.ObjectModule)
+	o.objectmodule = core.MustModule("Object").(*object.ObjectModule)
 	if o.objectmodule == nil {
 		panic("need object module")
 	}

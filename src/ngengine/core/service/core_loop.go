@@ -18,6 +18,12 @@ func (c *Core) doRPCProcess(ch chan *rpc.RpcCall) {
 	for {
 		select {
 		case call := <-ch:
+			if call.Error() { // 出错的rpc调用
+				call.Done()
+				call.Free()
+				continue
+			}
+
 			if call.IsThreadWork() {
 				c.busy = true
 			} else {

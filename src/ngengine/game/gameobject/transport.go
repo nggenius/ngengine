@@ -6,7 +6,7 @@ type transfer interface {
 	// 发起远程调用
 	Mailto(src *rpc.Mailbox, dest *rpc.Mailbox, method string, args ...interface{}) error
 	// 发起远程调用并调用回调函数
-	MailtoAndCallback(src *rpc.Mailbox, dest *rpc.Mailbox, method string, cb rpc.ReplyCB, args ...interface{}) error
+	MailtoAndCallback(src *rpc.Mailbox, dest *rpc.Mailbox, method string, cb rpc.ReplyCB, cbparam interface{}, args ...interface{}) error
 }
 
 type Transport struct {
