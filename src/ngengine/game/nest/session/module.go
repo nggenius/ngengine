@@ -26,6 +26,7 @@ type SessionModule struct {
 	deleted    *list.List // 标志为删除的session
 	cache      cache      // 缓存的口令
 	mainEntity string     // 主实体
+	role       string     // 玩家类名
 	ls         map[string]*event.EventListener
 }
 
@@ -47,7 +48,7 @@ func (s *SessionModule) Name() string {
 func (s *SessionModule) Init() bool {
 	opt := s.Core.Option()
 	s.mainEntity = opt.Args.String("MainEntity")
-
+	s.role = opt.Args.String("Role")
 	store := s.Core.MustModule("Store").(*store.StoreModule)
 	if store == nil {
 		s.Core.LogFatal("need Store module")

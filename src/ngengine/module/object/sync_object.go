@@ -3,6 +3,7 @@ package object
 import (
 	"ngengine/core/rpc"
 	"ngengine/protocol"
+	"ngengine/share"
 )
 
 type SyncObject struct {
@@ -10,6 +11,9 @@ type SyncObject struct {
 }
 
 func (s *SyncObject) RegisterCallback(svr rpc.Servicer) {
+	svr.RegisterCallback("Rebase", s.Rebase)
+	svr.RegisterCallback("Flip", s.Flip)
+	svr.RegisterCallback("Replicate", s.Replicate)
 	svr.RegisterCallback("UpdateAttr", s.UpdateAttr)
 	svr.RegisterCallback("UpdateTuple", s.UpdateTuple)
 	svr.RegisterCallback("AddTableRow", s.AddTableRow)
@@ -22,6 +26,42 @@ func (s *SyncObject) RegisterCallback(svr rpc.Servicer) {
 	svr.RegisterCallback("UnLockObj", s.UnLockObj)
 	svr.RegisterCallback("LockObjSuccess", s.LockObjSuccess)
 	svr.RegisterCallback("UnLockObjSuccess", s.UnLockObjSuccess)
+}
+
+// Rebase 变基
+func (s *SyncObject) Rebase(src rpc.Mailbox, dest rpc.Mailbox, msg *protocol.Message) (int32, *protocol.Message) {
+	return 0, nil
+}
+
+// Flip 交换控制权(由origin处理)
+func (s *SyncObject) Flip(src rpc.Mailbox, dest rpc.Mailbox, msg *protocol.Message) (int32, *protocol.Message) {
+	obj, err := s.owner.FindObject(dest)
+	if obj == nil {
+		return protocol.ReplyError(protocol.TINY, share.ERR_ORIGIN_NOT_FOUND, err.Error())
+	}
+
+	return 0, nil
+}
+
+// 对象复制
+func (s *SyncObject) Replicate(src rpc.Mailbox, dest rpc.Mailbox, msg *protocol.Message) (int32, *protocol.Message) {
+
+	var tag int
+	var data []byte
+	err := protocol.ParseArgs(msg, &tag, &data)
+	if err != nil {
+		return protocol.ReplyError(protocol.TINY, share.ERR_ARGS_ERROR, err.Error())
+	}
+
+	f := s.owner.Factory(share.OBJECT_TYPE_GHOST)
+	obj, err := f.Decode(data)
+	if err != nil {
+		return protocol.ReplyError(protocol.TINY, share.ERR_OBJECT_REPLICATE, err.Error())
+	}
+
+	s.owner.fireGlobalEvent(GLOBAL_ADD_DUMY, obj.(Object).ObjId(), rpc.NullMailbox, tag)
+
+	return protocol.Reply(protocol.TINY, obj.(Object).ObjId())
 }
 
 // 对象属性变动

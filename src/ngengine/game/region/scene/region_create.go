@@ -35,5 +35,7 @@ func (s *RegionCreate) Create(src rpc.Mailbox, dest rpc.Mailbox, msg *protocol.M
 	if err != nil {
 		return protocol.ReplyError(protocol.TINY, share.ERR_REGION_CREATE_FAILED, err.Error())
 	}
+
+	s.ctx.Core.LogInfo("create scene ", r)
 	return protocol.Reply(protocol.TINY, mb)
 }

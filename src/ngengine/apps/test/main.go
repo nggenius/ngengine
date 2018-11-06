@@ -26,7 +26,8 @@ var startnest = `{
 	"HostPort": 0,
 	"LogFile":"log/nest.log",
 	"Args": {
-		"MainEntity":"entity.GamePlayer"
+		"MainEntity":"entity.Player",
+		"Role":"GamePlayer"
 	}
 }`
 

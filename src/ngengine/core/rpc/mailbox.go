@@ -20,6 +20,10 @@ func (m Mailbox) String() string {
 	return fmt.Sprintf("mailbox://%x", uint64(m))
 }
 
+func (m Mailbox) Service() Mailbox {
+	return (m & 0xFFFF000000000000)
+}
+
 // 是否为空
 func (m Mailbox) IsNil() bool {
 	return m == 0

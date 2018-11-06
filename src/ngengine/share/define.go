@@ -5,12 +5,13 @@ type SessionId uint64
 type ServiceId uint16
 
 const (
-	MAX_BUF_LEN     = 1024 * 16      // 消息缓冲区大小16k
-	SID_MAX         = 0xFFFF         // service id 最大值
-	SESSION_MAX     = 0x7FFFFFFFFFFF // session最大值
-	OBJECT_ID_MAX   = 0xFFFFFFFFFF   // objectid最大值
-	OBJECT_TYPE_MAX = 0x7FFF         // object type最大值
-	OBJECT_MAX      = 0xFFFFFF       // 最大对象数量
+	MAX_BUF_LEN           = 1024 * 16      // 消息缓冲区大小16k
+	INNER_MESSAGE_BUF_LEN = 1024 * 1024    // 内部消息缓冲区大小1M
+	SID_MAX               = 0xFFFF         // service id 最大值
+	SESSION_MAX           = 0x7FFFFFFFFFFF // session最大值
+	OBJECT_ID_MAX         = 0xFFFFFFFFFF   // objectid最大值
+	OBJECT_TYPE_MAX       = 0x7FFF         // object type最大值
+	OBJECT_MAX            = 0xFFFFFF       // 最大对象数量
 )
 
 // mailbox类型定义
@@ -21,10 +22,11 @@ const (
 
 // object类型定义
 const (
-	OBJECT_TYPE_NONE   = iota
-	OBJECT_TYPE_OBJECT // 对象
-	OBJECT_TYPE_GHOST  // 对象副本
-	OBJECT_TYPE_SHARE  // 共享数据
+	OBJECT_TYPE_NONE         = iota
+	OBJECT_TYPE_OBJECT       // 对象
+	OBJECT_TYPE_GHOST        // 对象副本
+	OBJECT_TYPE_SHARE        // 共享数据
+	OBJECT_TYPE_SCENE_OFFSET // 场景起始
 )
 
 const (

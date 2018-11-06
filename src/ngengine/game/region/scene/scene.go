@@ -8,7 +8,7 @@ import (
 	"ngengine/share"
 )
 
-const GAME_SCENE = "entity.GameScene"
+const GAME_SCENE = "GameScene"
 
 type GameScene struct {
 	*entity.Scene
@@ -23,7 +23,7 @@ func (s *GameScene) Ctor() {
 	s.fsm = initState(s)
 }
 
-func (s *GameScene) Type() string {
+func (s *GameScene) EntityType() string {
 	return GAME_SCENE
 }
 

@@ -25,7 +25,7 @@ func New() *SceneModule {
 func (m *SceneModule) Init() bool {
 	m.object = m.Core.MustModule("Object").(*object.ObjectModule)
 	m.timer = m.Core.MustModule("Timer").(*timer.TimerModule)
-	m.object.Register("GameScene", new(GameScene))
+	m.object.Register(new(GameScene))
 	m.Core.RegisterRemote("Region", m.creater)
 	m.AddPeriod(time.Second)
 	m.AddCallback(time.Second, m.PerSecondCheck)

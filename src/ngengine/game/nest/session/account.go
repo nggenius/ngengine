@@ -156,7 +156,7 @@ func (a *Account) OnChooseRole(p interface{}, e *rpc.Error, ar *utils.LoadArchiv
 		return
 	}
 
-	inst, err := a.ctx.factory.Create(a.ctx.mainEntity)
+	inst, err := a.ctx.factory.Create(a.ctx.role)
 	if err != nil {
 		a.ctx.Core.LogFatal("entity create failed")
 		return
@@ -168,6 +168,8 @@ func (a *Account) OnChooseRole(p interface{}, e *rpc.Error, ar *utils.LoadArchiv
 		a.ctx.Core.LogFatal("entity is not gameobject")
 		return
 	}
+
+	gameobject.SetCap(0)
 
 	player := gameobject.Spirit()
 	if player == nil {
@@ -253,9 +255,16 @@ func (a *Account) OnFindRegion(param interface{}, replyerr *rpc.Error, ar *utils
 }
 
 func (p *Account) EnterRegion(s *Session, r rpc.Mailbox) error {
-	return p.ctx.Core.MailtoAndCallback(nil, &r, "GameScene.AddPlayer", p.OnEnterRegion, s.Mailbox, p.ctx.mainEntity, s.gameobject)
+	return p.ctx.factory.Replicate(s.gameobject.Spirit().ObjId(), r.Service(), 0, p.OnEnterRegion, s.id)
 }
 
-func (p *Account) OnEnterRegion(param interface{}, replyerr *rpc.Error, ar *utils.LoadArchive) {
+func (p *Account) OnEnterRegion(params interface{}, err error) {
+	session := p.ctx.FindSession(params.(uint64))
+	if session == nil {
+		p.ctx.Core.LogErr("session not found,", params)
+		return
+	}
 
+	p.ctx.Core.LogInfo("enter session ", params, err)
+	session.Dispatch(EONLINE, nil)
 }

@@ -7,6 +7,7 @@ import (
 	"ngengine/core/rpc"
 	"ngengine/core/service"
 	"ngengine/share"
+	"ngengine/utils"
 )
 
 type FactoryObject interface {
@@ -41,6 +42,21 @@ func newFactory(owner *ObjectModule, identity int) *Factory {
 	f.pool = NewObjectList(128, share.OBJECT_MAX)
 	f.delete = list.New()
 	return f
+}
+
+func (f *Factory) CreateWithCap(typ string, cap int) (interface{}, error) {
+	o, err := f.Create(typ)
+	if err != nil {
+		return nil, err
+	}
+
+	if c, ok := o.(Container); ok {
+		c.SetCap(cap)
+		f.Destroy(o)
+		return o, nil
+	}
+
+	return nil, fmt.Errorf("%s not have SetCap", typ)
 }
 
 // 通过类型创建一个对象
@@ -118,4 +134,57 @@ func (f *Factory) FindObject(mb rpc.Mailbox) (interface{}, error) {
 	}
 
 	return nil, fmt.Errorf("object has destroyed, %s", mb)
+}
+
+// Replicate 将一个对象复制到另一个服务
+func (f *Factory) Replicate(object interface{}, dest rpc.Mailbox, tag int, cb ReplicateCB, cbparams interface{}) error {
+	if dest.IsNil() {
+		return fmt.Errorf("dest is nil")
+	}
+
+	if object == nil {
+		return fmt.Errorf("object is nil")
+	}
+
+	data, err := f.Encode(object)
+	if err != nil {
+		return err
+	}
+
+	return f.owner.Core.MailtoAndCallback(nil, &dest, "object.Replicate", f.onReplicate, []interface{}{cb, cbparams, object.(Object).ObjId()}, tag, data)
+}
+
+func (f *Factory) onReplicate(param interface{}, replyerr *rpc.Error, ar *utils.LoadArchive) {
+	if param == nil {
+		return
+	}
+
+	args := param.([]interface{})
+	cb := args[0].(ReplicateCB)
+	id := args[2].(rpc.Mailbox)
+	o, _ := f.FindObject(id)
+	if o == nil {
+		f.owner.Core.LogErr("object not found")
+		return
+	}
+
+	if replyerr != nil {
+		if cb != nil {
+			cb(args[1], replyerr)
+		}
+		return
+	}
+	var dummy rpc.Mailbox
+	if err := ar.Read(&dummy); err != nil {
+		if cb != nil {
+			cb(args[1], err)
+		}
+		return
+	}
+	obj := o.(Object)
+	obj.AddDummy(dummy, DUMMY_STATE_READY)
+
+	if cb != nil {
+		cb(args[1], nil)
+	}
 }

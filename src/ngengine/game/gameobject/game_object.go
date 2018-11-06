@@ -43,6 +43,8 @@ type GameObject interface {
 	SetParentIndex(pos int)
 	// Cap 获取容量，返回-1表示不限容量
 	Cap() int
+	// SetCap 设置容量，并初始化容器
+	SetCap(cap int) error
 }
 
 // GameObjectEqual 判断两个对象是否相等

@@ -8,8 +8,8 @@ import (
 const (
 	ACCOUNT       = "inner.Account"
 	ROLE          = "inner.Role"
-	ROLE_SAVE     = "entyty.Player"
-	ROLE_SAVE_BAK = "entity.PlayerBak"
+	DB_PLAYER     = "entity.Player"
+	DB_PLAYER_BAK = "entity.PlayerBak"
 )
 
 var objreg = make(map[string]func() object.Object)
@@ -21,8 +21,8 @@ type Register interface {
 func RegisterToDB(r Register) {
 	r.Register(ACCOUNT, &inner.Account{}, []*inner.Account{})
 	r.Register(ROLE, &inner.Role{}, []*inner.Role{})
-	r.Register(ROLE_SAVE, &PlayerArchive{}, []*PlayerArchive{})
-	r.Register(ROLE_SAVE_BAK, &PlayerArchiveBak{}, []*PlayerArchiveBak{})
+	r.Register(DB_PLAYER, &PlayerArchive{}, []*PlayerArchive{})
+	r.Register(DB_PLAYER_BAK, &PlayerArchiveBak{}, []*PlayerArchiveBak{})
 }
 
 func registObject(typ string, f func() object.Object) {

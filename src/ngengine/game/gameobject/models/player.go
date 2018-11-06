@@ -6,7 +6,7 @@ import (
 )
 
 const (
-	GAME_PLAYER = "entity.GamePlayer"
+	GAME_PLAYER = "GamePlayer"
 )
 
 type GamePlayer struct {
@@ -19,6 +19,6 @@ func (p *GamePlayer) Ctor() {
 	p.SetSpirit(p.Player)
 }
 
-func (p *GamePlayer) Type() string {
+func (p *GamePlayer) EntityType() string {
 	return GAME_PLAYER
 }

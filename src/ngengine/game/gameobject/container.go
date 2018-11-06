@@ -120,3 +120,26 @@ func (p *Container) ChildAt(index int) GameObject {
 
 	return p.Child[index]
 }
+
+func (p *Container) FirstChild() (int, GameObject) {
+	for i, g := range p.Child {
+		if g != nil {
+			return i, g
+		}
+	}
+	return -1, nil
+}
+
+func (p *Container) NextChild(index int) (int, GameObject) {
+	if index < -1 {
+		return -1, nil
+	}
+	l := len(p.Child)
+	for i := index + 1; i < l; i++ {
+		if p.Child[i] != nil {
+			return i, p.Child[i]
+		}
+	}
+
+	return -1, nil
+}

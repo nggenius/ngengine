@@ -27,6 +27,14 @@ func (b *BaseObject) CanAdd(pos int, g GameObject) bool {
 	return true
 }
 
+// AddChildIf 增加一个对象
+func (b *BaseObject) AddChildIf(pos int, g interface{}) (int, error) {
+	if gb, ok := g.(GameObject); ok {
+		return b.AddChild(pos, gb)
+	}
+	return -1, fmt.Errorf("object not implement GameObject")
+}
+
 // AddChild 增加一个对象
 func (b *BaseObject) AddChild(pos int, g GameObject) (int, error) {
 	if b.c.Childs >= b.c.Cap {
@@ -89,5 +97,44 @@ func (b *BaseObject) ChildAt(pos int) GameObject {
 
 // ChildAtIf 取子对象接口
 func (b *BaseObject) ChildAtIf(pos int) interface{} {
-	return b.c.ChildAt(pos)
+	g := b.c.ChildAt(pos)
+	if g == nil {
+		return nil
+	}
+
+	return g
+}
+
+// ChildCount 子对象数量
+func (b *BaseObject) ChildCount() int {
+	return b.c.Childs
+}
+
+// FirstChild 获取第一个对象，返回的索引可以用于迭代
+func (b *BaseObject) FirstChild() (int, GameObject) {
+	return b.c.FirstChild()
+}
+
+// NextChild 获取下一个对象，和FirstChild配套使用。index为FirstChild返回的索引
+func (b *BaseObject) NextChild(index int) (int, interface{}) {
+	return b.c.NextChild(index)
+}
+
+// FirstChildIf 获取第一个对象，返回interface类型，返回的索引可以用于迭代
+func (b *BaseObject) FirstChildIf() (int, interface{}) {
+	i, g := b.c.FirstChild()
+	if g == nil {
+		return i, nil
+	}
+
+	return i, g
+}
+
+// NextChildIf 获取下一个对象，和FirstChildIf配套使用。index为FirstChildIf返回的索引
+func (b *BaseObject) NextChildIf(index int) (int, interface{}) {
+	i, g := b.c.NextChild(index)
+	if g == nil {
+		return i, nil
+	}
+	return i, g
 }

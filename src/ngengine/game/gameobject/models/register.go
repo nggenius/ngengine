@@ -3,9 +3,9 @@ package models
 import "ngengine/module/object"
 
 type reg interface {
-	Register(name string, oc object.ObjectCreate)
+	Register(oc object.ObjectCreate)
 }
 
 func Register(r reg) {
-	r.Register(GAME_PLAYER, new(GamePlayer))
+	r.Register(new(GamePlayer))
 }

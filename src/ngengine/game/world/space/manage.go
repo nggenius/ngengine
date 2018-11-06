@@ -237,7 +237,7 @@ func (s *SpaceManage) OnCreateRegion(p interface{}, rpcerr *rpc.Error, ar *utils
 		return
 	}
 
-	if rpcerr != nil && protocol.CheckRpcError(rpcerr) {
+	if rpcerr != nil {
 		ri.Status = REGION_FAILED
 		s.ctx.Core.LogErr("region create failed", rpcerr.Error())
 		return

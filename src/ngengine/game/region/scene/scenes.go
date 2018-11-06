@@ -19,13 +19,14 @@ func NewScenes(ctx *SceneModule) *Scenes {
 }
 
 func (s *Scenes) CreateScene(r share.Region) (rpc.Mailbox, error) {
-	err := s.ctx.object.AddFactory(r.Id)
+	fid := share.OBJECT_TYPE_SCENE_OFFSET + r.Id
+	err := s.ctx.object.AddFactory(fid)
 	if err != nil {
 		return rpc.NullMailbox, err
 	}
 
-	f := s.ctx.object.Factory(r.Id)
-	scene, err := f.Create("GameScene")
+	f := s.ctx.object.Factory(fid)
+	scene, err := f.Create(GAME_SCENE)
 	if err != nil {
 		return rpc.NullMailbox, err
 	}

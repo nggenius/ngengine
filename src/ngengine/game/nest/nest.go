@@ -1,5 +1,7 @@
 package nest
 
+// Nest 模块
+
 import (
 	"ngengine/core/service"
 	"ngengine/game/gameobject/entity"

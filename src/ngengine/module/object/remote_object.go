@@ -1,9 +1,40 @@
 package object
 
 import (
+	"fmt"
 	"ngengine/core/rpc"
 	"ngengine/utils"
 )
+
+// ExistDummy 是否存在某个副本
+func (o *ObjectWitness) ExistDummy(dummy rpc.Mailbox) bool {
+	_, ok := o.dummys[dummy]
+	return ok
+}
+
+// 关联一个副本对象
+func (o *ObjectWitness) AddDummy(dummy rpc.Mailbox, state int) {
+	if _, ok := o.dummys[dummy]; ok {
+		return
+	}
+
+	o.dummys[dummy] = state
+}
+
+// 移除一个副本对象
+func (o *ObjectWitness) RemoveDummy(dummy rpc.Mailbox) {
+	delete(o.dummys, dummy)
+}
+
+// 更新副本对象的状态
+func (o *ObjectWitness) ChangeDummyState(dummy rpc.Mailbox, state int) error {
+	if _, ok := o.dummys[dummy]; ok {
+		o.dummys[dummy] = state
+		return nil
+	}
+
+	return fmt.Errorf("dummy not found, %v", dummy)
+}
 
 // 是否是复制对象
 func (o *ObjectWitness) Dummy() bool {

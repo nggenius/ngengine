@@ -31,3 +31,9 @@ const (
 	ERR_REGION_NONE          = 12000 + iota
 	ERR_REGION_CREATE_FAILED // 创建场景失败
 )
+
+const (
+	ERR_OBJECT_NONT      = 13000 + iota
+	ERR_OBJECT_REPLICATE // 传送对象失败
+	ERR_ORIGIN_NOT_FOUND // 对象没有找到
+)

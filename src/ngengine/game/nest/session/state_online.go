@@ -33,12 +33,16 @@ func (o *online) Handle(event int, param interface{}) string {
 			o.owner.Error(share.ERR_ENTER_REGION_FAILED)
 			return SLOGGED
 		}
+	case EONLINE:
+		o.online = true
+		o.Idle = 0
 	case EBREAK:
 		//o.owner.DestroySelf()
+		o.owner.ctx.Core.LogInfo("client break")
 		return SLEAVING
 	case ETIMER:
-		o.Idle++
 		if !o.online {
+			o.Idle++
 			if o.Idle > 60 {
 				o.owner.Error(share.ERR_ENTER_REGION_FAILED)
 				return SLOGGED

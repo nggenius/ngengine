@@ -11,7 +11,8 @@ const (
 
 // 对象创建接口
 type ObjectCreate interface {
-	Ctor() //构造函数
+	Ctor()              //构造函数
+	EntityType() string // Entity type
 }
 
 // 缓存接口
@@ -109,4 +110,12 @@ type Object interface {
 	LockObjSuccess(locker rpc.Mailbox, lockindex uint32, isSynclock bool)
 	// 回调通知远程解锁成功
 	UnLockObjSuccess(isSynclock bool)
+	// 是否存在某个副本对象
+	ExistDummy(dummy rpc.Mailbox) bool
+	// 关联一个副本对象
+	AddDummy(dummy rpc.Mailbox, state int)
+	// 移除一个副本对象
+	RemoveDummy(dummy rpc.Mailbox)
+	// 更新副本对象的状态
+	ChangeDummyState(dummy rpc.Mailbox, state int) error
 }

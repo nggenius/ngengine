@@ -2,7 +2,6 @@ package object
 
 import (
 	"ngengine/core/rpc"
-	"reflect"
 	"sort"
 )
 
@@ -52,14 +51,14 @@ func NewEventDelegate() *EventDelegate {
 }
 
 // 执行指定事件的回调,并带返回值
-func (e *EventDelegate) Invoke(event string, self, sender rpc.Mailbox, args ...interface{}) int {
+func (e *EventDelegate) Invoke(event string, sender, target rpc.Mailbox, args ...interface{}) int {
 	ret := 0
 	if l, has := e.event[event]; has {
 		for _, v := range l {
 			if v == nil || v.cb == nil {
 				continue
 			}
-			ret = v.cb(self, sender, args...)
+			ret = v.cb(target, sender, args...)
 			if ret != 0 { // 不等于0，则终止调用
 				break
 			}
@@ -88,29 +87,4 @@ func (e *EventDelegate) AddListener(event string, f callback, priority int) {
 
 	e.event[event] = append(e.event[event], &PriorityDelegate{priority, f})
 	sort.Sort(sort.Reverse(e.event[event]))
-}
-
-// 移除事件监听
-func (e *EventDelegate) RemoveListener(event string, f callback) {
-	del := make([]int, 0, 2)
-	if l, has := e.event[event]; has {
-		for k, v := range l {
-			if v == nil || v.cb == nil {
-				continue
-			}
-
-			sf1 := reflect.ValueOf(v.cb)
-			sf2 := reflect.ValueOf(f)
-			if sf1.Pointer() == sf2.Pointer() {
-				l[k] = nil
-				del = append(del, k)
-			}
-		}
-	}
-	for _, d := range del {
-		copy(e.event[event][d:], e.event[event][d+1:])
-	}
-
-	size := len(e.event[event])
-	e.event[event] = e.event[event][:size-len(del)]
 }

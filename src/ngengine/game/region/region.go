@@ -2,6 +2,7 @@ package region
 
 import (
 	"ngengine/core/service"
+	"ngengine/game/gameobject/models"
 	"ngengine/game/region/scene"
 	"ngengine/module/object"
 	"ngengine/module/timer"
@@ -31,5 +32,6 @@ func (s *Region) Init(opt *service.CoreOption) error {
 
 func (s *Region) Start() error {
 	s.BaseService.Start()
+	models.Register(s.object) // 注册gameobjet
 	return nil
 }

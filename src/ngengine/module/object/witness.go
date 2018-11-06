@@ -19,6 +19,13 @@ const (
 	TABLE_SET_ROW
 )
 
+const (
+	DUMMY_STATE_NONE = iota
+	DUMMY_STATE_REPLICATE
+	DUMMY_STATE_READY
+	DUMMY_STATE_REMOVE
+)
+
 type attrObserver interface {
 	Init(object Object)
 	UpdateAttr(name string, val interface{}, old interface{})
@@ -39,6 +46,7 @@ type ObjectWitness struct {
 	objid         rpc.Mailbox
 	factory       *Factory
 	original      *rpc.Mailbox
+	dummys        map[rpc.Mailbox]int
 	dummy         bool // 是否是副本
 	sync          bool // 同步状态
 	silence       bool // 沉默状态
@@ -99,6 +107,7 @@ func (o *ObjectWitness) Witness(obj Object) {
 	o.tableobserver = make(map[string]tableObserver)
 	o.lockerQueue = list.New()
 	o.lockcb = make(map[uint32]LockCallBack)
+	o.dummys = make(map[rpc.Mailbox]int)
 }
 
 // AddAttrObserver 增加属性观察者,这里的name是观察者的标识符，不是属性名称
