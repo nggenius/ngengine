@@ -6,12 +6,12 @@ type VisibleObject struct {
 	BaseObject
 }
 
-func (v *VisibleObject) Create() {
-	v.BaseObject.Create()
+func (v *VisibleObject) OnCreate() {
+	v.BaseObject.OnCreate()
 }
 
-func (v *VisibleObject) Destroy() {
-	v.BaseObject.Destroy()
+func (v *VisibleObject) OnDestroy() {
+	v.BaseObject.OnDestroy()
 }
 
 func (v *VisibleObject) Update(delta time.Duration) {

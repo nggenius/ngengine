@@ -255,16 +255,24 @@ func (a *Account) OnFindRegion(param interface{}, replyerr *rpc.Error, ar *utils
 }
 
 func (p *Account) EnterRegion(s *Session, r rpc.Mailbox) error {
-	return p.ctx.factory.Replicate(s.gameobject.Spirit().ObjId(), r.Service(), 0, p.OnEnterRegion, s.id)
+	data, err := p.ctx.factory.Encode(s.gameobject.Spirit().ObjId())
+	if err != nil {
+		return err
+	}
+	return p.ctx.Core.MailtoAndCallback(nil, &r, "GameScene.AddPlayer", p.OnEnterRegion, s.id, data)
 }
 
-func (p *Account) OnEnterRegion(params interface{}, err error) {
-	session := p.ctx.FindSession(params.(uint64))
+func (p *Account) OnEnterRegion(param interface{}, replyerr *rpc.Error, ar *utils.LoadArchive) {
+	session := p.ctx.FindSession(param.(uint64))
 	if session == nil {
-		p.ctx.Core.LogErr("session not found,", params)
+		p.ctx.Core.LogErr("session not found,", param)
 		return
 	}
 
-	p.ctx.Core.LogInfo("enter session ", params, err)
+	if replyerr != nil {
+		p.ctx.Core.LogErr("enter region failed ", replyerr)
+		return
+	}
+	p.ctx.Core.LogInfo("enter session ", param, replyerr)
 	session.Dispatch(EONLINE, nil)
 }

@@ -6,13 +6,13 @@ type SceneObject struct {
 	BaseObject
 }
 
-func (s *SceneObject) Create() {
+func (s *SceneObject) OnCreate() {
 	s.typ = OBJECT_SCENE
-	s.BaseObject.Create()
+	s.BaseObject.OnCreate()
 }
 
-func (s *SceneObject) Destroy() {
-	s.BaseObject.Destroy()
+func (s *SceneObject) OnDestroy() {
+	s.BaseObject.OnDestroy()
 }
 
 func (s *SceneObject) Update(delta time.Duration) {

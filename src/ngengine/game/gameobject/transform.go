@@ -13,12 +13,12 @@ type TransformObject struct {
 	VisibleObject
 }
 
-func (t *TransformObject) Create() {
-	t.VisibleObject.Create()
+func (t *TransformObject) OnCreate() {
+	t.VisibleObject.OnCreate()
 }
 
-func (t *TransformObject) Destroy() {
-	t.VisibleObject.Destroy()
+func (t *TransformObject) OnDestroy() {
+	t.VisibleObject.OnDestroy()
 }
 
 func (t *TransformObject) Update(delta time.Duration) {

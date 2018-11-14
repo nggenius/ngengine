@@ -41,12 +41,13 @@ func (o *online) Handle(event int, param interface{}) string {
 		o.owner.ctx.Core.LogInfo("client break")
 		return SLEAVING
 	case ETIMER:
+		o.Idle++
 		if !o.online {
-			o.Idle++
 			if o.Idle > 60 {
 				o.owner.Error(share.ERR_ENTER_REGION_FAILED)
 				return SLOGGED
 			}
+			break
 		}
 	default:
 		o.owner.ctx.Core.LogWarnf("online state receive error event(%d)", event)

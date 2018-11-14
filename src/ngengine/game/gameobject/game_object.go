@@ -130,34 +130,34 @@ func (b *BaseObject) Prepare() {
 	b.CacheData.Init()
 }
 
-// Create 构造函数
-func (b *BaseObject) Create() {
-	if b.delegate != nil && b.spirit != nil {
-		b.delegate.Invoke(E_ON_CREATE, b.spirit.ObjId(), rpc.NullMailbox)
-	}
-}
-
 // ObjectType 获取对象类型
 func (b *BaseObject) ObjectType() int {
 	return b.typ
 }
 
+// Create 构造函数
+func (b *BaseObject) OnCreate() {
+	if b.delegate != nil && b.spirit != nil {
+		b.delegate.Invoke(E_ON_CREATE, b.spirit.ObjId(), rpc.NullMailbox)
+	}
+}
+
 // Destroy 准备销毁
-func (b *BaseObject) Destroy() {
+func (b *BaseObject) OnDestroy() {
 	if b.delegate != nil && b.spirit != nil {
 		b.delegate.Invoke(E_ON_DESTROY, b.spirit.ObjId(), rpc.NullMailbox)
 	}
 	b.delete = true
 }
 
+// Delete 正式开始删除
+func (b *BaseObject) OnDelete() {
+
+}
+
 // Alive 是否还活着
 func (b *BaseObject) Alive() bool {
 	return !b.delete
-}
-
-// Delete 正式开始删除
-func (b *BaseObject) Delete() {
-
 }
 
 // SetIndex 设置索引，由factory调用，不要手工调用

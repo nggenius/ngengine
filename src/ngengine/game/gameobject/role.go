@@ -8,13 +8,13 @@ type RoleObject struct {
 	TransformObject
 }
 
-func (r *RoleObject) Create() {
+func (r *RoleObject) OnCreate() {
 	r.typ = OBJECT_PLAYER
-	r.TransformObject.Create()
+	r.TransformObject.OnCreate()
 }
 
-func (r *RoleObject) Destroy() {
-	r.TransformObject.Destroy()
+func (r *RoleObject) OnDestroy() {
+	r.TransformObject.OnDestroy()
 }
 
 func (r *RoleObject) Update(delta time.Duration) {

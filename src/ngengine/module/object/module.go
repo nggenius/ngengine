@@ -101,6 +101,10 @@ func (o *ObjectModule) AddFactory(identity int) error {
 
 // 获取工厂
 func (o *ObjectModule) Factory(identity int) *Factory {
+	if identity == o.defaultFactory.identity {
+		return o.defaultFactory
+	}
+
 	if f, has := o.factorys[identity]; has {
 		return f
 	}
@@ -222,6 +226,34 @@ func (o *ObjectModule) Register(oc ObjectCreate) {
 	}
 	o.entitydelegate[name] = NewEventDelegate()
 	o.router.Register(name, oc)
+}
+
+func (o *ObjectModule) Encode(objid rpc.Mailbox) ([]byte, error) {
+	obj, err := o.FindObject(objid)
+	if err != nil {
+		return nil, err
+	}
+
+	f := o.Factory(objid.Identity())
+	if f == nil {
+		return nil, fmt.Errorf("factory not found")
+	}
+
+	return f.Encode(obj)
+}
+
+func (o *ObjectModule) Decode(identity int, data []byte) (rpc.Mailbox, error) {
+	f := o.Factory(identity)
+	if f == nil {
+		return rpc.NullMailbox, fmt.Errorf("factory not found")
+	}
+
+	obj, err := f.Decode(data)
+	if err != nil {
+		return rpc.NullMailbox, err
+	}
+
+	return obj.(FactoryObject).ObjId(), nil
 }
 
 // Replicate 将一个对象复制到另一个服务
