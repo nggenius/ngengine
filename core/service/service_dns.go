@@ -1,11 +1,12 @@
 package service
 
 import (
+	"sync"
+
 	"github.com/nggenius/ngengine/common/event"
 	"github.com/nggenius/ngengine/core/rpc"
 	"github.com/nggenius/ngengine/protocol"
 	"github.com/nggenius/ngengine/share"
-	"sync"
 
 	"github.com/mysll/toolkit"
 )
@@ -210,7 +211,7 @@ func (s *SrvDNS) LookupByType(typ string) []*Srv {
 	defer s.RUnlock()
 	ret := make([]*Srv, 0, 8)
 	for _, v := range s.srvs {
-		if v.Type == typ {
+		if v != nil && v.Type == typ {
 			ret = append(ret, v)
 		}
 	}
@@ -225,7 +226,7 @@ func (s *SrvDNS) LookupMinLoadByType(typ string) *Srv {
 	var ret *Srv
 	load := int32(0x7FFFFFFF)
 	for _, v := range s.srvs {
-		if v.Type == typ && v.Load < load {
+		if v != nil && v.Type == typ && v.Load < load {
 			ret = v
 			load = v.Load
 		}
@@ -240,7 +241,7 @@ func (s *SrvDNS) LookupOneByType(typ string) *Srv {
 	defer s.RUnlock()
 	var ret *Srv
 	for _, v := range s.srvs {
-		if v.Type == typ {
+		if v != nil && v.Type == typ {
 			ret = v
 			break
 		}
@@ -255,7 +256,7 @@ func (s *SrvDNS) LookupRandByType(typ string) *Srv {
 	defer s.RUnlock()
 	ret := make([]*Srv, 0, 8)
 	for _, v := range s.srvs {
-		if v.Type == typ {
+		if v != nil && v.Type == typ {
 			ret = append(ret, v)
 		}
 	}
