@@ -54,7 +54,7 @@ func (ar *StoreArchive) WriteAt(offset int, val interface{}) error {
 	case int8, int16, int32, int64, uint8, uint16, uint32, uint64, float32, float64:
 		err = binary.Write(ar, binary.LittleEndian, val)
 	case int:
-		err = binary.Write(ar, binary.LittleEndian, int32(val.(int)))
+		err = binary.Write(ar, binary.LittleEndian, int64(val.(int)))
 	default:
 		err = fmt.Errorf("unsupport type")
 	}

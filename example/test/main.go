@@ -85,7 +85,7 @@ func (m *ClientModule) OnResult(param interface{}, replyerr *rpc.Error, ar *util
 		return
 	}
 
-	result, _ := ar.ReadInt32()
+	result, _ := ar.ReadInt64()
 
 	m.Core.LogInfo("result:", result)
 }
