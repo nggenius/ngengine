@@ -1,0 +1,166 @@
+{
+	// Place your global snippets here. Each snippet is defined under a snippet name and has a scope, prefix, body and 
+	// description. Add comma separated ids of the languages where the snippet is applicable in the scope field. If scope 
+	// is left empty or omitted, the snippet gets applied to all languages. The prefix is what is 
+	// used to trigger the snippet and the body will be expanded and inserted. Possible variables are: 
+	// $1, $2 for tab stops, $0 for the final cursor position, and ${1:label}, ${2:another} for placeholders. 
+	// Placeholders with the same ids are connected.
+	// Example:
+	// "Print to console": {
+	// 	"scope": "javascript,typescript",
+	// 	"prefix": "log",
+	// 	"body": [
+	// 		"console.log('$1');",
+	// 		"$2"
+	// 	],
+	// 	"description": "Log output to console"
+	// }
+	"ng_service":{
+		"prefix":"ngservice",
+		"scope": "go",
+		"body":[
+			"import \"ngengine/core/service\"",
+			"type ${1:service name} struct {",
+			"	service.BaseService",
+			"}\n",			
+			"func (s *$1) Prepare(core service.CoreAPI) error {",
+			"   s.CoreAPI = core",
+			"	return nil",
+			"}\n",			
+			"func (s *$1) Init(opt *service.CoreOption) error {",
+			"	return nil",
+			"}\n",			
+			"func (s *$1) Start() error {",
+			"	s.BaseService.Start()",
+			"	return nil",
+			"}\n"
+		],
+		"description": "create service"
+	},
+
+	"ng_module":{
+		"prefix": "ngmodule",
+		"scope": "go",
+		"body": [
+			"import \"ngengine/core/service\"",
+			"type ${1:Name}Module struct {",
+			"	service.Module",
+			"}\n",
+			"func New() *$1Module {",
+			"	m := new($1Module)",
+			"	return m",
+			"}\n",
+			"func (m *$1Module) Name() string {",
+			"	return \"$1\"",
+			"}\n",
+			"func (m *$1Module) Init() bool {",
+			"	return true",
+			"}\n",
+			"// Start 模块启动",
+			"func (m *$1Module) Start() {",
+			"}\n",
+			"// Shut 模块关闭",
+			"func (m *$1Module) Shut() {",
+			"}\n",
+			"// OnUpdate 模块Update",
+			"func (m *$1Module) OnUpdate(t *service.Time) {",
+			"	m.Module.Update(t)",
+			"}\n",
+			"// OnMessage 模块消息",
+			"func (m *$1Module) OnMessage(id int, args ...interface{}) {",
+			"}"
+		],
+		"description": "create module"
+	},
+
+	"ng_rpc":{
+		"prefix": "ngrpc",
+		"scope": "go",
+		"body": [
+			"import \"ngengine/core/rpc\"",
+			"type ${1:Service Name} struct {",
+			"}\n",
+			"func New$1() *$1 {",
+			"	s := new($1)",
+			"	return s",
+			"}\n",			
+			"func (s *$1) RegisterCallback(srv rpc.Servicer) {",
+			"	//srv.RegisterCallback(\"Method\", s.Method)",
+			"}\n",			
+			"func (s *$1) Prototype(src rpc.Mailbox, dest rpc.Mailbox, msg *protocol.Message) (int32, *protocol.Message) {",
+			"	return 0, nil",
+			"}"
+		],
+		"description": "create rpc"
+	},
+	"ng_new":{
+		"prefix": "ngnew",
+		"scope": "go",
+		"body": [
+			"type ${1:StructName} struct{",
+			"}\n",
+			"func New$1() *$1{",
+			"\ts := new($1)",
+			"\treturn s",
+			"}"
+		],
+		"description": "create struct"
+	},
+	"ng_rpc_func" : {
+		"prefix": "ngrpcfunc",
+		"scope": "go",
+		"body": [
+			"//srv.RegisterCallback(\"$2\", s.$2)",
+			"func (s *${1:ServiceName}) ${2:FunctionName}(src rpc.Mailbox, dest rpc.Mailbox, msg *protocol.Message) (int32, *protocol.Message) {",
+			"	return 0, nil",
+			"}"
+		],
+		"description": "create rpc function"
+	},
+	"ng_reply" : {
+		"prefix": "ngreply",
+		"scope": "go",
+		"body": [
+			"func (s *${1:ServiceName}) ${2:FunctionName}(param interface{}, replyerr *rpc.Error, ar *utils.LoadArchive) {",
+			"	$0",
+			"}"
+		],
+		"description": "create rpc reply function"
+	},
+	"cfunc" :{
+		"prefix": "cfunc",
+		"scope": "go",
+		"body": [
+			"// $2",
+			"func (p *${1:class}) ${2:func}($3) $4{",
+			"\t$0",
+			"}" 
+		],
+	},
+	"ng_fsm" : {
+		"prefix": "ngfsm",
+		"scope": "go",
+		"body": [
+			"import \"ngengine/common/fsm\"",
+			"type ${1:state} struct {",
+			"	fsm.Default",
+			"	owner *${2:owner}"
+			"	Idle  int32",
+			"}\n",		
+			"func new$1(o *$2) *$1{"
+			"	s := new($1)"
+			"	s.owner = o"
+			"	return s"
+			"}\n"	
+			"func (s *$1) Handle(event int, param interface{}) string {",
+			"	switch event {",
+			"	case ETIMER:",
+			"		s.Idle++",
+			"	default:",
+			"	}",
+			"	return \"\"",
+			"}"
+		],
+		"description": "create fsm state"
+	}
+}
