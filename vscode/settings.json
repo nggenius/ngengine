@@ -1,0 +1,14 @@
+{
+    "files.autoGuessEncoding": true,
+
+    "go.lintFlags": [
+        "--disable-all",
+        "--enable=errcheck"
+    ],
+
+    "go.gopath": "${workspaceRoot}",
+
+    "terminal.integrated.env.windows": {
+        "GOPATH":"${workspaceRoot}"
+    },
+}
