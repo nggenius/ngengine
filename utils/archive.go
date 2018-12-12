@@ -4,15 +4,18 @@ import (
 	"bytes"
 	"encoding/binary"
 	"encoding/gob"
+	"errors"
 	"fmt"
 	"io"
 )
 
+// 输入字节流
 type StoreArchive struct {
 	buf []byte
 	pos int
 }
 
+// NewStoreArchiver 创建一个新的输出流
 func NewStoreArchiver(buf []byte) *StoreArchive {
 	if buf == nil || cap(buf) == 0 {
 		return nil
@@ -23,8 +26,12 @@ func NewStoreArchiver(buf []byte) *StoreArchive {
 	return ar
 }
 
+// Write 写入字节数组
 func (ar *StoreArchive) Write(p []byte) (n int, err error) {
 	l := len(p)
+	if l == 0 {
+		return l, nil
+	}
 	if ar.pos+l > cap(ar.buf) {
 		return 0, io.EOF
 	}
@@ -34,14 +41,17 @@ func (ar *StoreArchive) Write(p []byte) (n int, err error) {
 	return l, nil
 }
 
+// Data 获取已经写入的字节数组
 func (ar *StoreArchive) Data() []byte {
 	return ar.buf[:ar.pos]
 }
 
+// Len 写入的字节数组长度
 func (ar *StoreArchive) Len() int {
 	return ar.pos
 }
 
+// WriteAt 在指定位置定义数据，覆盖写入，不修改原始长度
 func (ar *StoreArchive) WriteAt(offset int, val interface{}) error {
 	if offset >= cap(ar.buf) {
 		return fmt.Errorf("offset out of range")
@@ -63,6 +73,7 @@ func (ar *StoreArchive) WriteAt(offset int, val interface{}) error {
 	return err
 }
 
+// Put 写入任意类型数据
 func (ar *StoreArchive) Put(val interface{}) error {
 	switch val.(type) {
 	case int8, int16, int32, int64, uint8, uint16, uint32, uint64, float32, float64:
@@ -78,10 +89,14 @@ func (ar *StoreArchive) Put(val interface{}) error {
 	}
 }
 
+// PutString 写入字符串，格式：uint16长度+字符串
 func (ar *StoreArchive) PutString(val string) error {
+	if len(val) > 0xFFFF {
+		return errors.New("string size too big")
+	}
 	data := []byte(val)
 	size := len(data)
-	err := binary.Write(ar, binary.LittleEndian, int16(size))
+	err := ar.Put(uint16(size))
 	if err != nil {
 		return err
 	}
@@ -89,12 +104,17 @@ func (ar *StoreArchive) PutString(val string) error {
 	return err
 }
 
+// PutObject 写入go对象
 func (ar *StoreArchive) PutObject(obj interface{}) error {
 	enc := gob.NewEncoder(ar)
 	return enc.Encode(obj)
 }
 
+// PutData 写入字节数据，格式为：2字节长度+数据,最大0xFFFF
 func (ar *StoreArchive) PutData(data []byte) error {
+	if len(data) > 0xFFFF {
+		return errors.New("data size too big")
+	}
 	err := ar.Put(uint16(len(data)))
 	if err != nil {
 		return err
@@ -103,6 +123,7 @@ func (ar *StoreArchive) PutData(data []byte) error {
 	return err
 }
 
+// 输出字节流
 type LoadArchive struct {
 	reader *bytes.Reader
 }
@@ -113,23 +134,28 @@ func NewLoadArchiver(data []byte) *LoadArchive {
 	return ar
 }
 
+// Position 获取当前位置
 func (ar *LoadArchive) Position() int {
 	return int(ar.reader.Size()) - ar.reader.Len()
 }
 
+// AvailableBytes 剩余字节长度
 func (ar *LoadArchive) AvailableBytes() int {
 	return ar.reader.Len()
 }
 
+// Size 总容量
 func (ar *LoadArchive) Size() int {
 	return int(ar.reader.Size())
 }
 
+// Seek 移动读指针
 func (ar *LoadArchive) Seek(offset int, whence int) (int, error) {
 	ret, err := ar.reader.Seek(int64(offset), whence)
 	return int(ret), err
 }
 
+// Read 读取任意类型的数据
 func (ar *LoadArchive) Read(val interface{}) (err error) {
 	switch val.(type) {
 	case *int8, *int16, *int32, *int64, *uint8, *uint16, *uint32, *uint64, *float32, *float64:
@@ -205,14 +231,17 @@ func (ar *LoadArchive) ReadFloat64() (val float64, err error) {
 	return
 }
 
+// ReadString 读取带前缀长度的字符串
 func (ar *LoadArchive) ReadString() (val string, err error) {
-	var size int16
-	binary.Read(ar.reader, binary.LittleEndian, &size)
-	if size == 0 {
+	l, err := ar.ReadUInt16()
+	if err != nil {
+		return "", err
+	}
+	if l == 0 {
 		val = ""
 		return
 	}
-	data := make([]byte, size)
+	data := make([]byte, l)
 	_, err = ar.reader.Read(data)
 	if err != nil {
 		return
@@ -221,14 +250,22 @@ func (ar *LoadArchive) ReadString() (val string, err error) {
 	return
 }
 
+// ReadObject 读取go对象
 func (ar *LoadArchive) ReadObject(val interface{}) error {
 	dec := gob.NewDecoder(ar.reader)
 	return dec.Decode(val)
 }
 
+// ReadData 读带前缀长度的字节流
 func (ar *LoadArchive) ReadData() (data []byte, err error) {
 	var l uint16
 	l, err = ar.ReadUInt16()
+	if err != nil {
+		return nil, err
+	}
+	if l == 0 {
+		return []byte{}, nil
+	}
 	data = make([]byte, int(l))
 	_, err = ar.reader.Read(data)
 	return data, err
