@@ -3,6 +3,7 @@ package ngadmin
 import (
 	"encoding/json"
 	"fmt"
+
 	"github.com/nggenius/ngengine/core/service"
 
 	simplejson "github.com/bitly/go-simplejson"
@@ -76,7 +77,7 @@ func (s *Options) StartPath(startName string) string {
 func (s *Options) loadServicePath(path string) error {
 	b, err := toolkit.ReadFile(path)
 	if err != nil {
-		panic(false)
+		panic(err)
 	}
 
 	JSON, err := simplejson.NewJson(b)

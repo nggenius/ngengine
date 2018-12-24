@@ -4,6 +4,7 @@ import (
 	"errors"
 	"io"
 	"net"
+
 	"github.com/nggenius/ngengine/common/event"
 	"github.com/nggenius/ngengine/core/rpc"
 	"github.com/nggenius/ngengine/protocol"
@@ -44,7 +45,7 @@ func (c *ClientCodec) ReadRequest(maxrc uint16) (*protocol.Message, error) {
 	}
 }
 
-// WriteResponse 发送rcp应答，不支持
+// WriteResponse 发送rpc应答，不支持
 func (c *ClientCodec) WriteResponse(seq uint64, errcode int32, body *protocol.Message) (err error) {
 	return ERRNOTSUPPORT
 }

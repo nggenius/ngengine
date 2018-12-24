@@ -1,10 +1,11 @@
 package service
 
 import (
+	"time"
+
 	"github.com/nggenius/ngengine/common/event"
 	"github.com/nggenius/ngengine/core/rpc"
 	"github.com/nggenius/ngengine/share"
-	"time"
 )
 
 var (
@@ -122,6 +123,7 @@ func (c *Core) run() {
 
 		// 运行模块
 		for _, m := range c.modules.modules {
+			m.Update(c.time)
 			m.OnUpdate(c.time)
 		}
 

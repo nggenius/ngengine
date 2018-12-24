@@ -12,6 +12,7 @@ type ModuleHandler interface {
 	Init() bool
 	Start()
 	Shut()
+	Update(t *Time)
 	OnUpdate(t *Time)
 	OnMessage(id int, args ...interface{})
 }
@@ -38,9 +39,13 @@ func (m *Module) Start() {
 func (m *Module) Shut() {
 }
 
+// Update 周期更新
+func (m *Module) Update(t *Time) {
+	m.Period.Update(t)
+}
+
 // OnUpdate 模块Update
 func (m *Module) OnUpdate(t *Time) {
-	m.Update(t)
 }
 
 // OnMessage 模块消息
