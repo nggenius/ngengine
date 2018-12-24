@@ -1,11 +1,14 @@
 package rpc
 
 import (
+	"encoding/binary"
 	"errors"
 	"fmt"
-	"github.com/nggenius/ngengine/share"
+	"io"
 	"strconv"
 	"strings"
+
+	"github.com/nggenius/ngengine/share"
 )
 
 const (
@@ -15,6 +18,20 @@ const (
 )
 
 type Mailbox uint64
+
+func (m Mailbox) MarshalArchive(w io.Writer) error {
+	return binary.Write(w, binary.LittleEndian, uint64(m))
+}
+
+func (m *Mailbox) UnmarshalArchive(r io.Reader) error {
+	var v uint64
+	if err := binary.Read(r, binary.LittleEndian, &v); err != nil {
+		return err
+	}
+
+	*m = Mailbox(v)
+	return nil
+}
 
 func (m Mailbox) String() string {
 	return fmt.Sprintf("mailbox://%x", uint64(m))

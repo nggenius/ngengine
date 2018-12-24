@@ -7,12 +7,21 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"reflect"
 )
 
 // 输入字节流
 type StoreArchive struct {
 	buf []byte
 	pos int
+}
+
+type Marshaler interface {
+	MarshalArchive(io.Writer) error
+}
+
+type Unmarshaler interface {
+	UnmarshalArchive(io.Reader) error
 }
 
 // NewStoreArchiver 创建一个新的输出流
@@ -75,15 +84,26 @@ func (ar *StoreArchive) WriteAt(offset int, val interface{}) error {
 
 // Put 写入任意类型数据
 func (ar *StoreArchive) Put(val interface{}) error {
-	switch val.(type) {
+	if m, ok := val.(Marshaler); ok {
+		return m.MarshalArchive(ar)
+	}
+
+	switch t := val.(type) {
 	case int8, int16, int32, int64, uint8, uint16, uint32, uint64, float32, float64:
-		return binary.Write(ar, binary.LittleEndian, val)
+		return binary.Write(ar, binary.LittleEndian, t)
+	case *int8, *int16, *int32, *int64, *uint8, *uint16, *uint32, *uint64, *float32, *float64:
+		v := reflect.ValueOf(val).Elem()
+		return binary.Write(ar, binary.LittleEndian, v.Interface())
 	case int:
-		return binary.Write(ar, binary.LittleEndian, int64(val.(int)))
+		return binary.Write(ar, binary.LittleEndian, int64(t))
+	case *int:
+		return binary.Write(ar, binary.LittleEndian, int64(*t))
 	case string:
-		return ar.PutString(val.(string))
+		return ar.PutString(t)
+	case *string:
+		return ar.PutString(*t)
 	case []byte:
-		return ar.PutData(val.([]byte))
+		return ar.PutData(t)
 	default:
 		return ar.PutObject(val)
 	}
@@ -157,6 +177,18 @@ func (ar *LoadArchive) Seek(offset int, whence int) (int, error) {
 
 // Read 读取任意类型的数据
 func (ar *LoadArchive) Read(val interface{}) (err error) {
+	dpv := reflect.ValueOf(val)
+	if dpv.Kind() != reflect.Ptr {
+		return errors.New("destination not a pointer")
+	}
+	if dpv.IsNil() {
+		return errors.New("destination pointer is nil")
+	}
+
+	if m, ok := val.(Unmarshaler); ok {
+		return m.UnmarshalArchive(ar.reader)
+	}
+
 	switch val.(type) {
 	case *int8, *int16, *int32, *int64, *uint8, *uint16, *uint32, *uint64, *float32, *float64:
 		return binary.Read(ar.reader, binary.LittleEndian, val)
