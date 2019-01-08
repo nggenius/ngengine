@@ -175,8 +175,13 @@ func (ar *LoadArchive) Seek(offset int, whence int) (int, error) {
 	return int(ret), err
 }
 
-// Read 读取任意类型的数据
-func (ar *LoadArchive) Read(val interface{}) (err error) {
+// io.Reader
+func (ar *LoadArchive) Read(p []byte) (n int, err error) {
+	return ar.reader.Read(p)
+}
+
+// Get 读取任意类型的数据
+func (ar *LoadArchive) Get(val interface{}) (err error) {
 	dpv := reflect.ValueOf(val)
 	if dpv.Kind() != reflect.Ptr {
 		return errors.New("destination not a pointer")
@@ -214,52 +219,52 @@ func (ar *LoadArchive) Read(val interface{}) (err error) {
 }
 
 func (ar *LoadArchive) ReadInt8() (val int8, err error) {
-	err = ar.Read(&val)
+	err = ar.Get(&val)
 	return
 }
 
 func (ar *LoadArchive) ReadUInt8() (val uint8, err error) {
-	err = ar.Read(&val)
+	err = ar.Get(&val)
 	return
 }
 
 func (ar *LoadArchive) ReadInt16() (val int16, err error) {
-	err = ar.Read(&val)
+	err = ar.Get(&val)
 	return
 }
 
 func (ar *LoadArchive) ReadUInt16() (val uint16, err error) {
-	err = ar.Read(&val)
+	err = ar.Get(&val)
 	return
 }
 
 func (ar *LoadArchive) ReadInt32() (val int32, err error) {
-	err = ar.Read(&val)
+	err = ar.Get(&val)
 	return
 }
 
 func (ar *LoadArchive) ReadUInt32() (val uint32, err error) {
-	err = ar.Read(&val)
+	err = ar.Get(&val)
 	return
 }
 
 func (ar *LoadArchive) ReadInt64() (val int64, err error) {
-	err = ar.Read(&val)
+	err = ar.Get(&val)
 	return
 }
 
 func (ar *LoadArchive) ReadUInt64() (val uint64, err error) {
-	err = ar.Read(&val)
+	err = ar.Get(&val)
 	return
 }
 
 func (ar *LoadArchive) ReadFloat32() (val float32, err error) {
-	err = ar.Read(&val)
+	err = ar.Get(&val)
 	return
 }
 
 func (ar *LoadArchive) ReadFloat64() (val float64, err error) {
-	err = ar.Read(&val)
+	err = ar.Get(&val)
 	return
 }
 

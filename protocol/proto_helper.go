@@ -115,7 +115,7 @@ func ParseArgs(msg *Message, args ...interface{}) error {
 
 	ar := NewMessageReader(msg)
 	for i := 0; i < len(args); i++ {
-		err := ar.Read(args[i])
+		err := ar.Get(args[i])
 		if err != nil {
 			return err
 		}

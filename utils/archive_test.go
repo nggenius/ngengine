@@ -49,44 +49,44 @@ func TestLoadArchive(t *testing.T) {
 	var x6 float64
 
 	load := utils.NewLoadArchiver(store.Data())
-	if err := load.Read(&x1); err != nil {
+	if err := load.Get(&x1); err != nil {
 		t.Fatalf(err.Error())
 	}
-	if err := load.Read(&x2); err != nil {
+	if err := load.Get(&x2); err != nil {
 		t.Fatalf(err.Error())
 	}
-	if err := load.Read(&x3); err != nil {
+	if err := load.Get(&x3); err != nil {
 		t.Fatalf(err.Error())
 	}
-	if err := load.Read(&x4); err != nil {
+	if err := load.Get(&x4); err != nil {
 		t.Fatalf(err.Error())
 	}
-	if err := load.Read(&x5); err != nil {
+	if err := load.Get(&x5); err != nil {
 		t.Fatalf(err.Error())
 	}
-	if err := load.Read(&x6); err != nil {
+	if err := load.Get(&x6); err != nil {
 		t.Fatalf(err.Error())
 	}
 	if x1 != v1 || x2 != v2 || x3 != v3 || x4 != v4 || x5 != v5 || x6 != v6 {
 		t.Fatalf("not match, need %v %v %v %v %v %v get %v %v %v %v %v %v", v1, v2, v3, v4, v5, v6, x1, x2, x3, x4, x5, x6)
 	}
 
-	if err := load.Read(&x1); err != nil {
+	if err := load.Get(&x1); err != nil {
 		t.Fatalf(err.Error())
 	}
-	if err := load.Read(&x2); err != nil {
+	if err := load.Get(&x2); err != nil {
 		t.Fatalf(err.Error())
 	}
-	if err := load.Read(&x3); err != nil {
+	if err := load.Get(&x3); err != nil {
 		t.Fatalf(err.Error())
 	}
-	if err := load.Read(&x4); err != nil {
+	if err := load.Get(&x4); err != nil {
 		t.Fatalf(err.Error())
 	}
-	if err := load.Read(&x5); err != nil {
+	if err := load.Get(&x5); err != nil {
 		t.Fatalf(err.Error())
 	}
-	if err := load.Read(&x6); err != nil {
+	if err := load.Get(&x6); err != nil {
 		t.Fatalf(err.Error())
 	}
 	if x1 != v1 || x2 != v2 || x3 != v3 || x4 != v4 || x5 != v5 || x6 != v6 {
@@ -94,7 +94,7 @@ func TestLoadArchive(t *testing.T) {
 	}
 
 	var xstr string
-	load.Read(&xstr)
+	load.Get(&xstr)
 	if xstr != str {
 		t.Fatalf("not match")
 	}
