@@ -19,7 +19,6 @@
 		"prefix":"ngservice",
 		"scope": "go",
 		"body":[
-			"import \"ngengine/core/service\"",
 			"type ${1:service name} struct {",
 			"	service.BaseService",
 			"}\n",			
@@ -42,7 +41,6 @@
 		"prefix": "ngmodule",
 		"scope": "go",
 		"body": [
-			"import \"ngengine/core/service\"",
 			"type ${1:Name}Module struct {",
 			"	service.Module",
 			"}\n",
@@ -77,15 +75,14 @@
 		"prefix": "ngrpc",
 		"scope": "go",
 		"body": [
-			"import \"ngengine/core/rpc\"",
 			"type ${1:Service Name} struct {",
 			"}\n",
 			"func New$1() *$1 {",
 			"	s := new($1)",
 			"	return s",
 			"}\n",			
-			"func (s *$1) RegisterCallback(srv rpc.Servicer) {",
-			"	//srv.RegisterCallback(\"Method\", s.Method)",
+			"func (s *$1) RegisterCallback(svr rpc.Servicer) {",
+			"	//svr.RegisterCallback(\"Method\", s.Method)",
 			"}\n",			
 			"func (s *$1) Prototype(src rpc.Mailbox, dest rpc.Mailbox, msg *protocol.Message) (int32, *protocol.Message) {",
 			"	return 0, nil",
@@ -110,7 +107,7 @@
 		"prefix": "ngrpcfunc",
 		"scope": "go",
 		"body": [
-			"//srv.RegisterCallback(\"$2\", s.$2)",
+			"//svr.RegisterCallback(\"$2\", s.$2)",
 			"func (s *${1:ServiceName}) ${2:FunctionName}(src rpc.Mailbox, dest rpc.Mailbox, msg *protocol.Message) (int32, *protocol.Message) {",
 			"	return 0, nil",
 			"}"
@@ -137,30 +134,48 @@
 			"}" 
 		],
 	},
+	"ng_state" : {
+		"prefix": "ngstate",
+		"scope": "go",
+		"body": [
+			"type ${1:state} struct {",
+			"	fsm.Default",
+			"	owner *${2:owner}",
+			"	Idle  int32",
+			"}\n",		
+			"func new$1(o *$2) *$1{",
+			"	s := new($1)",
+			"	s.owner = o",
+			"	return s",
+			"}\n",
+			"func (s *$1) Init(r fsm.StateRegister) {",
+			"	//r.AddHandle(LOGIN, s.OnLogin)",
+			"}\n",
+			"func (s *$1) OnTimer() string {",
+			"	return \"\"",
+			"}\n",
+			"func (s *$1) OnHandle(event int, param interface{}) string {",
+			"	return \"\"",
+			"}\n"
+		],
+		"description": "create fsm state"
+	},
 	"ng_fsm" : {
 		"prefix": "ngfsm",
 		"scope": "go",
 		"body": [
-			"import \"ngengine/common/fsm\"",
-			"type ${1:state} struct {",
-			"	fsm.Default",
-			"	owner *${2:owner}"
-			"	Idle  int32",
-			"}\n",		
-			"func new$1(o *$2) *$1{"
-			"	s := new($1)"
-			"	s.owner = o"
-			"	return s"
-			"}\n"	
-			"func (s *$1) Handle(event int, param interface{}) string {",
-			"	switch event {",
-			"	case ETIMER:",
-			"		s.Idle++",
-			"	default:",
-			"	}",
-			"	return \"\"",
-			"}"
-		],
-		"description": "create fsm state"
+			"const (",
+			"	NONE          = iota",
+			")\n",
+			"const (",
+			"	SIDLE    = \"idle\"",
+			")",
+			"func initState(s *${1:owner}) *fsm.FSM {",
+			"	fsm := fsm.NewFSM()",
+			"	fsm.Register(SIDLE, newIdle(s))",
+			"	fsm.Start(SIDLE)",
+			"	return fsm",
+			"}\n"
+		]
 	}
 }
