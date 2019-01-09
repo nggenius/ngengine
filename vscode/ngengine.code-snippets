@@ -169,7 +169,7 @@
 			")\n",
 			"const (",
 			"	SIDLE    = \"idle\"",
-			")",
+			")\n",
 			"func initState(s *${1:owner}) *fsm.FSM {",
 			"	fsm := fsm.NewFSM()",
 			"	fsm.Register(SIDLE, newIdle(s))",
