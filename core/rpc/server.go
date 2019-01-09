@@ -5,11 +5,11 @@ import (
 	"encoding/binary"
 	"errors"
 	"fmt"
-	"io"
 	"github.com/nggenius/ngengine/logger"
 	"github.com/nggenius/ngengine/protocol"
 	"github.com/nggenius/ngengine/share"
 	"github.com/nggenius/ngengine/utils"
+	"io"
 	"strings"
 	"sync"
 	"time"
@@ -357,7 +357,7 @@ func (server *Server) sendResponse(call *RpcCall) error {
 		var err *Error
 		if errcode != 0 {
 			err = NewError(errcode, "")
-			errstr, e := ar.ReadString()
+			errstr, e := ar.GetString()
 			if e != nil {
 				panic(e)
 			}
@@ -391,25 +391,25 @@ func (server *Server) createCall(msg *protocol.Message) (*RpcCall, error) {
 	call.message = msg
 	ar := utils.NewLoadArchiver(msg.Header)
 	var err error
-	call.header.Seq, err = ar.ReadUInt64()
+	call.header.Seq, err = ar.GetUint64()
 	if err != nil {
 		server.log.LogErr(err)
 		call.Free()
 		return nil, err
 	}
-	call.header.Src, err = ar.ReadUInt64()
+	call.header.Src, err = ar.GetUint64()
 	if err != nil {
 		server.log.LogErr(err)
 		call.Free()
 		return nil, err
 	}
-	call.header.Dest, err = ar.ReadUInt64()
+	call.header.Dest, err = ar.GetUint64()
 	if err != nil {
 		server.log.LogErr(err)
 		call.Free()
 		return nil, err
 	}
-	call.header.ServiceMethod, err = ar.ReadString()
+	call.header.ServiceMethod, err = ar.GetString()
 	if err != nil {
 		server.log.LogErr(err)
 		call.Free()

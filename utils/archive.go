@@ -207,70 +207,70 @@ func (ar *LoadArchive) Get(val interface{}) (err error) {
 		return nil
 	case *string:
 		inst := val.(*string)
-		*inst, err = ar.ReadString()
+		*inst, err = ar.GetString()
 		return err
 	case *[]byte:
 		inst := val.(*[]byte)
-		*inst, err = ar.ReadData()
+		*inst, err = ar.GetData()
 		return err
 	default:
-		return ar.ReadObject(val)
+		return ar.GetObject(val)
 	}
 }
 
-func (ar *LoadArchive) ReadInt8() (val int8, err error) {
+func (ar *LoadArchive) GetInt8() (val int8, err error) {
 	err = ar.Get(&val)
 	return
 }
 
-func (ar *LoadArchive) ReadUInt8() (val uint8, err error) {
+func (ar *LoadArchive) GetUInt8() (val uint8, err error) {
 	err = ar.Get(&val)
 	return
 }
 
-func (ar *LoadArchive) ReadInt16() (val int16, err error) {
+func (ar *LoadArchive) GetInt16() (val int16, err error) {
 	err = ar.Get(&val)
 	return
 }
 
-func (ar *LoadArchive) ReadUInt16() (val uint16, err error) {
+func (ar *LoadArchive) GetUint16() (val uint16, err error) {
 	err = ar.Get(&val)
 	return
 }
 
-func (ar *LoadArchive) ReadInt32() (val int32, err error) {
+func (ar *LoadArchive) GetInt32() (val int32, err error) {
 	err = ar.Get(&val)
 	return
 }
 
-func (ar *LoadArchive) ReadUInt32() (val uint32, err error) {
+func (ar *LoadArchive) GetUint32() (val uint32, err error) {
 	err = ar.Get(&val)
 	return
 }
 
-func (ar *LoadArchive) ReadInt64() (val int64, err error) {
+func (ar *LoadArchive) GetInt64() (val int64, err error) {
 	err = ar.Get(&val)
 	return
 }
 
-func (ar *LoadArchive) ReadUInt64() (val uint64, err error) {
+func (ar *LoadArchive) GetUint64() (val uint64, err error) {
 	err = ar.Get(&val)
 	return
 }
 
-func (ar *LoadArchive) ReadFloat32() (val float32, err error) {
+func (ar *LoadArchive) GetFloat32() (val float32, err error) {
 	err = ar.Get(&val)
 	return
 }
 
-func (ar *LoadArchive) ReadFloat64() (val float64, err error) {
+func (ar *LoadArchive) GetFloat64() (val float64, err error) {
 	err = ar.Get(&val)
 	return
 }
 
-// ReadString 读取带前缀长度的字符串
-func (ar *LoadArchive) ReadString() (val string, err error) {
-	l, err := ar.ReadUInt16()
+// GetString 读取带前缀长度的字符串
+func (ar *LoadArchive) GetString() (val string, err error) {
+	l, err := ar.GetUint16()
 	if err != nil {
 		return "", err
 	}
@@ -287,16 +287,16 @@ func (ar *LoadArchive) ReadString() (val string, err error) {
 	return
 }
 
-// ReadObject 读取go对象
-func (ar *LoadArchive) ReadObject(val interface{}) error {
+// GetObject 读取go对象
+func (ar *LoadArchive) GetObject(val interface{}) error {
 	dec := gob.NewDecoder(ar.reader)
 	return dec.Decode(val)
 }
 
-// ReadData 读带前缀长度的字节流
-func (ar *LoadArchive) ReadData() (data []byte, err error) {
+// GetData 读带前缀长度的字节流
+func (ar *LoadArchive) GetData() (data []byte, err error) {
 	var l uint16
-	l, err = ar.ReadUInt16()
+	l, err = ar.GetUint16()
 	if err != nil {
 		return nil, err
 	}

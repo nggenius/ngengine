@@ -8,12 +8,12 @@ import (
 	"bufio"
 	"encoding/binary"
 	"errors"
-	"io"
-	"net"
 	"github.com/nggenius/ngengine/logger"
 	"github.com/nggenius/ngengine/protocol"
 	. "github.com/nggenius/ngengine/share"
 	"github.com/nggenius/ngengine/utils"
+	"io"
+	"net"
 	"strings"
 	"sync"
 	"time"
@@ -212,7 +212,7 @@ func (client *Client) input() {
 		}
 
 		ar := utils.NewLoadArchiver(message.Header)
-		seq, err := ar.ReadUInt64()
+		seq, err := ar.GetUint64()
 		client.mutex.Lock()
 		call := client.pending[seq]
 		delete(client.pending, seq)
@@ -273,13 +273,13 @@ func (call *Call) done() {
 				err.Err = ErrTimeout.Error()
 
 			case ERR_RPC_FAILED:
-				errstr, e := ar.ReadString()
+				errstr, e := ar.GetString()
 				if e != nil {
 					panic(e)
 				}
 				err.Err = errstr
 			default:
-				errstr, e := ar.ReadString()
+				errstr, e := ar.GetString()
 				if e != nil {
 					panic(e)
 				}

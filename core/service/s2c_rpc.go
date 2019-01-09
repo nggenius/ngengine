@@ -29,7 +29,7 @@ func NewS2CHelper(core *Core) *S2CHelper {
 func (s *S2CHelper) Call(sender, _ rpc.Mailbox, msg *protocol.Message) (errcode int32, reply *protocol.Message) {
 	request := &protocol.S2CMsg{}
 	reader := protocol.NewMessageReader(msg)
-	if err := reader.ReadObject(request); err != nil {
+	if err := reader.GetObject(request); err != nil {
 		s.owner.LogErr(err)
 		return 0, nil
 	}
@@ -68,7 +68,7 @@ func (s *S2CHelper) call(sender rpc.Mailbox, session uint64, method string, out 
 func (s *S2CHelper) Broadcast(sender rpc.Mailbox, msg *protocol.Message) (errcode int32, reply *protocol.Message) {
 	request := &protocol.S2CBrocast{}
 	reader := protocol.NewMessageReader(msg)
-	if err := reader.ReadObject(request); err != nil {
+	if err := reader.GetObject(request); err != nil {
 		s.owner.LogErr(err)
 		return 0, nil
 	}

@@ -85,7 +85,7 @@ func GetReplyError(msg *Message) int32 {
 	}
 	ar.Seek(8, 0)
 
-	haserror, err := ar.ReadInt8()
+	haserror, err := ar.GetInt8()
 	if err != nil {
 		return 0
 	}
@@ -94,7 +94,7 @@ func GetReplyError(msg *Message) int32 {
 		return 0
 	}
 
-	errcode, err := ar.ReadInt32()
+	errcode, err := ar.GetInt32()
 	if err != nil {
 		return 0
 	}

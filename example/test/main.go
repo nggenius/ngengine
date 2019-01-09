@@ -74,7 +74,7 @@ func (m *ClientModule) OnEcho(param interface{}, replyerr *rpc.Error, ar *utils.
 		return
 	}
 
-	result, _ := ar.ReadString()
+	result, _ := ar.GetString()
 
 	m.Core.LogInfo("echo:", result)
 }
@@ -85,7 +85,7 @@ func (m *ClientModule) OnResult(param interface{}, replyerr *rpc.Error, ar *util
 		return
 	}
 
-	result, _ := ar.ReadInt64()
+	result, _ := ar.GetInt64()
 
 	m.Core.LogInfo("result:", result)
 }
